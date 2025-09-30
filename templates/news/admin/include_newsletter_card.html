@@ -8,7 +8,7 @@
         <a href="#" class="newsmenu"
                 data-nl-id="{{ nl.id }}"
                 data-nl-slug="{{ nl.slug }}"
-                data-url-edit="{% url 'news:newsletter-edit' nl.id %}?next={{ request.path|urlencode }}"
+                data-url-edit="{% url 'news:news-edit' nl.id %}?next={{ request.path|urlencode }}"
                 data-url-issues="{% url 'news:issue-list' nl.id %}?next={{ request.path|urlencode }}"
                 data-url-issue-add="{% url 'news:issue-add' nl.id %}?next={{ request.path|urlencode }}"
                 data-url-subs="{% url 'news:subscriptions-manage' nl.id %}?next={{ request.path|urlencode }}"

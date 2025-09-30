@@ -1,1 +1,1 @@
-recursive-include django-users/static *
+recursive-include skorie-news/static *

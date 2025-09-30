@@ -8,7 +8,7 @@ from .models import Newsletter, Subscription, Issue, Mailing, Article, Subscript
 User = get_user_model()
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    # Use the newsletter slug publicly
+    # Use the news slug publicly
     newsletter = serializers.SlugRelatedField(
         slug_field="slug",
         queryset=Newsletter.objects.all()
@@ -16,7 +16,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ["id", "newsletter", "email", "name", "created"]
+        fields = ["id", "news", "email", "name", "created"]
         read_only_fields = ["id", "created"]
 
 
@@ -44,7 +44,7 @@ class IssueArticleSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issue
-        fields = ("id", "title", "slug", "newsletter", "published_at", "created", "updated")
+        fields = ("id", "title", "slug", "news", "published_at", "created", "updated")
 
 class IssueArticlesUpdateSerializer(serializers.Serializer):
     """
@@ -67,7 +67,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         model = Mailing
         fields = ("id", "status", "publish_date")
 
-# assume we only ever see subscriptions for one newsletter
+# assume we only ever see subscriptions for one news
 class SubscriptionManageDTSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     user_link = serializers.SerializerMethodField()

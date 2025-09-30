@@ -83,7 +83,7 @@ def get_address(name: str | None, email: str) -> str:
 def attachment_upload_to(instance, filename):
     # Store under article/<id>/YYYY-MM-DD/filename
     return os.path.join(
-        "newsletter", "attachments",
+        "news", "attachments",
         datetime.utcnow().strftime("%Y-%m-%d"),
         f"article-{instance.article_id or 'new'}",
         filename,
@@ -104,7 +104,7 @@ class NewsletterQuerySet(models.QuerySet):
 class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     site = models.ManyToManyField(Site, blank=True)
 
-    title = models.CharField(max_length=200, verbose_name=_("newsletter title"))
+    title = models.CharField(max_length=200, verbose_name=_("news title"))
     slug = models.SlugField(db_index=True, unique=True)
     about = models.TextField(blank=True, null=True,  help_text=_("Short description shown on subscribe page"))
     email = models.EmailField(verbose_name=_("e-mail"), help_text=_("Sender e-mail"))
@@ -119,7 +119,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     objects = NewsletterQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _("newsletter")
+        verbose_name = _("news")
         verbose_name_plural = _("newsletters")
         ordering = ["title"]
 
@@ -128,7 +128,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
 
     # ----- URLs in your site (optional) -----
     def get_absolute_url(self):
-        return reverse(f"news:newsletter-edit", kwargs={"pk": self.id})
+        return reverse(f"news:news-edit", kwargs={"pk": self.id})
         #return reverse(f"news:newsletter_detail", kwargs={"newsletter_slug": self.slug})
 
     def subscribe_url(self):
@@ -142,7 +142,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
 
     @classmethod
     def is_subscribed_to_newsletter(cls, user, newsletter=None):
-        '''check if a user is currently subscribed to a newsletter'''
+        '''check if a user is currently subscribed to a news'''
         if not newsletter:
             newsletter = cls.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
         #TODO: this should be a search on user not email - potential for confusion
@@ -150,15 +150,15 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         return sub.subscribed if sub else False
 
     def subscribe_from_request(self, request):
-        '''subscribe the user in the request to the current newsletter'''
+        '''subscribe the user in the request to the current news'''
         return Subscription.subscribe_from_request(self, request)
 
     def unsubscribe_from_request(self, request):
-        '''subscribe the user in the request to the current newsletter'''
+        '''subscribe the user in the request to the current news'''
         return Subscription.unsubscribe_from_request(self, request)
 
     def subscribe_from_email(self, email, request):
-        '''subscribe the user in the request to the current newsletter'''
+        '''subscribe the user in the request to the current news'''
         return Subscription.subscribe_from_request(self, request)
 
     # ----- From header helper -----
@@ -170,27 +170,27 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         """
         Return a tuple: (subject_template, text_template, html_template or None)
         Looks under:
-            newsletter/message/<slug>/<action>_subject.txt
-            newsletter/message/<action>_subject.txt
+            news/message/<slug>/<action>_subject.txt
+            news/message/<action>_subject.txt
         and similarly for .txt and .html
         """
         assert action in ("message", "subscribe", "update", "unsubscribe"), f"Unknown action: {action}"
 
-        tpl_root = "newsletter/message/"
-        subs = {"newsletter": self.slug, "action": action}
+        tpl_root = "news/message/"
+        subs = {"news": self.slug, "action": action}
 
         subject_template = select_template([
-            f"{tpl_root}{subs['newsletter']}/{subs['action']}_subject.txt",
+            f"{tpl_root}{subs['news']}/{subs['action']}_subject.txt",
             f"{tpl_root}{subs['action']}_subject.txt",
         ])
         text_template = select_template([
-            f"{tpl_root}{subs['newsletter']}/{subs['action']}.txt",
+            f"{tpl_root}{subs['news']}/{subs['action']}.txt",
             f"{tpl_root}{subs['action']}.txt",
         ])
         html_template = None
         if self.send_html:
             html_template = select_template([
-                f"{tpl_root}{subs['newsletter']}/{subs['action']}.html",
+                f"{tpl_root}{subs['news']}/{subs['action']}.html",
                 f"{tpl_root}{subs['action']}.html",
             ])
         return subject_template, text_template, html_template
@@ -334,12 +334,12 @@ class Subscription(CreatedUpdatedMixin):
         constraints = [
 
             # models.UniqueConstraint(
-            #     fields=["newsletter", "email"],
+            #     fields=["news", "email"],
             #     name="uniq_newsletter_email",
             #     condition=models.Q(email__isnull=False),
             # ),
             models.UniqueConstraint(
-                fields=["newsletter", "email"],
+                fields=["news", "email"],
                 name="uniq_newsletter_email",
                 condition=models.Q(email__isnull=False),
             ),
@@ -382,7 +382,7 @@ class Subscription(CreatedUpdatedMixin):
         if qs.count() > 1:
 
             logger.warning(
-                f"Multiple subscriptions found for {email} and newsletter {newsletter.pk} - using pk {sub.pk}")
+                f"Multiple subscriptions found for {email} and news {newsletter.pk} - using pk {sub.pk}")
         return sub
 
     @classmethod
@@ -399,7 +399,7 @@ class Subscription(CreatedUpdatedMixin):
     @classmethod
     def subscribe_from_request(cls, newsletter: "Newsletter", request) -> "Subscription":
         """
-        Subscribe (or re-subscribe) an email to a newsletter based on the incoming request.
+        Subscribe (or re-subscribe) an email to a news based on the incoming request.
            #TODO: block logged in user from subscribing with different email
         Rules:
         - Guest (not logged in): create/leave as PENDING until consent is recorded (confirmation click).
@@ -564,7 +564,7 @@ class Subscription(CreatedUpdatedMixin):
         sub = cls.get_subscription(email=email, newsletter=newsletter)
 
         if not sub:
-            raise ValidationError("No subscription found for this user and newsletter.")
+            raise ValidationError("No subscription found for this user and news.")
 
         consent = cls.consent_from_request(request)
         sub.unsubscribe(consent, user)
@@ -805,7 +805,7 @@ class Article(CreatedUpdatedMixin):
     body_text = models.TextField(blank=True)
     url = models.URLField(blank=True, null=True)
 
-    image = models.ImageField(upload_to="newsletter/articles/", blank=True, null=True)
+    image = models.ImageField(upload_to="news/articles/", blank=True, null=True)
     ABOVE = "above"; BELOW = "below"; LEFT = "left"; RIGHT = "right"
     IMAGE_POSITION_CHOICES = [(ABOVE,"Above text"),(BELOW,"Below text"),(LEFT,"Left of text"),(RIGHT,"Right of text")]
     image_position = models.CharField(max_length=10, choices=IMAGE_POSITION_CHOICES, default=ABOVE)
@@ -856,7 +856,7 @@ class Issue(CreatedUpdatedMixin):
     class Meta:
         verbose_name = _("message")
         verbose_name_plural = _("messages")
-        unique_together = ("slug", "newsletter")
+        unique_together = ("slug", "news")
         ordering = ["-created"]
 
     def __str__(self):
@@ -931,7 +931,7 @@ class Issue(CreatedUpdatedMixin):
         """
         ctx = {
             "message": self,
-            "newsletter": self.newsletter,
+            "news": self.newsletter,
         }
         if extra_context:
             ctx.update(extra_context)
@@ -973,7 +973,7 @@ class IssueArticle(models.Model):
 
 class Mailing(CreatedUpdatedMixin):
     """
-    Represents sending a Issue to newsletter subscribers.
+    Represents sending a Issue to news subscribers.
     """
     class Status(models.TextChoices):
         INACTIVE = "0", "Inactive"
@@ -1003,7 +1003,7 @@ class Mailing(CreatedUpdatedMixin):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            # keep newsletter in sync
+            # keep news in sync
             self.newsletter = self.issue.newsletter
         super().save(*args, **kwargs)
 
@@ -1070,7 +1070,7 @@ class Mailing(CreatedUpdatedMixin):
     #         raise ValidationError("Mailgun not configured: set MAILGUN_SENDER_DOMAIN and MAILGUN_API_KEY.")
     #
     #     # collect recipients
-    #     subs = list(self.subscriptions.active()) or list(self.newsletter.get_subscriptions())
+    #     subs = list(self.subscriptions.active()) or list(self.news.get_subscriptions())
     #     recipients = [(s.email, (s.name or ""), s.pk, s.unsubscribe_url) for s in subs if s.email]
     #
     #     if not recipients:
@@ -1084,7 +1084,7 @@ class Mailing(CreatedUpdatedMixin):
     #         "site": Site.objects.get_current(),
     #         "submission": self,
     #         "issue": self.issue,
-    #         "newsletter": self.newsletter,
+    #         "news": self.news,
     #         "date": self.publish_date,
     #         "STATIC_URL": settings.STATIC_URL,
     #         "MEDIA_URL": settings.MEDIA_URL,
@@ -1113,7 +1113,7 @@ class Mailing(CreatedUpdatedMixin):
     #             }
     #
     #             data = {
-    #                 "from": self.newsletter.get_sender(),
+    #                 "from": self.news.get_sender(),
     #                 "subject": subject,
     #                 "text": text,
     #                 "to": list(recipient_vars.keys()),
@@ -1155,7 +1155,7 @@ class Mailing(CreatedUpdatedMixin):
             "site": Site.objects.get_current(),
             "submission": self,
             "issue": self.issue,
-            "newsletter": self.newsletter,
+            "news": self.newsletter,
             "date": self.publish_date,
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
@@ -1192,7 +1192,7 @@ class Mailing(CreatedUpdatedMixin):
                 msg.attach(att.file_name, att.file.read())
 
         # Provider-agnostic knobs
-        msg.tags = [NEWSLETTER_BASENAME or "newsletter", self.newsletter.slug]
+        msg.tags = [NEWSLETTER_BASENAME or "news", self.newsletter.slug]
         msg.metadata = {"mailing_id": str(self.pk), "newsletter_id": str(self.newsletter_id)}
         msg.merge_data = merge_data
         # If your ESP supports header merge vars (Mailgun does), this works there;

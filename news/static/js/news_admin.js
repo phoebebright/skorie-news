@@ -53,7 +53,7 @@
     const subId = $(this).data("subscription_id");
     const unsubscibe_url = $(this).closest('tr').data('unsubscribe_url');
     const subscribe_url = $(this).closest('tr').data('subscribe_url');
-    const newsletterId = $(this).closest('tr').data('newsletter-id');
+    const newsletterId = $(this).closest('tr').data('news-id');
     setBusy($btn, true);
 
     $.ajax({
@@ -84,7 +84,7 @@
     const subId = $(this).closest('tr').data("subscription_id");
     const unsubscibe_url = $(this).closest('tr').data('unsubscribe_url');
     const subscribe_url = $(this).closest('tr').data('subscribe_url');
-    const newsletterId = $(this).closest('tr').data('newsletter-id');
+    const newsletterId = $(this).closest('tr').data('news-id');
     setBusy($btn, true);
 
     $.ajax({

@@ -12,17 +12,17 @@ class Migration(migrations.Migration):
     operations = [
 
         migrations.AddField(
-            model_name='newsletter',
+            model_name='news',
             name='about',
             field=models.TextField(blank=True, help_text='Short description shown on subscribe page', null=True),
         ),
         migrations.AlterField(
-            model_name='newsletter',
+            model_name='news',
             name='public',
             field=models.BooleanField(db_index=True, default=True, help_text='Whether or not users can self-subscribe.'),
         ),
         migrations.AlterField(
-            model_name='newsletter',
+            model_name='news',
             name='visible',
             field=models.BooleanField(db_index=True, default=True),
         ),

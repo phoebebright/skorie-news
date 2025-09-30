@@ -21,8 +21,8 @@
 </ul>
 {% else %}
 
-{% trans "Do you want to unsubscribe from this newsletter?" %}
-<form enctype="multipart/form-data" method="post" action="{% url "newsletter:newsletter_unsubscribe_confirm" newsletter.slug %}">
+{% trans "Do you want to unsubscribe from this news?" %}
+<form enctype="multipart/form-data" method="post" action="{% url "news:newsletter_unsubscribe_confirm" newsletter.slug %}">
     {% csrf_token %}
         <input id="id_submit" name="submit" value="{% trans "Unsubscribe" %}" type="submit" class="btn btn-primary" />
 </form>

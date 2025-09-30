@@ -20,8 +20,8 @@
     {% endfor %}
 </ul>
 {% else %}
-{% trans "Confirm you want to subscribe to this newsletter?" %}
-<form  method="post" action="{% url "newsletter:newsletter_subscribe_confirm" newsletter.slug %}">
+{% trans "Confirm you want to subscribe to this news?" %}
+<form  method="post" action="{% url "news:newsletter_subscribe_confirm" newsletter.slug %}">
     {% csrf_token %}
 
         <input id="id_submit" name="submit" value="{% trans "Activate" %}" type="submit" class="btn btn-primary mt-3" />

@@ -144,8 +144,8 @@ class ArticleAdmin(admin.ModelAdmin):
 #
 # # @admin.register(Message)
 # class MessageAdmin(admin.ModelAdmin):
-#     list_display = ("title", "newsletter", "created", "modified", "preview_link", "queue_link")
-#     list_filter = ("newsletter",)
+#     list_display = ("title", "news", "created", "modified", "preview_link", "queue_link")
+#     list_filter = ("news",)
 #     search_fields = ("title",)
 #     inlines = []
 #
@@ -166,6 +166,6 @@ class ArticleAdmin(admin.ModelAdmin):
 #
 # # @admin.register(Submission)
 # class SubmissionAdmin(admin.ModelAdmin):
-#     list_display = ("id", "message", "newsletter", "status", "prepared", "sent")
-#     list_filter = ("status", "newsletter")
+#     list_display = ("id", "message", "news", "status", "prepared", "sent")
+#     list_filter = ("status", "news")
 #     search_fields = ("message__title",)

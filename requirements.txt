@@ -1,9 +1,7 @@
-git+https://github.com/phoebebright/django-keycloak-admin
+
 Django
-twilio
-nanoid
 qrcode
 djangorestframework
 djangorestframework-api-key
-python-jose
+
 git+https://github.com/phoebebright/django-docserve

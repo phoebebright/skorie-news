@@ -49,10 +49,10 @@ class MessageForm(forms.ModelForm):
 class IssueForm(forms.ModelForm):
     class Meta:
         model = Issue
-        fields = ["title", "newsletter"]
+        fields = ["title", "news"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Issue title"}),
-            "newsletter": forms.Select(attrs={"class": "form-select"}),
+            "news": forms.Select(attrs={"class": "form-select"}),
         }
 
 class ArticleQuickForm(forms.ModelForm):
@@ -106,7 +106,7 @@ class DispatchForm(forms.ModelForm):
 class MessageForm(forms.ModelForm):
     class Meta:
         model = Issue
-        fields = ["title",  "newsletter", "published_at", ]
+        fields = ["title",  "news", "published_at", ]
 
 IssueArticleFormSet = inlineformset_factory(
     parent_model=Issue,
@@ -118,7 +118,7 @@ IssueArticleFormSet = inlineformset_factory(
 
 
 class SubscriptionForm(forms.ModelForm):
-    """Add a single subscriber to a specific newsletter."""
+    """Add a single subscriber to a specific news."""
     class Meta:
         model = Subscription
         fields = ["email", "name"]

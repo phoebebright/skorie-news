@@ -3,9 +3,9 @@ requires = ["setuptools>=65.5.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "django-users"
-version = "0.4.13"
-description = "A reusable Django app to manage users that also use keycloak for SSO."
+name = "skorie-news"
+version = "0.0.1"
+description = "A reusable Django app for newsletters and direct emails."
 readme = "README.md"
 license = {text = "MIT License"}
 authors = [
@@ -23,8 +23,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/phoebebright/django-users"
-Repository = "https://github.com/phoebebright/django-users"
+Homepage = "https://github.com/phoebebright/skorie-news"
+Repository = "https://github.com/phoebebright/skorie-news"
 
 [tool.setuptools]
 include-package-data = true

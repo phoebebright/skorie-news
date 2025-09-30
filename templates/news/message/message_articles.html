@@ -5,7 +5,7 @@
 
 {% block content %}
 
-  <a href="{% url 'newsletter:article-create' message.pk %}" class="btn btn-primary mb-3">Add New Article</a>
+  <a href="{% url 'news:article-create' message.pk %}" class="btn btn-primary mb-3">Add New Article</a>
 
   <ul id="article-list" class="list-group">
     {% for article in articles %}

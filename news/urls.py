@@ -17,10 +17,10 @@ register_converter(EventRefConverter, 'event_ref')
 urlpatterns = [
     # Newsletters
     path("", NewsletterDashboardView.as_view(), name="news-home"),
-    # path("newsletter/list/", NewsletterListView.as_view(), name="newsletter-list"),
-    path("newsletter/add/", NewsletterCreateView.as_view(), name="newsletter-add"),
-    path("newsletter/<int:pk>/edit/", NewsletterUpdateView.as_view(), name="newsletter-edit"),
-    path("newsletter/<int:pk>/delete/", NewsletterDeleteView.as_view(), name="newsletter-delete"),
+    # path("news/list/", NewsletterListView.as_view(), name="news-list"),
+    path("news/add/", NewsletterCreateView.as_view(), name="news-add"),
+    path("news/<int:pk>/edit/", NewsletterUpdateView.as_view(), name="news-edit"),
+    path("news/<int:pk>/delete/", NewsletterDeleteView.as_view(), name="news-delete"),
 
     # Issues
     path("issues/", MessageListView.as_view(), name="issue-list"),
@@ -51,24 +51,24 @@ urlpatterns = [
     path("event/<event_ref:event_ref>/send/", EventSendView.as_view(), name="event-send"),
 
     # Subscriptions
-    path("newsletter/<str:newsletter_slug>/subscribe/", SubscribeWithEmail.as_view(), name="subscribe-with-email-only"),
+    path("news/<str:newsletter_slug>/subscribe/", SubscribeWithEmail.as_view(), name="subscribe-with-email-only"),
     # only used while transferring from icontact - does not require confirmation
     # Subscriptions
-    path("newsletter/<str:newsletter_slug>/subscribe/", SubscribeWithEmailUnconfirmed.as_view(),
+    path("news/<str:newsletter_slug>/subscribe/", SubscribeWithEmailUnconfirmed.as_view(),
          name="subscribe-with-email"),
 
 
     # only used while transferring from icontact - does not require confirmation
     path("resubscribe/", SubscribeWithEmailRedirect.as_view(), name="resubscribe-with-email"),
 
-    path("newsletter/<int:newsletter_pk>/subscription/", UpdateMySubscription.as_view(), name="subscription-update"),
+    path("news/<int:newsletter_pk>/subscription/", UpdateMySubscription.as_view(), name="subscription-update"),
     path(
-        "newsletter/<int:newsletter_pk>/subscriptions/",
+        "news/<int:newsletter_pk>/subscriptions/",
         NewsletterSubscriptionsView.as_view(),
         name="subscriptions-manage",
     ),
     path(
-        "newsletter/<int:newsletter_pk>/subscriptions/<str:action>",
+        "news/<int:newsletter_pk>/subscriptions/<str:action>",
         NewsletterSubscriptionsView.as_view(),
         name="subscriptions-manage",
     ),

@@ -44,27 +44,27 @@ User = get_user_model()
 from news.api import MANAGE_EMAIL_SALT, MANAGE_EMAIL_MAX_AGE
 
 class MixinNewsletterNMessage(object):
-    '''add newsletter and message to context if available'''
+    '''add news and message to context if available'''
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not 'newsletter' in context or not 'message' in context:
-            if hasattr(self, 'object') and hasattr(self.object, 'newsletter'):
-                context['newsletter'] = self.object.newsletter
+        if not 'news' in context or not 'message' in context:
+            if hasattr(self, 'object') and hasattr(self.object, 'news'):
+                context['news'] = self.object.newsletter
             if hasattr(self, 'object') and self.object and hasattr(self.object, 'message'):
                 context['message'] = self.object.message
-                context['newsletter'] = self.object.message.newsletter
+                context['news'] = self.object.message.newsletter
 
             elif 'message_pk' in kwargs:
                 context['message'] = get_object_or_404(Issue, pk=kwargs['message_pk'])
-                context['newsletter'] = context['message'].newsletter
+                context['news'] = context['message'].newsletter
             elif 'message_pk' in self.kwargs:
                 context['message'] = get_object_or_404(Issue, pk=self.kwargs['message_pk'])
-                context['newsletter'] = context['message'].newsletter
+                context['news'] = context['message'].newsletter
         return context
 
 @method_decorator(never_cache, name='dispatch')
 class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
-    template_name = "newsletter/admin/newsletter_dash.html"
+    template_name = "news/admin/newsletter_dash.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -77,15 +77,15 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
         unsub_count = Subscription.objects.filter(
             newsletter=OuterRef("pk"),
             unsubscribed=True,
-        ).values("newsletter").annotate(c=Count("id")).values("c")
+        ).values("news").annotate(c=Count("id")).values("c")
 
         suppressed_count = Subscription.objects.filter(
             newsletter=OuterRef("pk")
-        ).filter(active=False).values("newsletter").annotate(c=Count("id")).values("c")
+        ).filter(active=False).values("news").annotate(c=Count("id")).values("c")
 
         issues_count = Issue.objects.filter(
             newsletter=OuterRef("pk")
-        ).values("newsletter").annotate(c=Count("id")).values("c")
+        ).values("news").annotate(c=Count("id")).values("c")
 
         last_issue = Issue.objects.filter(
             newsletter=OuterRef("pk")
@@ -100,7 +100,7 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
             Newsletter.objects
             .annotate(
                 subscribers_active=Subquery(
-                    active_qs.values("newsletter").annotate(c=Count("id")).values("c"),
+                    active_qs.values("news").annotate(c=Count("id")).values("c"),
                 ),
                 subscribers_unsub=Subquery(unsub_count),
                 subscribers_suppressed=Subquery(suppressed_count),
@@ -127,7 +127,7 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
 #
 # class NewsletterListView(UserCanAdministerMixin, GoNextMixin, ListView):
 #     model = Newsletter
-#     template_name = "newsletter/admin/newsletter_list.html"
+#     template_name = "news/admin/newsletter_list.html"
 #
 #     def get_queryset(self):
 #         qs = (
@@ -144,30 +144,30 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
 class NewsletterCreateView(UserCanAdministerMixin, GoNextMixin,CreateView):
     model = Newsletter
     form_class = NewsletterForm
-    template_name = "newsletter/admin/newsletter_form_create.html"
+    template_name = "news/admin/newsletter_form_create.html"
     success_url = reverse_lazy("news:news-home")
 
 @method_decorator(never_cache, name='dispatch')
 class NewsletterUpdateView(UserCanAdministerMixin, UpdateView):
     model = Newsletter
     form_class = NewsletterForm
-    template_name = "newsletter/admin/newsletter_form.html"
+    template_name = "news/admin/newsletter_form.html"
     success_url = reverse_lazy("news:news-home")
 
 
 class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
     model = Newsletter
-    template_name = "newsletter/admin/newsletter_confirm_delete.html"
+    template_name = "news/admin/newsletter_confirm_delete.html"
     success_url = reverse_lazy("news:news-home")
 
 @method_decorator(never_cache, name='dispatch')
 class MessageListView(UserCanAdministerMixin, ListView):
     model = Issue
     paginate_by = 20
-    template_name = "newsletter/admin/message/../templates/newsletter/admin/issues/message_list.html"
+    template_name = "news/admin/message/../templates/news/admin/issues/message_list.html"
 
     def get_queryset(self):
-        qs = Issue.objects.select_related("newsletter").order_by("-created")
+        qs = Issue.objects.select_related("news").order_by("-created")
         q = self.request.GET.get("q")
         if q:
             qs = qs.filter(subject__icontains=q)
@@ -177,7 +177,7 @@ class MessageListView(UserCanAdministerMixin, ListView):
 class MessageCreateView(UserCanAdministerMixin, CreateView):
     model = Issue
     form_class = MessageForm
-    template_name = "newsletter/admin/issues/issue_form.html"
+    template_name = "news/admin/issues/issue_form.html"
     success_url = reverse_lazy("news:issue-list")
 
     def get_form_kwargs(self):
@@ -186,20 +186,20 @@ class MessageCreateView(UserCanAdministerMixin, CreateView):
         if 'newsletter_pk' in self.kwargs:
             # If a newsletter_pk is provided, set it in the kwargs
             kwargs['initial'] = kwargs.get('initial', {})
-            kwargs['initial']['newsletter'] = self.kwargs['newsletter_pk']
+            kwargs['initial']['news'] = self.kwargs['newsletter_pk']
 
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['newsletter'] = Newsletter.objects.get(pk=self.kwargs['newsletter_pk'])
+        context['news'] = Newsletter.objects.get(pk=self.kwargs['newsletter_pk'])
         return context
 
 @method_decorator(never_cache, name='dispatch')
 class MessageUpdateView(UserCanAdministerMixin, UpdateView):
     model = Issue
     form_class = MessageForm
-    template_name = "newsletter/admin/issues/issue_form.html"
+    template_name = "news/admin/issues/issue_form.html"
     article_formset_class = ArticleForm
     attachment_formset_class = AttachmentForm
     success_url = reverse_lazy("news:issue-list")
@@ -225,7 +225,7 @@ class MessageUpdateView(UserCanAdministerMixin, UpdateView):
                 "submission_status": submission_status,
                 "submissions": submissions,
                 "message": obj,
-                "newsletter": obj.newsletter,
+                "news": obj.newsletter,
             },
         )
 
@@ -266,21 +266,21 @@ class MessageUpdateView(UserCanAdministerMixin, UpdateView):
                 "object": obj,
 
                 "message": obj,
-                "newsletter": obj.newsletter,
+                "news": obj.newsletter,
             },
         )
 
 
 class MessageDeleteView(UserCanAdministerMixin, DeleteView):
     model = Issue
-    template_name = "newsletter/admin/message_confirm_delete.html"
+    template_name = "news/admin/message_confirm_delete.html"
     success_url = reverse_lazy("news:issue-list")
 
 @method_decorator(never_cache, name='dispatch')
 class MessagePreviewView(UserCanAdministerMixin, View):
     """Show HTML + text preview of a Message, with Queue button."""
 
-    template_name = "newsletter/admin/message/message_preview.html"
+    template_name = "news/admin/message/message_preview.html"
 
     def get(self, request, pk):
         message = get_object_or_404(Issue, pk=pk)
@@ -298,10 +298,10 @@ class MessagePreviewView(UserCanAdministerMixin, View):
 class SubmissionListView(UserCanAdministerMixin, ListView):
     model = Mailing
     paginate_by = 20
-    template_name = "newsletter/admin/submission_list.html"
+    template_name = "news/admin/submission_list.html"
 
     def get_queryset(self):
-        return Mailing.objects.select_related("message", "newsletter").order_by("-prepared")
+        return Mailing.objects.select_related("message", "news").order_by("-prepared")
 
 
 
@@ -309,7 +309,7 @@ class SubmissionListView(UserCanAdministerMixin, ListView):
 def issue_queue_submission(request: HttpRequest, pk: int) -> HttpResponse:
     """Create or reuse a Submission for a Message and set it queued.
 
-    NOTE: django-newsletter actually sends via the management command
+    NOTE: django-news actually sends via the management command
     `submit_newsletter`. This view only creates the Submission and marks
     it QUEUED, so your scheduled job will send it.
     """
@@ -331,10 +331,10 @@ def issue_queue_submission(request: HttpRequest, pk: int) -> HttpResponse:
     return redirect("news:submission-list")
 
 class SubscriptionThanks(TemplateView):
-    template_name = "newsletter/user/subscription_thanks.html"
+    template_name = "news/user/subscription_thanks.html"
 
 class SubscriberManageView(UserCanAdministerMixin, TemplateView):
-    template_name = "newsletter/admin/subscriptions_manage.html"
+    template_name = "news/admin/subscriptions_manage.html"
     paginate_by = 25
 
     def get_context_data(self, **kwargs):
@@ -377,7 +377,7 @@ class SubscriberManageView(UserCanAdministerMixin, TemplateView):
         }
 
         context.update({
-            "newsletter": nl,
+            "news": nl,
             "q": q,
             "status": status,
             "page_obj": page_obj,
@@ -399,14 +399,14 @@ class SubscriberManageView(UserCanAdministerMixin, TemplateView):
 @method_decorator(never_cache, name='dispatch')
 class NewsletterSubscriptionsView(MixinNewsletterNMessage, UserCanAdministerMixin, View):
     """
-    Admin page to manage subscriptions for a single newsletter:
+    Admin page to manage subscriptions for a single news:
     - List (with search + paginate)
     - Add single subscriber
     - Bulk import CSV
     - Delete selected
     - Export CSV
     """
-    template_name = "newsletter/admin/subscriptions_manage.html"
+    template_name = "news/admin/subscriptions_manage.html"
     paginate_by = 100
 
 
@@ -414,7 +414,7 @@ class NewsletterSubscriptionsView(MixinNewsletterNMessage, UserCanAdministerMixi
         object = get_object_or_404(Newsletter, pk=newsletter_pk)
 
         context = {
-            "newsletter": object,
+            "news": object,
             "form_add": SubscriptionForm(),
 
         }
@@ -553,29 +553,29 @@ class NewsletterSubscriptionsView(MixinNewsletterNMessage, UserCanAdministerMixi
 
 class MySubscriptions(LoginRequiredMixin, ListView):
     model = Subscription
-    template_name = "newsletter/user/my_subscriptions.html"
+    template_name = "news/user/my_subscriptions.html"
 
     def get_queryset(self):
         return Subscription.objects.filter(user=self.request.user).order_by("-created")
 
 class UpdateMySubscription(LoginRequiredMixin, GoNextTemplateMixin, TemplateView):
 
-    template_name = "newsletter/user/my_subscription_form.html"
+    template_name = "news/user/my_subscription_form.html"
 
 
     def get_context_data(self, newsletter_pk):
         context = super().get_context_data()
 
-        context['newsletter'] = get_object_or_404(Newsletter, pk=newsletter_pk)
+        context['news'] = get_object_or_404(Newsletter, pk=newsletter_pk)
         try:
-            context['subscription'] = Subscription.objects.get(user=self.request.user, newsletter=context['newsletter'])
+            context['subscription'] = Subscription.objects.get(user=self.request.user, newsletter=context['news'])
         except Subscription.DoesNotExist:
             raise Http404("No subscription found")
         return context
 
 class SubscribeWithEmailRedirect(RedirectView):
     """
-    Redirect to /newsletter/<newsletter_pk>/subscribe?email=...&name=...&next=...
+    Redirect to /news/<newsletter_pk>/subscribe?email=...&name=...&next=...
 
     This is a convenience view to allow email links like
     /news/subscribe/<newsletter_pk>/?email=...&name=...&next=...
@@ -597,7 +597,7 @@ class SubscribeWithEmailRedirect(RedirectView):
 class SubscribeWithEmailUnconfirmed(View):
     '''this is the normal route that includes seding an email for confirmation'''
     confirm_immediately = False
-    confirm_message = "Confirmed I want to continue to receive emailed newsletter."
+    confirm_message = "Confirmed I want to continue to receive emailed news."
     confirm_source = "email-link"
 
     def get(self, request, newsletter_slug ):
@@ -645,7 +645,7 @@ class SubscribeWithEmailUnconfirmed(View):
 
 class SubscribeWithEmail(SubscribeWithEmailUnconfirmed):
     """
-    GET /newsletter/<newsletter_pk>/subscribe?email=<addr>&name=<optional>&next=<url>
+    GET /news/<newsletter_pk>/subscribe?email=<addr>&name=<optional>&next=<url>
 
     Behavior:
       - If a User with this email exists: ensure a user-linked Subscription.
@@ -660,7 +660,7 @@ class SubscribeWithEmail(SubscribeWithEmailUnconfirmed):
     confirm_source = "icontact-email-link"
 
 class MessageArticlesView(MixinNewsletterNMessage, ListView):
-    template_name = "newsletter/message/message_articles.html"
+    template_name = "news/message/message_articles.html"
     context_object_name = "articles"
 
 
@@ -676,7 +676,7 @@ class MessageArticlesView(MixinNewsletterNMessage, ListView):
 # class ArticleCreateView(MixinNewsletterNMessage, CreateView):
 #     model = Article
 #     form_class = ArticleForm
-#     template_name = "newsletter/message/article_form.html"
+#     template_name = "news/message/article_form.html"
 #
 #     def form_valid(self, form):
 #         message = get_object_or_404(Message, pk=self.kwargs["message_pk"])
@@ -689,14 +689,14 @@ class MessageArticlesView(MixinNewsletterNMessage, ListView):
 # class ArticleUpdateView(MixinNewsletterNMessage, UpdateView):
 #     model = Article
 #     form_class = ArticleForm
-#     template_name = "newsletter/message/article_form.html"
+#     template_name = "news/message/article_form.html"
 #
 #     def get_success_url(self):
 #         return reverse_lazy("news:message-articles", args=[self.object.post.pk])
 #
 # class ArticleDeleteView(MixinNewsletterNMessage,DeleteView):
 #     model = Article
-#     template_name = "newsletter/message/article_confirm_delete.html"
+#     template_name = "news/message/article_confirm_delete.html"
 #
 #     def get_success_url(self):
 #         return reverse_lazy("news:message-articles", args=[self.object.post.pk])
@@ -707,7 +707,7 @@ class MessageArticlesView(MixinNewsletterNMessage, ListView):
 
 class ArticleListView(ListView):
     model = Article
-    template_name = "newsletter/admin/article/article_list.html"
+    template_name = "news/admin/article/article_list.html"
     context_object_name = "articles"
     paginate_by = 20
 
@@ -717,7 +717,7 @@ class ArticleListView(ListView):
 class ArticleEditView(UpdateView):
     model = Article
     form_class = ArticleForm
-    template_name = "newsletter/admin/article/article_edit.html"
+    template_name = "news/admin/article/article_edit.html"
 
     def get_object(self, queryset=None):
         if "pk" in self.kwargs:
@@ -744,7 +744,7 @@ class ArticleEditView(UpdateView):
 
 
 class EventSendView(UserCanOrganiseEventMixin, View):
-    template_name = "newsletter/message/event_send.html"
+    template_name = "news/message/event_send.html"
 
     def get(self, request, event_ref):
         dispatch = EventDispatch(event=self.event, creator=request.user)
@@ -835,7 +835,7 @@ class EventSendView(UserCanOrganiseEventMixin, View):
 
 
 class IssueListView(UserCanAdministerMixin, TemplateView):
-    template_name = "newsletter/admin/issues/issue_list.html"
+    template_name = "news/admin/issues/issue_list.html"
     paginate_by = 20
 
     def get_context_data(self, **kwargs):
@@ -851,7 +851,7 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
             Issue.objects
             .filter(newsletter=nl)
             .annotate(latest_status=Coalesce(latest_status, Value("", output_field=CharField())))
-            .select_related("newsletter")
+            .select_related("news")
             .order_by("-created")
         )
 
@@ -868,7 +868,7 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
         }
 
         context.update({
-            "newsletter": nl,
+            "news": nl,
             "issues": issues,
             "counts": counts,
         })
@@ -876,18 +876,18 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
 
 class IssueCreateView(UserCanAdministerMixin, TemplateView):
     """
-    Step 1: choose newsletter + title
+    Step 1: choose news + title
     Step 2 (on same page): pick/add articles, order, mark appear_in_blog
     """
-    template_name = "newsletter/admin/issues/issue_form.html"
+    template_name = "news/admin/issues/issue_form.html"
 
     def get(self, request, newsletter_pk):
         nl = get_object_or_404(Newsletter, id=newsletter_pk)
-        form = IssueForm(initial={"newsletter": nl})
+        form = IssueForm(initial={"news": nl})
         # “library”: templates first, then recent
         library = Article.objects.all().order_by("-is_template", "-updated")[:50]
         return render(request, self.template_name, {
-            "newsletter": nl,
+            "news": nl,
             "form": form,
             "issue": None,
             "library": library,
@@ -900,7 +900,7 @@ class IssueCreateView(UserCanAdministerMixin, TemplateView):
         if not form.is_valid():
             library = Article.objects.all().order_by("-is_template", "-updated")[:50]
             return render(request, self.template_name, {
-                "newsletter": nl, "form": form, "issue": None, "library": library, "articles": [],
+                "news": nl, "form": form, "issue": None, "library": library, "articles": [],
             })
         issue = form.save()
         messages.success(request, "Issue created. Add articles below, then Queue or Publish.")
@@ -915,12 +915,12 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
         """
         model = Issue
         form_class = IssueForm
-        template_name = "newsletter/admin/issues/issue_form.html"
+        template_name = "news/admin/issues/issue_form.html"
         pk_url_kwarg = "pk"
 
         def get_queryset(self):
-            # keep newsletter handy
-            return Issue.objects.select_related("newsletter")
+            # keep news handy
+            return Issue.objects.select_related("news")
 
         def get_context_data(self, **kwargs):
             context = super().get_context_data(**kwargs)
@@ -936,7 +936,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
                 issue.issue_articles.select_related("article").order_by("position", "id")
             )
 
-            context["newsletter"] = issue.newsletter
+            context["news"] = issue.newsletter
             context["submission"] = issue.active_mailing if issue else None
             return context
 
@@ -956,7 +956,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
     #     # current ordered articles
     #     links = issue.issue_articles.select_related("article").order_by("position", "id")
     #     return render(request, self.template_name, {
-    #         "newsletter": issue.newsletter,
+    #         "news": issue.news,
     #         "form": form,
     #         "issue": issue,
     #         "library": library,
@@ -965,7 +965,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
     #     })
     #
     # def post(self, request, pk):
-    #     # update basics (title/newsletter)
+    #     # update basics (title/news)
     #     issue = get_object_or_404(Issue, pk=pk)
     #     form = IssueForm(request.POST, instance=issue)
     #     if form.is_valid():
@@ -975,17 +975,17 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
     #     library = Article.objects.all().order_by("-is_template", "-updated")[:50]
     #     links = issue.issue_articles.select_related("article").order_by("position", "id")
     #     return render(request, self.template_name, {
-    #         "newsletter": issue.newsletter, "form": form, "issue": issue, "library": library, "articles": links,
+    #         "news": issue.news, "form": form, "issue": issue, "library": library, "articles": links,
     #         "submission": issue.active_mailing,
     #     })
 
 class IssuePreviewView(DetailView):
     model = Issue
-    template_name = "newsletter/admin/issues/issue_preview.html"
+    template_name = "news/admin/issues/issue_preview.html"
     context_object_name = "issue"
 
     def get_queryset(self):
-        return super().get_queryset().select_related("newsletter").prefetch_related("issue_articles__article")
+        return super().get_queryset().select_related("news").prefetch_related("issue_articles__article")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1025,7 +1025,7 @@ class ManageSubscriptionsView(TemplateView):
       - For guests: a form to request an unsubscribe email for email-only subscriptions
     Also the landing page after subscribe/unsubscribe (use messages framework).
     """
-    template_name = "newsletter/user/manage_subscriptions.html"
+    template_name = "news/user/manage_subscriptions.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1040,7 +1040,7 @@ class UnsubscribeView(TemplateView):
     GET /news/unsubscribe/confirm/<pk>/<code>/
     Confirms the email-only unsubscribe immediately and shows a friendly page.
     """
-    template_name = "newsletter/user/unsubscribe_confirmed.html"
+    template_name = "news/user/unsubscribe_confirmed.html"
 
     def dispatch(self, request, *args, **kwargs):
         sub = get_object_or_404(Subscription, pk=kwargs["pk"], activation_code=kwargs["code"])
@@ -1058,7 +1058,7 @@ class UnsubscribeView(TemplateView):
         return context
 
 class ConfirmSubscribeView(TemplateView):
-    template_name = "newsletter/user/subscribe_confirmed.html"
+    template_name = "news/user/subscribe_confirmed.html"
 
     def dispatch(self, request, *args, **kwargs):
         sub = get_object_or_404(
@@ -1084,7 +1084,7 @@ class ConfirmSubscribeView(TemplateView):
 
 @method_decorator(never_cache, name='dispatch')
 class SendFromTemplateView(UserCanAdministerMixin, TemplateView):
-    template_name = "newsletter/admin/email/send_email_with_template.html"
+    template_name = "news/admin/email/send_email_with_template.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1130,7 +1130,7 @@ class SendFromTemplateView(UserCanAdministerMixin, TemplateView):
 
 
 class AdminNewsletterDownloadView(UserCanAdministerMixin, TemplateView):
-    template_name = "newsletter/admin/subscriber_downloads.html"
+    template_name = "news/admin/subscriber_downloads.html"
 
     def dispatch(self, request, *args, **kwargs):
         # Example guard; replace with your UserCanAdministerMixin if you have it
@@ -1153,7 +1153,7 @@ class AdminNewsletterDownloadView(UserCanAdministerMixin, TemplateView):
             return self._build_download_response(newsletter, scope, fmt)
 
         # Otherwise render the page
-        return render(request, self.template_name, {"newsletter": newsletter, "form": form})
+        return render(request, self.template_name, {"news": newsletter, "form": form})
 
     # ---------- helpers ----------
 

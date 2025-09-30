@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('body_html', models.TextField(blank=True)),
                 ('body_text', models.TextField(blank=True)),
                 ('url', models.URLField(blank=True, null=True)),
-                ('image', models.ImageField(blank=True, null=True, upload_to='newsletter/articles/')),
+                ('image', models.ImageField(blank=True, null=True, upload_to='news/articles/')),
                 ('image_position', models.CharField(choices=[('above', 'Above text'), ('below', 'Below text'), ('left', 'Left of text'), ('right', 'Right of text')], default='above', max_length=10)),
                 ('is_template', models.BooleanField(default=False)),
                 ('creator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_creator', to=settings.AUTH_USER_MODEL)),
@@ -126,7 +126,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Created Date')),
                 ('updated', models.DateTimeField(blank=True, db_index=True, editable=False, null=True, verbose_name='Updated Date')),
                 ('event_ref', models.CharField(blank=True, db_index=True, max_length=5, null=True)),
-                ('title', models.CharField(max_length=200, verbose_name='newsletter title')),
+                ('title', models.CharField(max_length=200, verbose_name='news title')),
                 ('slug', models.SlugField(unique=True)),
                 ('email', models.EmailField(help_text='Sender e-mail', max_length=254, verbose_name='e-mail')),
                 ('sender', models.CharField(help_text='Sender name', max_length=200, verbose_name='sender')),
@@ -138,15 +138,15 @@ class Migration(migrations.Migration):
                 ('updator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_updator', to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'verbose_name': 'newsletter',
+                'verbose_name': 'news',
                 'verbose_name_plural': 'newsletters',
                 'ordering': ['title'],
             },
         ),
         migrations.AddField(
             model_name='message',
-            name='newsletter',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='issues', to='news.newsletter'),
+            name='news',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='issues', to='news.news'),
         ),
         migrations.CreateModel(
             name='Submission',
@@ -159,7 +159,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('0', 'Inactive'), ('1', 'Queued'), ('2', 'Sending'), ('3', 'Sent'), ('9', 'Error')], default='1', max_length=1)),
                 ('creator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_creator', to=settings.AUTH_USER_MODEL)),
                 ('message', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='news.message')),
-                ('newsletter', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='news.newsletter')),
+                ('news', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='news.news')),
                 ('updator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_updator', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -198,7 +198,7 @@ class Migration(migrations.Migration):
                 ('unsubscribed', models.BooleanField(db_index=True, default=False)),
                 ('unsubscribe_date', models.DateTimeField(blank=True, null=True)),
                 ('creator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_creator', to=settings.AUTH_USER_MODEL)),
-                ('newsletter', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subscriptions', to='news.newsletter')),
+                ('news', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subscriptions', to='news.news')),
                 ('updator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_updator', to=settings.AUTH_USER_MODEL)),
                 ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
@@ -218,16 +218,16 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='message',
-            unique_together={('slug', 'newsletter')},
+            unique_together={('slug', 'news')},
         ),
 
 
         migrations.AddConstraint(
             model_name='subscription',
-            constraint=models.UniqueConstraint(condition=models.Q(('user__isnull', False)), fields=('newsletter', 'user'), name='uniq_newsletter_user'),
+            constraint=models.UniqueConstraint(condition=models.Q(('user__isnull', False)), fields=('news', 'user'), name='uniq_newsletter_user'),
         ),
         migrations.AddConstraint(
             model_name='subscription',
-            constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
+            constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('news', 'email'), name='uniq_newsletter_email'),
         ),
     ]
