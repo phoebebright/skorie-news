@@ -15,7 +15,7 @@
 
         {% endcomment %}
     {% else %}
-        <form enctype="multipart/form-data" method="post" action=".">
+        <form enctype="multipart/form-data" method="post" action="">
             {% csrf_token %}
         {% bootstrap_form form %}
 
