@@ -1,0 +1,91 @@
+{# templates/news/admin/issue_list.html #}
+{% extends "admin/newsletter_base.html" %}
+
+{% block page_header %}Issues — {{ newsletter.title }}{% endblock %}
+
+{% block content %}
+
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th>Created</th>
+          <th>Published</th>
+          <th>Submission</th>
+          <th class="text-end" style="width: 280px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in issues %}
+        <tr data-id="{{ item.id }}">
+          <td class="fw-semibold">
+            {{ item.title }}<br>
+            <span class="small text-muted">{{ item.slug }}</span>
+          </td>
+          <td class="small text-muted">{{ item.created|date:"Y-m-d H:i" }}</td>
+          <td class="small">{% if item.published_at %}{{ item.published_at|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+          <td>
+            {% if item.latest_status == "1" %}
+              <span class="badge bg-warning text-dark">Queued</span>
+            {% elif itemlatest_status == "2" %}
+              <span class="badge bg-info text-dark">Sending</span>
+            {% elif item.latest_status == "3" %}
+              <span class="badge bg-success">Sent</span>
+            {% elif item.latest_status == "9" %}
+              <span class="badge bg-danger">Error</span>
+            {% else %}
+              <span class="badge bg-secondary">Draft</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a class="btn btn-outline-secondary" href="{% url 'news:issue-edit' item.id %}">Edit</a>
+              <button class="btn btn-outline-secondary goto_url" data-url="{% url "news:issue-preview" item.pk %}?next={{ request.path|urlencode }}">Preview</button>
+              {% if m.latest_status == "1" or m.latest_status == "2" %}
+                <button class="btn btn-outline-primary goto_url" disabled title="Already queued">Queue</button>
+              {% else %}
+                <button class="btn btn-outline-primary goto_url" data-url="{% url "news:issue-queue" item.pk %}?next={{ request.path|urlencode }}">Queue</button>
+              {% endif %}
+              <button class="btn btn-outline-secondary disabled">Publish</button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No issues found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+(function($){
+  $(function(){
+
+    function go() {
+      var q = $.trim($('#q').val() || '');
+      var status = $('#status').val();
+      var url = new URL(window.location.href);
+      url.searchParams.set('q', q);
+      url.searchParams.set('status', status);
+      url.searchParams.delete('page');
+      window.location = url.toString();
+    }
+
+    $('#q').on('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); go(); }});
+    $('#status').on('change', go);
+
+
+
+
+  });
+})(jQuery);
+</script>
+{% endblock %}

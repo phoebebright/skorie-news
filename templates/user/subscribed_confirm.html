@@ -1,0 +1,9 @@
+{# templates/news/public/subscribe_confirmed.html #}
+{% extends "base.html" %}
+{% block page_header %}Subscription confirmed{% endblock %}
+{% block content %}
+  <div class="alert alert-success">
+    You’re now subscribed to <strong>{{ subscription.newsletter.title }}</strong>.
+  </div>
+  <p><a href="{% url 'news:manage-subs' %}" class="btn btn-outline-primary btn-sm">Manage subscriptions</a></p>
+{% endblock %}

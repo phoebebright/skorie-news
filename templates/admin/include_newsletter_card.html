@@ -1,0 +1,43 @@
+      <div class="col nl-card" data-title="{{ nl.title|lower }}">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex align-items-start justify-content-between">
+              <h5 class="card-title mb-1">{{ nl.title }}</h5>
+
+        <!-- Context-menu trigger (ellipsis) -->
+        <a href="#" class="newsmenu"
+                data-nl-id="{{ nl.id }}"
+                data-nl-slug="{{ nl.slug }}"
+                data-url-edit="{% url 'news:news-edit' nl.id %}?next={{ request.path|urlencode }}"
+                data-url-issues="{% url 'news:issue-list' nl.id %}?next={{ request.path|urlencode }}"
+                data-url-issue-add="{% url 'news:issue-add' nl.id %}?next={{ request.path|urlencode }}"
+                data-url-subs="{% url 'news:subscriptions-manage' nl.id %}?next={{ request.path|urlencode }}"
+                data-url-import="#"
+                data-url-downloads="{% url 'news:subscribers-download' nl.id %}?next={{ request.path|urlencode }}"
+                data-url-archive="{{ nl.get_absolute_url }}?next={{ request.path|urlencode }}"
+        >
+  <i class="bi bi-three-dots-vertical"></i>
+        </a>
+
+              {% if nl.has_pending %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+            </div>
+            <div class="text-muted small mb-2">{{ nl.slug }}</div>
+
+            <ul class="list-unstyled small mb-3">
+              <li><strong>{{ nl.subscribers_active }}</strong> active subscribers</li>
+              <li><strong>{{ nl.subscribers_unsub }}</strong> unsubscribed</li>
+              <li><strong>{{ nl.subscribers_suppressed }}</strong> suppressed</li>
+              <li><strong>{{ nl.issues_total }}</strong> total issues</li>
+              <li>Last issue: {{ nl.last_issue_at|date:"Y-m-d H:i" | default:"—" }}</li>
+            </ul>
+
+      <!-- Remove the old buttons; context menu replaces them -->
+      <div class="mt-auto"></div>
+          </div>
+          <div class="card-footer small text-muted">
+            From: {{ nl.sender }} &lt;{{ nl.email }}&gt;
+          </div>
+        </div>
+      </div>
