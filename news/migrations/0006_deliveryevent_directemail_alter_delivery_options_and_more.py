@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('news', '0005_remove_subscription_sub_user_xor_email_not_both_and_more'),
-        ('web', '0007_remove_commstemplate_template_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

@@ -5,3 +5,4 @@ djangorestframework
 djangorestframework-api-key
 
 git+https://github.com/phoebebright/django-docserve
+django-anymail[mailgun]
