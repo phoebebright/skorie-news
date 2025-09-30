@@ -28,6 +28,7 @@ class mail:
         reply_to: Optional[Sequence[str]] = None,
         scheduled_time=None,
         backend: Optional[str] = None,
+            user = None, # the skorie user sending the email (may not be the sender on the email)
             receiver=None,   # User instance - only where there is one recipient, might need to rethink this.
         **kwargs,
     ):
@@ -48,10 +49,13 @@ class mail:
                 body_html=html_message or "",
                 template=template,
                 receiver=receiver,
+                creator=user,
                 # store any headers you care about in context or add a headers JSONField
             )
             if context:
                 email.render(context, save=True)
+            else:
+                email.save()
 
             deliveries.append(email.send())
 
