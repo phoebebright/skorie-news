@@ -856,7 +856,7 @@ class Issue(CreatedUpdatedMixin):
     class Meta:
         verbose_name = _("message")
         verbose_name_plural = _("messages")
-        unique_together = ("slug", "news")
+        unique_together = ("slug", "newsletter")
         ordering = ["-created"]
 
     def __str__(self):

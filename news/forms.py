@@ -34,16 +34,6 @@ class NewsletterForm(forms.ModelForm):
         return instance
 
 
-class MessageForm(forms.ModelForm):
-    class Meta:
-        model = Issue
-        fields = ['title',]
-
-    def save(self, commit=True):
-
-        instance = super().save(commit=True)
-
-        return instance
 
 
 class IssueForm(forms.ModelForm):
@@ -103,10 +93,6 @@ class DispatchForm(forms.ModelForm):
         ]
 
 
-class MessageForm(forms.ModelForm):
-    class Meta:
-        model = Issue
-        fields = ["title",  "news", "published_at", ]
 
 IssueArticleFormSet = inlineformset_factory(
     parent_model=Issue,

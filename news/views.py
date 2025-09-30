@@ -36,7 +36,7 @@ from tools.permission_mixins import UserCanOrganiseEventMixin
 from users.models import VerificationCode
 from web.models import Event, CommsTemplate
 from web.views import is_superuser
-from .forms import NewsletterForm, MessageForm, CSVImportForm, SubscriptionForm, \
+from .forms import NewsletterForm,  CSVImportForm, SubscriptionForm, \
     ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm
 
 User = get_user_model()
@@ -159,138 +159,138 @@ class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
     model = Newsletter
     template_name = "news/admin/newsletter_confirm_delete.html"
     success_url = reverse_lazy("news:news-home")
-
-@method_decorator(never_cache, name='dispatch')
-class MessageListView(UserCanAdministerMixin, ListView):
-    model = Issue
-    paginate_by = 20
-    template_name = "news/admin/message/../templates/news/admin/issues/message_list.html"
-
-    def get_queryset(self):
-        qs = Issue.objects.select_related("news").order_by("-created")
-        q = self.request.GET.get("q")
-        if q:
-            qs = qs.filter(subject__icontains=q)
-        return qs
-
-
-class MessageCreateView(UserCanAdministerMixin, CreateView):
-    model = Issue
-    form_class = MessageForm
-    template_name = "news/admin/issues/issue_form.html"
-    success_url = reverse_lazy("news:issue-list")
-
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = super().get_form_kwargs()
-        if 'newsletter_pk' in self.kwargs:
-            # If a newsletter_pk is provided, set it in the kwargs
-            kwargs['initial'] = kwargs.get('initial', {})
-            kwargs['initial']['news'] = self.kwargs['newsletter_pk']
-
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['news'] = Newsletter.objects.get(pk=self.kwargs['newsletter_pk'])
-        return context
-
-@method_decorator(never_cache, name='dispatch')
-class MessageUpdateView(UserCanAdministerMixin, UpdateView):
-    model = Issue
-    form_class = MessageForm
-    template_name = "news/admin/issues/issue_form.html"
-    article_formset_class = ArticleForm
-    attachment_formset_class = AttachmentForm
-    success_url = reverse_lazy("news:issue-list")
-
-
-    def get(self, request, *args, **kwargs):
-        obj = self.get_object()
-        form = self.form_class(instance=obj)
-        articles = self.article_formset_class(instance=obj, prefix="articles")
-        attachments = self.attachment_formset_class(instance=obj, prefix="files")
-        submission = obj.active_mailing
-        submission_status = submission.get_status_display() if submission else None
-        submissions = obj.submission_set.all().order_by('-publish_date')
-        return render(
-            request,
-            self.template_name,
-            {
-                "form": form,
-                "articles": articles,
-                "attachments": attachments,
-                "object": obj,
-                "submission": submission,
-                "submission_status": submission_status,
-                "submissions": submissions,
-                "message": obj,
-                "news": obj.newsletter,
-            },
-        )
-
-    def post(self, request, *args, **kwargs):
-        obj = self.get_object()
-        form = self.form_class(request.POST, instance=obj)
-        articles = self.article_formset_class(request.POST, instance=obj, prefix="articles")
-        attachments = self.attachment_formset_class(
-            request.POST, request.FILES, instance=obj, prefix="files"
-        )
-
-        if form.is_valid() and articles.is_valid() and attachments.is_valid():
-            with transaction.atomic():
-                msg = form.save()  # save parent first to get a PK
-                articles.instance = msg
-                attachments.instance = msg
-                articles.save()
-                attachments.save()
-
-            messages.success(
-                request,
-                "Message saved with {} article(s) and {} attachment(s).".format(
-                    articles.total_form_count() - len(articles.deleted_forms),
-                    attachments.total_form_count() - len(attachments.deleted_forms),
-                ),
-            )
-            return redirect(self.success_url)
-
-        # fall-through: re-render with errors
-        return render(
-            request,
-            self.template_name,
-
-            {
-                "form": form,
-                "articles": articles,
-                "attachments": attachments,
-                "object": obj,
-
-                "message": obj,
-                "news": obj.newsletter,
-            },
-        )
-
-
-class MessageDeleteView(UserCanAdministerMixin, DeleteView):
-    model = Issue
-    template_name = "news/admin/message_confirm_delete.html"
-    success_url = reverse_lazy("news:issue-list")
-
-@method_decorator(never_cache, name='dispatch')
-class MessagePreviewView(UserCanAdministerMixin, View):
-    """Show HTML + text preview of a Message, with Queue button."""
-
-    template_name = "news/admin/message/message_preview.html"
-
-    def get(self, request, pk):
-        message = get_object_or_404(Issue, pk=pk)
-        return render(
-            request,
-            self.template_name,
-            {
-                "message": message,
-            },
-        )
+#
+# @method_decorator(never_cache, name='dispatch')
+# class MessageListView(UserCanAdministerMixin, ListView):
+#     model = Issue
+#     paginate_by = 20
+#     template_name = "news/admin/message/../templates/news/admin/issues/message_list.html"
+#
+#     def get_queryset(self):
+#         qs = Issue.objects.select_related("news").order_by("-created")
+#         q = self.request.GET.get("q")
+#         if q:
+#             qs = qs.filter(subject__icontains=q)
+#         return qs
+#
+#
+# class MessageCreateView(UserCanAdministerMixin, CreateView):
+#     model = Issue
+#     form_class = MessageForm
+#     template_name = "news/admin/issues/issue_form.html"
+#     success_url = reverse_lazy("news:issue-list")
+#
+#     def get_form_kwargs(self):
+#         """Return the keyword arguments for instantiating the form."""
+#         kwargs = super().get_form_kwargs()
+#         if 'newsletter_pk' in self.kwargs:
+#             # If a newsletter_pk is provided, set it in the kwargs
+#             kwargs['initial'] = kwargs.get('initial', {})
+#             kwargs['initial']['news'] = self.kwargs['newsletter_pk']
+#
+#         return kwargs
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['news'] = Newsletter.objects.get(pk=self.kwargs['newsletter_pk'])
+#         return context
+#
+# @method_decorator(never_cache, name='dispatch')
+# class MessageUpdateView(UserCanAdministerMixin, UpdateView):
+#     model = Issue
+#     form_class = MessageForm
+#     template_name = "news/admin/issues/issue_form.html"
+#     article_formset_class = ArticleForm
+#     attachment_formset_class = AttachmentForm
+#     success_url = reverse_lazy("news:issue-list")
+#
+#
+#     def get(self, request, *args, **kwargs):
+#         obj = self.get_object()
+#         form = self.form_class(instance=obj)
+#         articles = self.article_formset_class(instance=obj, prefix="articles")
+#         attachments = self.attachment_formset_class(instance=obj, prefix="files")
+#         submission = obj.active_mailing
+#         submission_status = submission.get_status_display() if submission else None
+#         submissions = obj.submission_set.all().order_by('-publish_date')
+#         return render(
+#             request,
+#             self.template_name,
+#             {
+#                 "form": form,
+#                 "articles": articles,
+#                 "attachments": attachments,
+#                 "object": obj,
+#                 "submission": submission,
+#                 "submission_status": submission_status,
+#                 "submissions": submissions,
+#                 "message": obj,
+#                 "news": obj.newsletter,
+#             },
+#         )
+#
+#     def post(self, request, *args, **kwargs):
+#         obj = self.get_object()
+#         form = self.form_class(request.POST, instance=obj)
+#         articles = self.article_formset_class(request.POST, instance=obj, prefix="articles")
+#         attachments = self.attachment_formset_class(
+#             request.POST, request.FILES, instance=obj, prefix="files"
+#         )
+#
+#         if form.is_valid() and articles.is_valid() and attachments.is_valid():
+#             with transaction.atomic():
+#                 msg = form.save()  # save parent first to get a PK
+#                 articles.instance = msg
+#                 attachments.instance = msg
+#                 articles.save()
+#                 attachments.save()
+#
+#             messages.success(
+#                 request,
+#                 "Message saved with {} article(s) and {} attachment(s).".format(
+#                     articles.total_form_count() - len(articles.deleted_forms),
+#                     attachments.total_form_count() - len(attachments.deleted_forms),
+#                 ),
+#             )
+#             return redirect(self.success_url)
+#
+#         # fall-through: re-render with errors
+#         return render(
+#             request,
+#             self.template_name,
+#
+#             {
+#                 "form": form,
+#                 "articles": articles,
+#                 "attachments": attachments,
+#                 "object": obj,
+#
+#                 "message": obj,
+#                 "news": obj.newsletter,
+#             },
+#         )
+#
+#
+# class MessageDeleteView(UserCanAdministerMixin, DeleteView):
+#     model = Issue
+#     template_name = "news/admin/message_confirm_delete.html"
+#     success_url = reverse_lazy("news:issue-list")
+#
+# @method_decorator(never_cache, name='dispatch')
+# class MessagePreviewView(UserCanAdministerMixin, View):
+#     """Show HTML + text preview of a Message, with Queue button."""
+#
+#     template_name = "news/admin/message/message_preview.html"
+#
+#     def get(self, request, pk):
+#         message = get_object_or_404(Issue, pk=pk)
+#         return render(
+#             request,
+#             self.template_name,
+#             {
+#                 "message": message,
+#             },
+#         )
 
 
 
