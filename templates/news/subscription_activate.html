@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load bootstrap5 %}
+
+{% block title %}{% trans "Newsletter" %} {{ newsletter.title }} {{ action }} {% trans "activate" %}{% endblock title %}
+
+{% block page_header %}{% trans "Newsletter" %} {{ newsletter.title }} {{ action }} {% trans "activate" %}{% endblock %}
+{% block content %}
+    <form enctype="multipart/form-data" method="post" action=".">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <input id="id_submit" name="submit" value="{% trans "Activate" %}" type="submit" class="btn btn-primary" />
+    </form>
+{% endblock  %}

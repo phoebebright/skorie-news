@@ -1,0 +1,6 @@
+{% for ma in message.message_articles.all %}
+  {% include "newsletter/message/include_article_block.html" with article=ma.article %}
+  <hr style="border:0;border-top:1px solid #eee;margin:16px 0;">
+{% empty %}
+  <p class="text-muted">No articles added yet.</p>
+{% endfor %}

@@ -1,0 +1,5 @@
+{# templates/news/email/manage_link.txt #}
+Manage your subscriptions:
+{{ manage_url }}
+
+If you didn’t request this, you can ignore this email.

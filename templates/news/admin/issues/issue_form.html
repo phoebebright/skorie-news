@@ -1,0 +1,289 @@
+{% extends "admin/newsletter_base.html" %}
+{% load bootstrap5 %}
+
+{% block page_header %}{% if issue %}Edit Issue – {{ issue.title }}{% else %}Create Issue – {{ newsletter.title }}{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="post" id="issue-form" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+                    <!-- Left column: fields -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                            {{ form.title }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.newsletter.id_for_label }}" class="form-label">Newsletter</label>
+                            {{ form.newsletter }}
+                        </div>
+                    </div>
+
+                    <!-- Right column: actions -->
+                    <div class="col-md-6 d-flex flex-column gap-3">
+
+                        <div>
+                            <button class="btn btn-primary w-100" type="submit">Save</button>
+                        </div>
+
+                        {% if form.instance.pk %}
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{% url 'news:issue-preview' form.instance.pk %}"
+                                   target="_blank"
+                                   class="btn btn-outline-info flex-fill">
+                                    Preview
+                                </a>
+
+                                <button type="button" class="btn btn-outline-primary flex-fill" id="btn-queue">
+                                    Queue
+                                </button>
+
+                                <button type="button" class="btn btn-outline-secondary flex-fill" id="btn-publish">
+                                    Publish to Blog
+                                </button>
+                            </div>
+
+                            <div>
+                                <label for="test-email" class="form-label">Send Test</label>
+                                <div class="input-group">
+                                    <input type="email" id="test-email" class="form-control" placeholder="test@example.com">
+                                    <button id="send-test" class="btn btn-outline-primary" type="button">Send</button>
+                                </div>
+                                <div id="test-status" class="form-text mt-1"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if issue %}
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Articles in this Issue</strong>
+                        <button class="btn btn-sm btn-outline-secondary" id="save-order">Save Order</button>
+                    </div>
+                    <div class="card-body">
+                        <ul id="issue-articles" class="list-group">
+                            {% for link in articles %}
+                                <li class="list-group-item d-flex align-items-center" data-id="{{ link.article.id }}">
+                                    <span class="handle me-3" title="Drag">☰</span>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">{{ link.article.title }}</div>
+                                        <div class="small text-muted">{{ link.article.url|default:"" }}</div>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input appear" type="checkbox" {% if link.appear_in_blog %}checked{% endif %}>
+                                        <label class="form-check-label">Blog</label>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'news:article-edit' link.article.id %}" class="btn btn-outline-secondary">Edit</a>
+                                        <button class="btn btn-outline-danger remove-article">Remove</button>
+                                    </div>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item text-muted">No articles yet. Pick or create on the right.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card mb-3">
+                    <div class="card-header"><strong>Article Library</strong></div>
+                    <div class="card-body">
+                        <input type="search" class="form-control mb-2" id="lib-search" placeholder="Filter articles…">
+                        <div id="lib-list" class="list-group small" style="max-height: 360px; overflow:auto;">
+                            {% for a in library %}
+                                <a href="#" class="list-group-item list-group-item-action lib-item"
+                                   data-id="{{ a.id }}" data-title="{{ a.title|lower }}">
+                                    {% if a.is_template %}<span class="badge bg-info me-1">Template</span>{% endif %}
+                                    {{ a.title }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <hr>
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#quick-article">Quick new article</button>
+                        <div id="quick-article" class="collapse mt-2">
+                            <form id="quick-article-form" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="mb-2"><input class="form-control" type="text" name="title" placeholder="Title" required></div>
+                                <div class="mb-2"><textarea class="form-control" name="body_html" rows="4" placeholder="Body (HTML ok)"></textarea></div>
+                                <div class="mb-2"><input class="form-control" type="url" name="url" placeholder="Optional link"></div>
+                                <div class="mb-2"><input class="form-control" type="file" name="image"></div>
+                                <div class="mb-2">
+                                    <select class="form-select" name="image_position">
+                                        <option value="above">Image above text</option>
+                                        <option value="below">Image below text</option>
+                                        <option value="left">Image left of text</option>
+                                        <option value="right">Image right of text</option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="is_template" id="qa-template">
+                                    <label class="form-check-label" for="qa-template">Save as template</label>
+                                </div>
+                                <button class="btn btn-primary btn-sm" type="submit">Create & Add</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+
+{% block js %}
+    <script>
+        (function($){
+            $(function(){
+
+                var issueId = {{ issue.id|default:"null" }};
+
+                // Save article ordering
+                $('#save-order').on('click', function(){
+                    var payload = [];
+                    $('#issue-articles > li').each(function(idx){
+                        payload.push({
+                            article: $(this).data('id'),
+                            position: idx + 1,
+                            appear_in_blog: $(this).find('.appear').is(':checked')
+                        });
+                    });
+                    $.ajax({
+                        url: '/api/v2/news/issues/' + issueId + '/articles/',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({articles: payload}),
+                        success: function(){ alert('Saved.'); },
+                        error: function(xhr){ alert(xhr.responseJSON?.detail || 'Error'); }
+                    });
+                });
+
+                // Add from library
+                $('#lib-list').on('click', '.lib-item', function(e){
+                    e.preventDefault();
+                    var id = $(this).data('id'), title = $(this).text().trim();
+                    // optimistic UI
+                    var li = $('<li class="list-group-item d-flex align-items-center" data-id="'+id+'">\
+          <span class="handle me-3" title="Drag">☰</span>\
+          <div class="flex-grow-1"><div class="fw-semibold"></div></div>\
+          <div class="form-check me-3">\
+            <input class="form-check-input appear" type="checkbox">\
+            <label class="form-check-label">Blog</label>\
+          </div>\
+          <div class="btn-group btn-group-sm">\
+            <a href="#" class="btn btn-outline-secondary disabled">Edit</a>\
+            <button class="btn btn-outline-danger remove-article">Remove</button>\
+          </div>\
+        </li>');
+                    li.find('.fw-semibold').text(title);
+                    $('#issue-articles').append(li);
+
+                    $.ajax({
+                        url: '/api/v2/news/issues/' + issueId + '/articles/add/',
+                        method: 'POST',
+                        data: { article: id },
+                        error: function(){ alert('Error adding article.'); }
+                    });
+                });
+
+                // Remove article
+                $('#issue-articles').on('click', '.remove-article', function(e){
+                    e.preventDefault();
+                    var $li = $(this).closest('li');
+                    var id = $li.data('id');
+                    $.ajax({
+                        url: '/api/v2/news/issues/' + issueId + '/articles/' + id + '/',
+                        method: 'DELETE',
+                        success: function(){ $li.remove(); },
+                        error: function(){ alert('Error removing article.'); }
+                    });
+                });
+
+                // Queue
+                $('#btn-queue').on('click', function(){
+                    $.ajax({
+                        url: '/api/v2/news/issues/' + issueId + '/queue/',
+                        method: 'POST',
+                        success: function(){ location.reload(); },
+                        error: function(){ alert('Error queueing.'); }
+                    });
+                });
+
+                // Publish to blog
+                $('#btn-publish').on('click', function(){
+                    $.ajax({
+                        url: '/api/v2/news/issues/' + issueId + '/publish/',
+                        method: 'POST',
+                        success: function(){ location.reload(); },
+                        error: function(){ alert('Error publishing.'); }
+                    });
+                });
+
+                // Quick article create (using ArticleViewSet)
+                $('#quick-article-form').on('submit', function(e){
+                    e.preventDefault();
+                    var fd = new FormData(this);
+                    $.ajax({
+                        url: '/api/v2/news/articles/',
+                        method: 'POST',
+                        data: fd,
+                        processData: false, contentType: false,
+                        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                        success: function(resp){
+                            // add to list immediately
+                            var id = resp.id, title = resp.title;
+                            var li = $('<li class="list-group-item d-flex align-items-center" data-id="'+id+'">\
+              <span class="handle me-3" title="Drag">☰</span>\
+              <div class="flex-grow-1"><div class="fw-semibold"></div></div>\
+              <div class="form-check me-3">\
+                <input class="form-check-input appear" type="checkbox">\
+                <label class="form-check-label">Blog</label>\
+              </div>\
+              <div class="btn-group btn-group-sm">\
+                <a href="#" class="btn btn-outline-secondary disabled">Edit</a>\
+                <button class="btn btn-outline-danger remove-article">Remove</button>\
+              </div>\
+            </li>');
+                            li.find('.fw-semibold').text(title);
+                            $('#issue-articles').append(li);
+                            $('#quick-article-form')[0].reset();
+                        },
+                        error: function(xhr){ alert(xhr.responseJSON?.detail || 'Error creating article.'); }
+                    });
+                });
+
+                $("#send-test").on("click", function(e){
+                    e.preventDefault();
+                    let email = $("#test-email").val();
+                    if (!email) {
+                        $("#test-status").html('<div class="alert alert-warning">Enter a valid email.</div>');
+                        return;
+                    }
+                    $("#test-status").html("Sending...");
+                    {#$.ajax({#}
+                    {#    url: "{% url 'news-issue-send-test' issue.pk %}",#}
+                    {#    method: "POST",#}
+                    {#    contentType: "application/json",#}
+                    {#    data: JSON.stringify({email: email}),#}
+                    {#    success: function(resp){#}
+                    {#        $("#test-status").html('<div class="alert alert-success">'+resp.msg+'</div>');#}
+                    {#    },#}
+                    {#    error: function(xhr){#}
+                    {#        $("#test-status").html('<div class="alert alert-danger">Error: '+xhr.responseText+'</div>');#}
+                    {#    }#}
+                    {#});#}
+                });
+            });
+        })(jQuery);
+    </script>
+
+{% endblock %}
