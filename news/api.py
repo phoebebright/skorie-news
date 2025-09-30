@@ -74,7 +74,7 @@ class SubscriptionManagePagination(DatatablesPageNumberPagination):
     page_size = 100
 
 class AdminSubscriptionROViewSet(ReadOnlyModelViewSet):
-    queryset = Subscription.objects.select_related("news","user")
+    queryset = Subscription.objects.select_related("newsletter","user")
     serializer_class = SubscriptionManageDTSerializer
     pagination_class = SubscriptionManagePagination
     filter_backends = [DatatablesFilterBackend,]
@@ -85,7 +85,7 @@ class AdminSubscriptionROViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         qs = Subscription.objects.all()
-        newsletter_slug = self.request.query_params.get("news")
+        newsletter_slug = self.request.query_params.get("newsletter")
         if newsletter_slug:
             qs = qs.filter(newsletter__slug=newsletter_slug)
         return qs
@@ -94,7 +94,7 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
     """
     Admin: list/retrieve/update/destroy (IsAdminUser)
     Public: POST /api/subscriptions/subscribe/  (AllowAny)
-      body: { "news": "<slug>", "email": "...", "name": "..." }
+      body: { "newsletter": "<slug>", "email": "...", "name": "..." }
     """
     queryset = Subscription.objects.all().order_by("-created")
     serializer_class = SubscriptionSerializer
@@ -109,7 +109,7 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
     def create(self, request, *args, **kwargs):
         '''can pass in user pk or just email and name'''
 
-        nl = Newsletter.objects.get(slug=request.data.get('news'))
+        nl = Newsletter.objects.get(slug=request.data.get('newsletter'))
         if 'user_keycloak_id' in request.data:
             user = User.objects.get(keycloak_id=request.data.get('user_keycloak_id'))
             email = user.email
@@ -146,7 +146,7 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
     def subscribe_me(self, request, *args, **kwargs):
         """
         Public-friendly endpoint:
-        - Accepts news slug
+        - Accepts newsletter slug
         - Idempotent (returns 200 if already exists)
         - Returns message + serialized subscription
         """
@@ -167,7 +167,7 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
     def unsubscribe_me(self, request, *args, **kwargs):
         """
         Public-friendly endpoint:
-        - Accepts news slug
+        - Accepts newsletter slug
         - Idempotent (returns 200 if already exists)
         - Returns message + serialized subscription
         """
@@ -283,7 +283,7 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
         confirm_url = f"{settings.SITE_URL}{confirm_path}"
 
         # Send confirmation email (privacy-safe regardless of state)
-        ctx = {"news": nl, "confirm_url": confirm_url}
+        ctx = {"newsletter": nl, "confirm_url": confirm_url}
         subject = f"Confirm your subscription – {nl.title}"
         text = render_to_string("news/email/sub_request.txt", ctx)
         html = render_to_string("news/email/sub_request.html", ctx)
@@ -349,7 +349,7 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
             sub = Subscription.objects.filter(newsletter=nl, email=self.email).first()
 
             items.append({
-                "news": {"slug": nl.slug, "title": nl.title, "about": nl.about or ""},
+                "newsletter": {"slug": nl.slug, "title": nl.title, "about": nl.about or ""},
                 "subscribed": bool(sub and sub.subscribed and not sub.unsubscribed),
                 "subscription_id": sub.pk if sub else None,
             })
@@ -417,7 +417,7 @@ class IssueViewSet(ModelViewSet):
     def queue(self, request, pk=None):
         message = self.get_object()
         if not message.newsletter_id:
-            return Response({"status": "error", "detail": "No news linked."}, status=400)
+            return Response({"status": "error", "detail": "No newsletter linked."}, status=400)
 
         submission = message.submit()
         logger.info(f"Message {message.pk} manually queued as submission {submission.pk} by user {request.user}")
@@ -583,7 +583,7 @@ class IssueViewSet(ModelViewSet):
       - POST /issues/{id}/queue/             -> create/reuse Submission + queue
       - POST /issues/{id}/publish/           -> set published_at
     """
-    queryset = Issue.objects.select_related("news").all().order_by("-created")
+    queryset = Issue.objects.select_related("newsletter").all().order_by("-created")
     serializer_class = MessageSerializer
 
 
@@ -665,7 +665,7 @@ class AdminSubscriberViewSet(
     Admin-only subscriber management for a single Newsletter.
     Routes (via router.register('admin/subscribers', ...)):
 
-    - GET    /api/v2/news/admin/subscribers/?news=<slug>&q=&status=&page=&page_size=
+    - GET    /api/v2/news/admin/subscribers/?newsletter=<slug>&q=&status=&page=&page_size=
     - POST   /api/v2/news/admin/subscribers/               (newsletter_slug, email, name)
     - POST   /api/v2/news/admin/subscribers/bulk/          (action, ids[])
     - POST   /api/v2/news/admin/subscribers/{id}/unsubscribe/
@@ -674,7 +674,7 @@ class AdminSubscriberViewSet(
     - GET    /api/v2/news/admin/subscribers/{id}/events/
     """
     permission_classes = [IsAdminUser]
-    queryset = Subscription.objects.select_related("news").all()
+    queryset = Subscription.objects.select_related("newsletter").all()
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -685,8 +685,8 @@ class AdminSubscriberViewSet(
     def get_queryset(self):
         qs = super().get_queryset()
 
-        # Required news slug
-        nl_slug = self.request.query_params.get("news")
+        # Required newsletter slug
+        nl_slug = self.request.query_params.get("newsletter")
         if not nl_slug:
             return qs.none()
         try:
@@ -1106,7 +1106,7 @@ def mailgun_webhook(request):
 class SubscribeMe(APIView):
 
     def get(self, request):
-        '''get for general news only - only works if email passed as query param'''
+        '''get for general newsletter only - only works if email passed as query param'''
         newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
 
         newsletter.subscribe_from_request(request)
@@ -1117,7 +1117,7 @@ class SubscribeMe(APIView):
         return Response(status=status.HTTP_200_OK)
 
     def post(self, request):
-        '''get for general news only'''
+        '''get for general newsletter only'''
         newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
 
         newsletter.subscribe_from_request(request)

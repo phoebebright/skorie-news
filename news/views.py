@@ -44,22 +44,22 @@ User = get_user_model()
 from news.api import MANAGE_EMAIL_SALT, MANAGE_EMAIL_MAX_AGE
 
 class MixinNewsletterNMessage(object):
-    '''add news and message to context if available'''
+    '''add newsletter and message to context if available'''
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not 'news' in context or not 'message' in context:
-            if hasattr(self, 'object') and hasattr(self.object, 'news'):
-                context['news'] = self.object.newsletter
+        if not 'newsletter' in context or not 'message' in context:
+            if hasattr(self, 'object') and hasattr(self.object, 'newsletter'):
+                context['newsletter'] = self.object.newsletter
             if hasattr(self, 'object') and self.object and hasattr(self.object, 'message'):
                 context['message'] = self.object.message
-                context['news'] = self.object.message.newsletter
+                context['newsletter'] = self.object.message.newsletter
 
             elif 'message_pk' in kwargs:
                 context['message'] = get_object_or_404(Issue, pk=kwargs['message_pk'])
-                context['news'] = context['message'].newsletter
+                context['newsletter'] = context['message'].newsletter
             elif 'message_pk' in self.kwargs:
                 context['message'] = get_object_or_404(Issue, pk=self.kwargs['message_pk'])
-                context['news'] = context['message'].newsletter
+                context['newsletter'] = context['message'].newsletter
         return context
 
 @method_decorator(never_cache, name='dispatch')
@@ -77,15 +77,15 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
         unsub_count = Subscription.objects.filter(
             newsletter=OuterRef("pk"),
             unsubscribed=True,
-        ).values("news").annotate(c=Count("id")).values("c")
+        ).values("newsletter").annotate(c=Count("id")).values("c")
 
         suppressed_count = Subscription.objects.filter(
             newsletter=OuterRef("pk")
-        ).filter(active=False).values("news").annotate(c=Count("id")).values("c")
+        ).filter(active=False).values("newsletter").annotate(c=Count("id")).values("c")
 
         issues_count = Issue.objects.filter(
             newsletter=OuterRef("pk")
-        ).values("news").annotate(c=Count("id")).values("c")
+        ).values("newsletter").annotate(c=Count("id")).values("c")
 
         last_issue = Issue.objects.filter(
             newsletter=OuterRef("pk")
@@ -100,7 +100,7 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
             Newsletter.objects
             .annotate(
                 subscribers_active=Subquery(
-                    active_qs.values("news").annotate(c=Count("id")).values("c"),
+                    active_qs.values("newsletter").annotate(c=Count("id")).values("c"),
                 ),
                 subscribers_unsub=Subquery(unsub_count),
                 subscribers_suppressed=Subquery(suppressed_count),
@@ -377,7 +377,7 @@ class SubscriberManageView(UserCanAdministerMixin, TemplateView):
         }
 
         context.update({
-            "news": nl,
+            "newsletter": nl,
             "q": q,
             "status": status,
             "page_obj": page_obj,
@@ -414,7 +414,7 @@ class NewsletterSubscriptionsView(MixinNewsletterNMessage, UserCanAdministerMixi
         object = get_object_or_404(Newsletter, pk=newsletter_pk)
 
         context = {
-            "news": object,
+            "newsletter": object,
             "form_add": SubscriptionForm(),
 
         }
@@ -568,7 +568,7 @@ class UpdateMySubscription(LoginRequiredMixin, GoNextTemplateMixin, TemplateView
 
         context['news'] = get_object_or_404(Newsletter, pk=newsletter_pk)
         try:
-            context['subscription'] = Subscription.objects.get(user=self.request.user, newsletter=context['news'])
+            context['subscription'] = Subscription.objects.get(user=self.request.user, newsletter=context['newsletter'])
         except Subscription.DoesNotExist:
             raise Http404("No subscription found")
         return context
@@ -597,7 +597,7 @@ class SubscribeWithEmailRedirect(RedirectView):
 class SubscribeWithEmailUnconfirmed(View):
     '''this is the normal route that includes seding an email for confirmation'''
     confirm_immediately = False
-    confirm_message = "Confirmed I want to continue to receive emailed news."
+    confirm_message = "Confirmed I want to continue to receive emailed newsletter."
     confirm_source = "email-link"
 
     def get(self, request, newsletter_slug ):
@@ -851,7 +851,7 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
             Issue.objects
             .filter(newsletter=nl)
             .annotate(latest_status=Coalesce(latest_status, Value("", output_field=CharField())))
-            .select_related("news")
+            .select_related("newsletter")
             .order_by("-created")
         )
 
@@ -868,7 +868,7 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
         }
 
         context.update({
-            "news": nl,
+            "newsletter": nl,
             "issues": issues,
             "counts": counts,
         })
@@ -883,11 +883,11 @@ class IssueCreateView(UserCanAdministerMixin, TemplateView):
 
     def get(self, request, newsletter_pk):
         nl = get_object_or_404(Newsletter, id=newsletter_pk)
-        form = IssueForm(initial={"news": nl})
+        form = IssueForm(initial={"newsletter": nl})
         # “library”: templates first, then recent
         library = Article.objects.all().order_by("-is_template", "-updated")[:50]
         return render(request, self.template_name, {
-            "news": nl,
+            "newsletter": nl,
             "form": form,
             "issue": None,
             "library": library,
@@ -900,7 +900,7 @@ class IssueCreateView(UserCanAdministerMixin, TemplateView):
         if not form.is_valid():
             library = Article.objects.all().order_by("-is_template", "-updated")[:50]
             return render(request, self.template_name, {
-                "news": nl, "form": form, "issue": None, "library": library, "articles": [],
+                "newsletter": nl, "form": form, "issue": None, "library": library, "articles": [],
             })
         issue = form.save()
         messages.success(request, "Issue created. Add articles below, then Queue or Publish.")
@@ -919,8 +919,8 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
         pk_url_kwarg = "pk"
 
         def get_queryset(self):
-            # keep news handy
-            return Issue.objects.select_related("news")
+            # keep newsletter handy
+            return Issue.objects.select_related("newsletter")
 
         def get_context_data(self, **kwargs):
             context = super().get_context_data(**kwargs)
@@ -936,7 +936,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
                 issue.issue_articles.select_related("article").order_by("position", "id")
             )
 
-            context["news"] = issue.newsletter
+            context["newsletter"] = issue.newsletter
             context["submission"] = issue.active_mailing if issue else None
             return context
 
@@ -1153,7 +1153,7 @@ class AdminNewsletterDownloadView(UserCanAdministerMixin, TemplateView):
             return self._build_download_response(newsletter, scope, fmt)
 
         # Otherwise render the page
-        return render(request, self.template_name, {"news": newsletter, "form": form})
+        return render(request, self.template_name, {"newsletter": newsletter, "form": form})
 
     # ---------- helpers ----------
 

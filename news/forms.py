@@ -104,7 +104,7 @@ IssueArticleFormSet = inlineformset_factory(
 
 
 class SubscriptionForm(forms.ModelForm):
-    """Add a single subscriber to a specific news."""
+    """Add a single subscriber to a specific newsletter."""
     class Meta:
         model = Subscription
         fields = ["email", "name"]
