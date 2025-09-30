@@ -1,6 +1,0 @@
-{# templates/news/email/sub_request.txt #}
-Please confirm your subscription to "{{ newsletter.title }}".
-Click this link:
-{{ confirm_url }}
-
-If you didn’t request this, ignore this email.

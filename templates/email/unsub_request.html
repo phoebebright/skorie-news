@@ -1,9 +1,0 @@
-{# templates/news/email/unsub_request.html #}
-<p>You requested to manage your subscription to <strong>{{ newsletter.title }}</strong>.</p>
-{% if confirm_url %}
-  <p>To confirm unsubscribe, click the button below:</p>
-  <p><a href="{{ confirm_url }}" style="display:inline-block;padding:10px 16px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:6px;">Confirm Unsubscribe</a></p>
-{% else %}
-  <p>If you created an account on our site, you can log in to manage your subscriptions without the need to verify by email.</p>
-{% endif %}
-<p style="color:#6c757d;font-size:12px;">If you didn’t request this, you can safely ignore this email.</p>
