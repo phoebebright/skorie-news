@@ -39,10 +39,10 @@ class NewsletterForm(forms.ModelForm):
 class IssueForm(forms.ModelForm):
     class Meta:
         model = Issue
-        fields = ["title", "news"]
+        fields = ["title", "newsletter"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Issue title"}),
-            "news": forms.Select(attrs={"class": "form-select"}),
+            "newsletter": forms.Select(attrs={"class": "form-select"}),
         }
 
 class ArticleQuickForm(forms.ModelForm):
