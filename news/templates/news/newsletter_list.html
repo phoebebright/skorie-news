@@ -20,7 +20,7 @@
     {% for form in formset.forms %}
       <tr>
         <td>{{ form.id }}{{ form.newsletter }}
-<a href="{% url "news:news-edit" form.instance.newsletter.id %}">{{ form.instance.newsletter.title }}</a></td>
+<a href="{% url "news:newsletter-edit" form.instance.newsletter.id %}">{{ form.instance.newsletter.title }}</a></td>
         <td>{{ form.subscribed }}</td>
       </tr>
     {% endfor %}
