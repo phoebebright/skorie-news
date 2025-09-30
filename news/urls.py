@@ -1,18 +1,17 @@
 from django.urls import path, register_converter
 
 from news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
-    MessageListView, MessageCreateView, MessageUpdateView, MessageDeleteView, SubmissionListView, \
-    NewsletterSubscriptionsView, UpdateMySubscription, MessagePreviewView, \
+    SubmissionListView, \
+    NewsletterSubscriptionsView, UpdateMySubscription,  \
     MessageArticlesView, SubscribeWithEmail, EventSendView, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
     SendFromTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission
-from tools.ref import EventRefConverter
+
 
 app_name = "news"
 
-register_converter(EventRefConverter, 'event_ref')
 
 urlpatterns = [
     # Newsletters
@@ -23,12 +22,11 @@ urlpatterns = [
     path("news/<int:pk>/delete/", NewsletterDeleteView.as_view(), name="news-delete"),
 
     # Issues
-    path("issues/", MessageListView.as_view(), name="issue-list"),
+
     path("issue/<int:newsletter_pk>/", IssueListView.as_view(), name="issue-list"),
     path("issue/add/", IssueCreateView.as_view(), name="issue-add"),
     path("issue/add/<int:newsletter_pk>/", IssueCreateView.as_view(), name="issue-add"),
     path("issue/<int:pk>/edit/", IssueEditView.as_view(), name="issue-edit"),
-    path("messages/<int:pk>/delete/", MessageDeleteView.as_view(), name="message-delete"),
     path("issue/<int:pk>/preview/", IssuePreviewView.as_view(), name="issue-preview"),
     path("issues/<int:pk>/queue/", issue_queue_submission, name="issue-queue" ),
 
@@ -38,17 +36,13 @@ urlpatterns = [
 
 
     #Articles
-    path("message/<int:message_pk>/articles/", MessageArticlesView.as_view(), name="message-articles"),
-    # path("message/<int:message_pk>/articles/add/", ArticleCreateView.as_view(), name="article-create"),
-    # path("article/<int:pk>/edit/", ArticleUpdateView.as_view(), name="article-update"),
-    # path("article/<int:pk>/delete/", ArticleDeleteView.as_view(), name="article-delete"),
-    # path("message/<int:pk>/articles/reorder/", reorder_articles, name="article-reorder"),
+
 
     path("articles/", ArticleListView.as_view(), name="article-list"),
     path("articles/<int:pk>/edit/", ArticleEditView.as_view(), name="article-edit"),
     path("articles/new/", ArticleEditView.as_view(), name="article-new"),
 
-    path("event/<event_ref:event_ref>/send/", EventSendView.as_view(), name="event-send"),
+    # path("event/<event_ref:event_ref>/send/", EventSendView.as_view(), name="event-send"),
 
     # Subscriptions
     path("news/<str:newsletter_slug>/subscribe/", SubscribeWithEmail.as_view(), name="subscribe-with-email-only"),
