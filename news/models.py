@@ -1319,7 +1319,7 @@ class DirectEmail(CreatedUpdatedMixin):
 
         context['SITE_URL'] = settings.SITE_URL
         context['SITE_NAME'] = settings.SITE_NAME
-        context['SIGNATURE'] = settings.SIGNATURE
+        context['SIGNATURE'] = self.get_signature
 
         return context
 
@@ -1460,6 +1460,13 @@ class DirectEmail(CreatedUpdatedMixin):
 
             return delivery
 
+    @property
+    def get_signature(self):
+
+        if self.event:
+            return "Event Team"
+        else:
+            return getattr('settings','SIGNATURE','')
 
 class Delivery(models.Model):
     mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, related_name="deliveries", blank=True, null=True) # only for newsletters not emails

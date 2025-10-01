@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Optional, Sequence
+
+from django.conf import settings
+
 from .models import DirectEmail
 
 @dataclass
@@ -61,3 +64,9 @@ class mail:
 
 
         return deliveries
+
+
+    def mail_admins(self, *args, **kwargs):
+
+        recipients = settings.ADMINS
+        self.send(recipients, **kwargs)
