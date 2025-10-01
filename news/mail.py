@@ -66,7 +66,9 @@ class mail:
         return deliveries
 
 
-    def mail_admins(self, *args, **kwargs):
+    def mail_admins(self, subject, message, *args, **kwargs):
 
-        recipients = settings.ADMINS
-        self.send(recipients, **kwargs)
+        kwargs['recipients'] = settings.ADMINS
+        kwargs["subject"] = subject
+        kwargs["body_text"] = message
+        self.send(**kwargs)

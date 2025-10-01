@@ -26,8 +26,8 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import AuthenticationFailed
 
-# If you have these mixins in your project, keep them. Otherwise remove.
-from skorie.common.model_mixins import EventMixin, CreatedUpdatedMixin
+# can't import from skorie.common as get circular import
+from .model_mixins import EventMixin, CreatedUpdatedMixin
 
 logger = logging.getLogger("django")
 User = get_user_model()
