@@ -138,7 +138,8 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
             sub = Subscription.objects.create(
                 newsletter=nl, email=email, name=name, user=user
             )
-            sub.subscribe()
+            consent = {'consent_text': f'Subscribed by {request.user}'}
+            sub.subscribe(consent=consent, user=request.user)
 
         return Response("Subscribed", status=status.HTTP_201_CREATED)
 

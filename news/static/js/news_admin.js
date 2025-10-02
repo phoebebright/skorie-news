@@ -15,9 +15,10 @@
   // ---- Subscribe (create a new Subscription row) ----
   $(document).on("click", ".subscribe", function() {
     const $btn = $(this);
+const $tr = $btn.closest("tr");
 
-    const subscribe_url = $(this).closest('tr').data('subscribe_url');
-    const newsletterId = $(this).closest('tr').data('newsletter_id');
+    const subscribe_url = $tr.data('subscribe_url');
+    const newsletterId = $tr.data('newsletter_id');
     setBusy($btn, true);
 
     const payload = {
@@ -84,7 +85,7 @@
     const subId = $(this).closest('tr').data("subscription_id");
     const unsubscibe_url = $(this).closest('tr').data('unsubscribe_url');
     const subscribe_url = $(this).closest('tr').data('subscribe_url');
-    const newsletterId = $(this).closest('tr').data('news-id');
+    const newsletterId = $(this).closest('tr').data('newsletter-id');
     setBusy($btn, true);
 
     $.ajax({

@@ -97,6 +97,9 @@ class NewsletterQuerySet(models.QuerySet):
     def visible(self):
         return self.filter(visible=True)
 
+    def active(self):
+        return self.filter(visible=True)
+
     def public(self):
         return self.filter(public=True, visible=True)
 
@@ -110,8 +113,8 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     email = models.EmailField(verbose_name=_("e-mail"), help_text=_("Sender e-mail"))
     sender = models.CharField(max_length=200, verbose_name=_("sender"), help_text=_("Sender name"))
 
-    visible = models.BooleanField(default=True,  db_index=True)
-    public = models.BooleanField(default=True,  help_text=_("Whether or not users can self-subscribe."), db_index=True)
+    visible = models.BooleanField(default=True,  db_index=True, help_text=_("Should be named active.  Can be active and not public for team use only."))
+    public = models.BooleanField(default=True,  help_text=_("Appears in list that users can subscribe to."), db_index=True)
     send_html = models.BooleanField(
         default=True, verbose_name=_("send html"),
         help_text=_("Whether or not to send HTML versions of e-mails."),
@@ -721,7 +724,7 @@ class Subscription(CreatedUpdatedMixin):
         self.ip = ip_address
         self.save()  # refresh active
 
-        SubscriptionEvent.log(self, event, meta={"source": source, "ip": ip_address, user_agent: user_agent})
+        SubscriptionEvent.log(self, event, meta={'source': source, 'ip': ip_address, 'user_agent': user_agent})
 
 
         # # If this consent made us become active now (fresh after any unsubscribe), send confirmation
@@ -781,7 +784,7 @@ class Subscription(CreatedUpdatedMixin):
             raise NotImplementedError(f"action {action} is not implemented _send_tx_email")
 
         result = DirectEmail.send_simple_email(subject, text, user=self.user, to_email=self.email)
-        SubscriptionEvent.log(self, SubscriptionEvent.Event.EMAIL_SENT, meta={'email_action': action, 'result': result})
+        SubscriptionEvent.log(self, SubscriptionEvent.Event.EMAIL_SENT, meta={'email_action': action, 'result': result.pk})
 
 # ---------------------------------------------------------------------
 # Article (+ Attachment on Article)
@@ -1319,8 +1322,9 @@ class DirectEmail(CreatedUpdatedMixin):
 
         context['SITE_URL'] = settings.SITE_URL
         context['SITE_NAME'] = settings.SITE_NAME
-        context['SIGNATURE'] = self.get_signature
-
+        context['SIGNATURE'] = settings.SIGNATURE
+        context['SUPPORT_EMAIL'] = settings.SUPPORT_EMAIL
+        context['LOGIN_URL'] = settings.LOGIN_URL
         return context
 
     def render(self, context, save=False):
