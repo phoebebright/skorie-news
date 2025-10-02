@@ -44,6 +44,8 @@ table shows differnt possible scenarios.  Not that iContact is the temporary flo
 ### Process for Unsubscribe
 - Guest and User - request unsubscribe, all matching records set to unsubscribed=True and active = False. Consent is cleared in case of resubscribe - record still in event log Confirmation email sent.  No confirmation of unsubscribe required.
 - Admin - as Gues and User. Optional confirmation email sent.
+
+
 | #  | Who added         | Is User | Logged in? | Existing status (by newsletter+email) | System action                                                                            | Resulting state                                         | User-facing message                                          | Test | Done |
 | -- | ----------------- | ------- | ---------- | ------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------ | ---- | ---- |
 | 1  | iContact          | No      | N/A         | **No record**                         | Create **email-only** subscription; **record consent**                                   | `subscribed=True`, `user=None`, `active=True`           | “You are subscribed.”                                        | X    | n/a  |
@@ -87,7 +89,36 @@ table shows differnt possible scenarios.  Not that iContact is the temporary flo
 | Admin             | Yes        | **No record**                         | **Create suppression row** (helps prevent accidental re-subscribe)                                                           | Suppression active                         | “Suppression added.”                                             |
 
 
+# Install
 
+- add to requirements.txt and run pip install
+- Add settings as above
+- Add a general newsletter to the newsletter model - give it slug general unless you feel strongly.
+
+### Copy templates
+copy news directory in template
+
+### Update URLs
+
+    from news.api import SubscriptionAdminViewSet as NewsSubscriptionViewSet, \
+    SubscriberEventListAPIView, ArticleViewSet, IssueViewSet, \
+    SubscriptionPublicViewSet, MailingViewSet, AdminSubscriberViewSet, AdminSubscriptionROViewSet, SubscribeMe, UnSubscribeMe
+    
+    # news/newsletter APIs
+    router.register(r'news/subscription', NewsSubscriptionViewSet, basename='news-subscription-api')
+    router.register(r"news/subscription-manage", SubscriptionPublicViewSet, basename="news-sub-manage")  # public endpoint
+    # router.register(r'news/admin/subscribers', AdminSubscriberViewSet, basename='news-admin-subscribers')
+    router.register(r'news/admin/subscribers', AdminSubscriptionROViewSet, basename='news-admin-subscribers')
+    router.register(r'news/mailing', MailingViewSet, basename='news-mailing-api')
+    router.register(r"news/articles", ArticleViewSet, basename="news-article")
+    router.register(r"news/issues",   IssueViewSet,   basename="news-issue")
+    
+    path('api/v2/subscribe_me/', SubscribeMe.as_view(), name="subscribe_me"),  # assume user is logged in and just default newsletter
+    path('api/v2/unsubscribe_me/', UnSubscribeMe.as_view(), name="unsubscribe_me"),# assume user is logged in and just default newsletter
+    path("api/v2/news/subscribers/<int:pk>/events/", SubscriberEventListAPIView.as_view(),
+         name="news-subscriber-events"),
+    
+    path('news/', include('news.urls', namespace='news')),
 
 # TODO
 - expire subscriptions that are not confirmed

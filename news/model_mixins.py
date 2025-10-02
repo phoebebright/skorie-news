@@ -171,6 +171,9 @@ class CreatedUpdatedMixin(models.Model):
             user = kwargs['user']
             kwargs.pop('user')
 
+            if not (getattr(user, "is_authenticated", False) and isinstance(user, models.Model)):
+                logger.warning(f"User {user} passed to save method of {self} is not a User object or is not authenticted")
+                user = None
 
         if self.pk:
             self.updator = user

@@ -257,7 +257,7 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
         Guest (no login) double-opt-in: send a confirmation email with secure link.
         """
         email = request.data.get("email").strip().lower()
-        slug = (request.data.get("newsletter_slug") or "").strip()
+        slug = (request.data.get("newsletter_slug") or settings.NEWSLETTER_GENERAL_SLUG).strip()
         name = (request.data.get("name") or "").strip()
         if not email or not slug:
             return Response({"detail": "email and newsletter_slug required."}, status=400)
