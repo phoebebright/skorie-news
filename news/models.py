@@ -589,7 +589,7 @@ class Subscription(CreatedUpdatedMixin):
         """
 
         path = reverse("news:confirm-subscribe", args=[self.pk, self.activation_code])
-        return f"https://{settings.SITE_URL}{path}"
+        return f"{settings.SITE_URL}{path}"
 
     @property
     def unsubscribe_url(self):
@@ -598,7 +598,7 @@ class Subscription(CreatedUpdatedMixin):
         """
 
         path = reverse("news:unsubscribe-now", args=[self.pk, self.activation_code])
-        return f"https://{settings.SITE_URL}{path}"
+        return f"{settings.SITE_URL}{path}"
 
     @property
     def subscribe_url(self):
@@ -607,7 +607,7 @@ class Subscription(CreatedUpdatedMixin):
         """
         # link will subscribe and confirm
         path = reverse("news:confirm-subscribe", args=[self.pk, self.activation_code])
-        return f"https://{settings.SITE_URL}{path}"
+        return f"{settings.SITE_URL}{path}"
 
     @classmethod
     def link_subscriptions_to_user(cls, user) -> int:
