@@ -30,7 +30,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from .model_mixins import EventMixin, CreatedUpdatedMixin
 
 logger = logging.getLogger("django")
-User = get_user_model()
+#User = get_user_model() .  # don't do this - ends up with circular import
 
 
 # ---------------------------------------------------------------------
@@ -414,6 +414,7 @@ class Subscription(CreatedUpdatedMixin):
           * If pending and user is logged in → record consent now.
           * Else no-op (idempotent).
         """
+        User = get_user_model()
         data = getattr(request, "data", None) or getattr(request, "POST", {})
         email = (data.get("email") or "").strip().lower()
         name = (data.get("name") or "").strip()
