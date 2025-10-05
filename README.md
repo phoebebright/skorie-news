@@ -29,6 +29,7 @@ And require:
     NEWSLETTER_GENERAL_PK = None
     NEWSLETTER_GENERAL_SLUG = None.  <--- use this one
 
+    SIGNATURE = "Skorie Support Team, info@skor.ie"
 
 ## Scenarios
 

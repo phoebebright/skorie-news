@@ -17,7 +17,7 @@ class mail:
     @staticmethod
     def send(
         recipients: Sequence[str] | str,
-        sender: Optional[str] = None,          # this needs to be a user
+        sender: Optional[str] = None,          # this needs to be a user - the person sending the email
         template: Optional[str] = None,
         context: Optional[Mapping] = None,
         subject: Optional[str] = None,
@@ -33,6 +33,7 @@ class mail:
         backend: Optional[str] = None,
             user = None, # the skorie user sending the email (may not be the sender on the email)
             receiver=None,   # User instance - only where there is one recipient, might need to rethink this.
+            from_email=None,  # the from email address - if None, use settings.DEFAULT_FROM_EMAIL
         **kwargs,
     ):
         # Normalize to a list
@@ -41,12 +42,14 @@ class mail:
         elif isinstance(recipients, (tuple, set)):
             receiver = None    # can't have both receipients (plural) and receiver (singular)
 
-
+        if not from_email:
+            from_email = settings.DEFAULT_FROM_EMAIL
 
         deliveries = []
         for to_email in recipients:
             email = DirectEmail(
                 to_email=to_email,
+                from_email=from_email,
                 subject=subject or "",
                 body_text=message or "",
                 body_html=html_message or "",

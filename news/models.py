@@ -1451,7 +1451,7 @@ class DirectEmail(CreatedUpdatedMixin):
             # Record Delivery (provider-agnostic)
             delivery = Delivery.objects.create(direct_mail=self,
                                             email=self.to_email,
-                esp_name=getattr(st, "esp_name", "mailgun"),
+                esp_name=esp_name,
                 message_id=message_id,
                 state="sending",                # accepted/queued by ESP; later webhooks will roll this up
                 sent_at=timezone.now(),
