@@ -32,16 +32,17 @@ from news.models import Newsletter, Issue, Mailing, Subscription, Article, Event
 from skorie.common.api import verify_signature
 
 from skorie.common.mixins import GoNextMixin, GoNextTemplateMixin
-from tools.permission_mixins import UserCanOrganiseEventMixin
 from users.models import VerificationCode
-from web.models import Event, CommsTemplate
-from web.views import is_superuser
+
 from .forms import NewsletterForm,  CSVImportForm, SubscriptionForm, \
     ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm
 
 User = get_user_model()
 
 from news.api import MANAGE_EMAIL_SALT, MANAGE_EMAIL_MAX_AGE
+
+def is_superuser(user):
+    return user.is_superuser
 
 class MixinNewsletterNMessage(object):
     '''add newsletter and message to context if available'''
@@ -741,96 +742,6 @@ class ArticleEditView(UpdateView):
             messages.success(request, "Article saved.")
             return redirect(reverse("news:article-list"))
         return self.render_to_response(self.get_context_data(form=form, formset=formset))
-
-
-class EventSendView(UserCanOrganiseEventMixin, View):
-    template_name = "news/message/event_send.html"
-
-    def get(self, request, event_ref):
-        dispatch = EventDispatch(event=self.event, creator=request.user)
-        # forms
-        article_form = ArticleQuickForm()
-        dispatch_form = DispatchForm(instance=dispatch)
-        # library: templates first, then recent
-        library = Article.objects.all().order_by("-is_template", "-updated")
-        return render(request, self.template_name, {
-            "event": self.event,
-            "article_form": article_form,
-            "dispatch_form": dispatch_form,
-            "library": library,
-        })
-
-    def post(self, request, event_ref):
-
-        action = request.POST.get("action")  # "send_test" or "send_now"
-        use_library_id = request.POST.get("article_id")  # if picking from library
-        article = None
-
-        if use_library_id:
-            article = get_object_or_404(Article, pk=use_library_id)
-            article_form = ArticleQuickForm(instance=article)  # read-only in UI, but we won’t save here
-        else:
-            article_form = ArticleQuickForm(request.POST, request.FILES)
-            if article_form.is_valid():
-                article = article_form.save()
-            else:
-                dispatch_form = DispatchForm()
-                library = Article.objects.all().order_by("-is_template", "-updated")
-                return render(request, self.template_name, {
-                    "event": self.event,
-                    "article_form": article_form,
-                    "dispatch_form": dispatch_form,
-                    "library": library,
-                })
-
-        dispatch = EventDispatch(event=self.event, article=article, creator=request.user)
-        dispatch_form = DispatchForm(request.POST, instance=dispatch)
-        if not dispatch_form.is_valid():
-            library = Article.objects.all().order_by("-is_template", "-updated")
-            return render(request, self.template_name, {
-                "event": self.event,
-                "article_form": article_form,
-                "dispatch_form": dispatch_form,
-                "library": library,
-            })
-
-        dispatch = dispatch_form.save(commit=False)
-
-        # Send Test
-        if action == "send_test":
-            test_email = (request.POST.get("test_email") or "").strip().lower()
-            try:
-                validate_email(test_email)
-            except ValidationError:
-                messages.error(request, "Please enter a valid test email.")
-                return redirect(request.path)
-
-            # Mailgun single send
-            url = f"https://api.mailgun.net/v3/{settings.MAILGUN_DOMAIN}/messages"
-            auth = ("api", settings.MAILGUN_API_KEY)
-            data = {
-                "from": getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com"),
-                "to": [test_email],
-                "subject": f"[TEST] {article.title}",
-                "html": article.text or "",
-                "text": "",
-            }
-            r = requests.post(url, auth=auth, data=data)
-            try:
-                r.raise_for_status()
-                messages.success(request, f"Sent test to {test_email}.")
-            except Exception:
-                messages.error(request, f"Mailgun error: {r.text[:400]}")
-            return redirect(request.path)
-
-        # Send Now
-        try:
-            dispatch.send_now(user_is_admin=request.user.is_staff)
-            messages.success(request, "Update sent.")
-        except Exception as e:
-            messages.error(request, str(e))
-
-        return redirect(reverse("news:event-send", args=[self.event.ref]))
 
 
 

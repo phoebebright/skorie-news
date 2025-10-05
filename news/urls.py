@@ -2,8 +2,7 @@ from django.urls import path, register_converter
 
 from news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
     SubmissionListView, \
-    NewsletterSubscriptionsView, UpdateMySubscription,  \
-    MessageArticlesView, SubscribeWithEmail, EventSendView, \
+    NewsletterSubscriptionsView, UpdateMySubscription,   SubscribeWithEmail, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \

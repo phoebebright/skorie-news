@@ -26,8 +26,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import AuthenticationFailed
 
-# can't import from skorie.common as get circular import
-from .model_mixins import EventMixin, CreatedUpdatedMixin
+from news.model_mixins import CreatedUpdatedMixin
 
 logger = logging.getLogger("django")
 #User = get_user_model() .  # don't do this - ends up with circular import
@@ -104,7 +103,7 @@ class NewsletterQuerySet(models.QuerySet):
         return self.filter(public=True, visible=True)
 
 
-class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
+class Newsletter(CreatedUpdatedMixin, models.Model):
     site = models.ManyToManyField(Site, blank=True)
 
     title = models.CharField(max_length=200, verbose_name=_("newsletter title"))
@@ -1702,7 +1701,7 @@ class DeliveryEvent(CreatedUpdatedMixin):
         ordering = ["-created"]
 
 
-class EventDispatch(EventMixin, CreatedUpdatedMixin):
+class EventDispatch(CreatedUpdatedMixin):
     class Status(models.TextChoices):
         DRAFT  = "draft",  "Draft"
         QUEUED = "queued", "Queued"
@@ -1748,11 +1747,6 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
             raise ValueError("Event is closed; cannot send.")
 
         try:
-            if self.to_event_news:
-                self._post_to_event_news()
-
-            if self.to_email_competitors or self.to_email_team:
-                self._send_email_batches()
 
             if self.to_bluesky:
                 self._post_bluesky_stub()
@@ -1771,25 +1765,7 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
             self.save(update_fields=["status", "last_error", "updated"])
             raise
 
-    # ---- Channels ----
-    def _post_to_event_news(self):
-        """
-        Map Article -> your existing public News model.
-        Adjust import/path and flags per your project.
-        """
-        from web.models import News  # TODO: adjust to your app
-        News.objects.create(
-            event=self.event,
-            summary=self.article.title[:200],
-            body=self.article.body_html,
-            public=True,
-            for_organisers=False,
-            for_staff=False,
-            for_competitors=False,
-            url=None,
-            publish_start=timezone.now(),
-            publish_end=None,
-        )
+
 
     def _send_email_batches(self):
         if not (settings.MAILGUN_SENDER_DOMAIN and settings.MAILGUN_API_KEY):
