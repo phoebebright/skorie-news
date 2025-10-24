@@ -101,6 +101,9 @@ copy news directory in template
 
 ### Update URLs
 
+    path('api/n1/', include('skorie_news.urls_api')),
+    path('news/', include('skorie_news.urls')),
+
     from news.api import SubscriptionAdminViewSet as NewsSubscriptionViewSet, \
     SubscriberEventListAPIView, ArticleViewSet, IssueViewSet, \
     SubscriptionPublicViewSet, MailingViewSet, AdminSubscriberViewSet, AdminSubscriptionROViewSet, SubscribeMe, UnSubscribeMe

@@ -21,6 +21,11 @@ urlpatterns = [
     path("newsletter/<int:pk>/edit/", NewsletterUpdateView.as_view(), name="newsletter-edit"),
     path("newsletter/<int:pk>/delete/", NewsletterDeleteView.as_view(), name="newsletter-delete"),
 
+    path("event/<event_ref:event_ref>/news/", NewsListView.as_view(), name="news_list"),
+    path("event/<event_ref:event_ref>/news/create/", NewsCreateView.as_view(), name="news_create"),
+    path("event/<event_ref:event_ref>/news/<int:pk>/edit/", NewsUpdateView.as_view(), name="news_edit"),
+    path("event/<event_ref:event_ref>/news/<int:pk>/delete/", NewsDeleteView.as_view(), name="news_delete"),
+
     # Issues
 
     path("issue/<int:newsletter_pk>/", IssueListView.as_view(), name="issue-list"),

@@ -1260,3 +1260,105 @@ def fix_subscribers(request):
             Subscription.admin_subscribe(newsletter, item.email, item.formal_name, item, consent={'consent_text': "subscribe copied from user table 28/9/25"}, user=request.user)
 
     return HttpResponse("Done")
+
+
+# === NEWS LIST VIEW ===
+@method_decorator(never_cache, name="dispatch")
+class NewsListViewBase(UserCanOrganiseEventMixin, ListView):
+    model = None
+    template_name = "organiser/news/news_list.html"
+    context_object_name = "news_list"
+
+    def get_queryset(self):
+        queryset = self.model.objects.filter(event=self.event).order_by("-publish_start")
+
+        return queryset
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get("format") == "json":
+            data = list(context["news_list"].values("id", "summary", "publish_start", "publish_end", "public"))
+            return JsonResponse({"data": data})
+        return super().render_to_response(context, **response_kwargs)
+
+
+# === NEWS CREATE VIEW ===
+class NewsCreateViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, CreateView):
+    model = None
+    fields = "__all__"
+    template_name = "organiser/news/news_form.html"
+
+    def get_success_url(self):
+        return self.get_next_url() or reverse_lazy("news_list")
+
+
+# === NEWS UPDATE VIEW ===
+class NewsUpdateViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, UpdateView):
+    model = None
+    fields = "__all__"
+    template_name = "organiser/news/news_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.created_by is None:  # System-generated news
+            raise PermissionDenied("System-generated news cannot be edited.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return self.get_next_url() or reverse_lazy("news_list")
+
+
+# === NEWS DELETE VIEW ===
+class NewsDeleteViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, DeleteView):
+    model = None
+    success_url = reverse_lazy("news_list")
+    template_name = "organiser/news/news_confirm_delete.html"
+
+    def get_success_url(self):
+        return self.get_next_url() or self.success_url
+
+
+# === NEWS DETAIL VIEW ===
+class NewsDetailViewBase(UserCanOrganiseEventMixin, DetailView):
+    model = None
+    template_name = "organiser/news/news_detail.html"
+    context_object_name = "news"
+
+# === ADMIN NEWS VIEWS ===
+
+@method_decorator(never_cache, name="dispatch")
+class NewsAdminListViewBase(UserCanAdministerMixin, GoNextMixin, ListView):
+    model = None
+    template_name = "admin/news/news_list.html"
+    context_object_name = "news_list"
+
+    def get_queryset(self):
+        return  self.model.objects.filter(event__isnull=True).order_by("-publish_start")
+
+class NewsAdminCreateViewBase(UserCanAdministerMixin, GoNextMixin, CreateView):
+    model = None
+    template_name = "admin/news/news_form.html"
+    form_class = NewsForm
+
+    def get_success_url(self):
+        return reverse_lazy("admin_news_list")
+
+class NewsAdminUpdateViewBase(UserCanAdministerMixin, GoNextMixin, UpdateView):
+    model = None
+    template_name = "admin/news/news_form.html"
+    form_class = NewsForm
+
+    def get_queryset(self):
+        return  self.model.objects.exclude(event__isnull=False).order_by("-publish_start")
+
+
+
+    def get_success_url(self):
+        return reverse_lazy("admin_news_list")
+
+class NewsAdminDeleteViewBase(UserCanAdministerMixin, GoNextMixin, DeleteView):
+    model = None
+    success_url = reverse_lazy("news_list")
+    template_name = "admin/news/news_confirm_delete.html"
+
+    def get_success_url(self):
+        return reverse_lazy("admin_news_list")
