@@ -126,6 +126,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         verbose_name = _("newsletter")
         verbose_name_plural = _("newsletters")
         ordering = ["title"]
+        db_table = "news_newsletter"
 
     def __str__(self):
         return self.title
@@ -240,6 +241,7 @@ class SubscriptionEvent(models.Model):
 
     class Meta:
         ordering = ["-at"]
+        db_table = "news_subscriptionevent"
 
     def __str__(self):
         return f"{self.subscription_id} {self.event} @ {self.at:%Y-%m-%d %H:%M}"
@@ -348,6 +350,7 @@ class Subscription(CreatedUpdatedMixin):
                 condition=models.Q(email__isnull=False),
             ),
         ]
+        db_table = "news_subscription"
 
     def __str__(self):
         return f"{self.name or self.email} → {self.newsletter}"
@@ -822,6 +825,7 @@ class Article(CreatedUpdatedMixin):
         verbose_name = _("article")
         verbose_name_plural = _("articles")
         ordering = ["-created"]
+        db_table = "news_article"
 
     def __str__(self):
         return self.title
@@ -864,6 +868,7 @@ class Issue(CreatedUpdatedMixin):
         verbose_name_plural = _("messages")
         unique_together = ("slug", "newsletter")
         ordering = ["-created"]
+        db_table = "news_issue"
 
     def __str__(self):
         return f"{self.title} in {self.newsletter}"
@@ -969,6 +974,7 @@ class IssueArticle(models.Model):
     class Meta:
         ordering = ["position", "id"]
         unique_together = [("issue", "article")]
+        db_table = "news_issuearticle"
 
     def __str__(self):
         return f"{self.issue.title} → {self.article.title} (#{self.position})"
@@ -1014,9 +1020,8 @@ class Mailing(CreatedUpdatedMixin):
     status = models.CharField(max_length=1, choices=Status.choices, default=Status.INACTIVE)
 
     class Meta:
-        verbose_name = _("submission")
-        verbose_name_plural = _("submissions")
         ordering = ["-created"]
+        db_table = "news_mailing"
 
     def __str__(self):
         return f"{self.issue} @ {self.publish_date:%Y-%m-%d %H:%M}"
@@ -1318,6 +1323,7 @@ class DirectEmail(CreatedUpdatedMixin):
 
     class Meta:
         ordering = ["-created"]
+        db_table = "news_directemail"
 
     def __str__(self):
         return f"{self.subject or '(no subject)'} → {self.to_email}"
@@ -1595,6 +1601,7 @@ class Delivery(models.Model):
             models.Index(fields=["email", "state"]),
             models.Index(fields=["esp_name"]),
         ]
+        db_table = "news_delivery"
 
     def __str__(self):
         mid = self.message_id or self.mailgun_id or "∅"
@@ -1711,18 +1718,18 @@ class DeliveryEvent(CreatedUpdatedMixin):
     raw_payload = models.JSONField()
 
     class Meta:
-        ordering = ["occurred_at"]
+        ordering = ["-created"]
         indexes = [
             models.Index(fields=["event"]),
             models.Index(fields=["recipient"]),
             models.Index(fields=["occurred_at"]),
         ]
+        db_table = "news_deliveryevent"
 
     def __str__(self):
         return f"{self.event} @ {self.occurred_at:%Y-%m-%d %H:%M:%S} ({self.recipient})"
 
-    class Meta:
-        ordering = ["-created"]
+
 
 
 class EventDispatch(EventMixin, CreatedUpdatedMixin):
@@ -1749,6 +1756,7 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
 
     class Meta:
         ordering = ["-created"]
+        db_table = "news_eventdispatch"
 
     def __str__(self):
         return f"{getattr(self, 'event', None)} – {self.article} ({self.status})"
