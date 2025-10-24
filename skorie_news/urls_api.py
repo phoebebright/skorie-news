@@ -12,7 +12,7 @@ from skorie_news.api import (
     SubscriptionAdminViewSet,
     SubscribeMe,
     UnSubscribeMe,
-    SubscriberEventListAPIView,
+    SubscriberEventListAPIView, mailgun_webhook,
 )
 
 # Use DRF's DefaultRouter, not django.db.router
@@ -28,7 +28,7 @@ urlpatterns = [
     path('subscribe_me/', SubscribeMe.as_view(), name='subscribe_me'),
     path('unsubscribe_me/', UnSubscribeMe.as_view(), name='unsubscribe_me'),
     path('news/subscribers/<int:pk>/events/', SubscriberEventListAPIView.as_view(), name='news-subscriber-events'),
-
+    path('mailgun_webhook/', mailgun_webhook, name="mailgun_webhook"),
     # include the router-generated endpoints
     path('', include(router.urls)),
 ]
