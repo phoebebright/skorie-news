@@ -15,7 +15,7 @@ app_name = "skorie_news"
 
 urlpatterns = [
     # Newsletters
-    path("", NewsletterDashboardView.as_view(), name="skorie_news-home"),
+    path("", NewsletterDashboardView.as_view(), name="news-home"),
     # path("newsletter/list/", NewsletterListView.as_view(), name="newsletter-list"),
     path("newsletter/add/", NewsletterCreateView.as_view(), name="newsletter-add"),
     path("newsletter/<int:pk>/edit/", NewsletterUpdateView.as_view(), name="newsletter-edit"),

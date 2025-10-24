@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('sites', '0002_alter_domain_unique'),
-        ('web', '0057_remove_submission_media_id_remove_submission_upload_and_more'),
+        ('web', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
