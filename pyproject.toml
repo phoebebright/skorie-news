@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skorie-news"
-version = "0.1.8"
+version = "0.1.9"
 description = "A reusable Django app for newsletters and direct emails."
 readme = "README.md"
 license = {text = "MIT License"}
@@ -36,4 +36,4 @@ include = ["skorie_news"]
 
 [tool.setuptools.package-data]
 # key is the import path of your app
-"skorie_news" = ["templates/**/*.html", "templates/**/*.txt","templates/**/*.handlebars", "static/**/*"]
+"skorie_news" = ["templates/**/*.html", "templates/**/*.txt","templates/**/*.handlebars", "static/**/*", "management/**/*", "docs/**/*", "migrations/**/*" ]
