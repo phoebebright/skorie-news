@@ -1,0 +1,198 @@
+{# templates/skorie_news/public/manage_subscriptions.html #}
+{% extends "base.html" %}
+{% load bootstrap5 %}
+{% block page_header %}Manage Your Subscriptions{% endblock %}
+
+{% block messages %}
+
+{% endblock %}
+
+{% block content %}
+
+    <div id="header_messages"  class="d-print-none">
+        {% bootstrap_messages %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+
+                    {% if request.user.is_authenticated %}
+                        <p class="mb-2">You are signed in as <strong>{{ request.user.email }}</strong>.</p>
+                    {% else %}
+
+                        {#                        {% if managed_email %}#}
+                        {#                            <p >Managing subscriptions for <strong>{{ request.session.managed_email }}</strong>.</p>#}
+                        {#                            <a href="#" class="btn btn-sm btn-outline-secondary clear_session">Stop managing this email</a>#}
+                        {#                        {% endif %}#}
+                       <div class="mt-3 text-center">
+    <p>You’re not signed in. Login if you already have an account to manage subscriptions.</p>
+
+    {% if account_username %}
+        <p>
+            <a href="{% url 'login' %}?email={{ account_username|urlencode }}&next={% url 'news:manage-subs' %}"
+               class="btn btn-primary w-75 mx-auto">
+               Log in as {{ account_username }}
+            </a>
+        </p>
+    {% else %}
+        <p>
+            <a href="{% url 'login' %}?next={% url 'news:manage-subs' %}"
+               class="btn btn-primary w-75 mx-auto">
+               Log in
+            </a>
+        </p>
+    {% endif %}
+</div>
+
+                        {% if not  managed_email%}
+                            OR, enter email used to subscribe
+                            </p>
+
+
+                            <div id="guest-manage" class="mt-3">
+                                <div id="guest-status" class="mb-2"></div>
+                                <div class="input-group">
+                                    <input type="email" id="guest-email" class="form-control" placeholder="you@example.com">
+                                    <button id="guest-send" class="btn btn-outline-primary" type="button">Email me a manage link</button>
+                                </div>
+                            </div>
+
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if user.is_authenticated or managed_email %}
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Your Subscriptions</h5>
+                        <div id="subs-status" class="mb-2"></div>
+                        <div id="subs-list">
+                            <p class="text-muted mb-0">Loading…</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+
+        // Optional: allow clearing managed_email from session via query param
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("clear") === "1") {
+            // simple full reload is fine; server should clear session if you add handling in view (not shown)
+        }
+
+                const email = "{{ request.user.email }}";
+        const sub_toggle_url = "{% url "news-sub-manage-toggle"  %}";
+        const newsletters_list_url = "{% url "news-sub-manage-list-current" %}"
+
+        $(document).ready(function(){
+            {% if user.is_authenticated or managed_email %}
+                loadSubs();
+            {% endif %}
+            // Send magic link for guests
+            $("#guest-send").on("click", function(){
+                const email = $.trim($("#guest-email").val());
+                if (!email) {
+                    $("#guest-status").html('<div class="alert alert-warning">Please enter your email.</div>');
+                    return;
+                }
+                $("#guest-status").text("Sending…");
+                $.ajax({
+                    url: "/api/v2/news/subscription-manage/request_manage_link/",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ email: email })
+                }).done(function(){
+                    $("#guest-status").html('<div class="alert alert-success">We’ve emailed you a link to manage your subscriptions.</div>');
+                }).fail(function(){
+                    $("#guest-status").html('<div class="alert alert-danger">Sorry, something went wrong.</div>');
+                });
+            });
+        })
+
+
+        // Render list helper
+        function renderList(data){
+            if (!data ||  data.length === 0) {
+                $("#subs-list").html('<p class="text-muted mb-0">No newsletters found.</p>');
+                return;
+            }
+            let html = '<ul class="list-group">';
+            data.forEach(function(d){
+                const checked = d.subscribed ? 'checked' : '';
+                html += `
+          <li class="list-group-item d-flex justify-content-between align-items-center" >
+            <div class="me-3">
+              <div class="fw-semibold">${d.newsletter.title}</div>
+    <div class="small text-muted">${d.newsletter.about}</div>
+            </div>
+            <div class="form-check form-switch m-0">
+              <input class="form-check-input sub-toggle" data-slug="${d.newsletter.slug}" type="checkbox" ${checked}>
+            </div>
+          </li>`;
+            });
+            html += '</ul>';
+            $("#subs-list").html(html);
+        }
+
+        {% if user.is_authenticated or managed_email %}
+            // Fetch current subject subscriptions
+            function loadSubs(){
+                $.ajax({
+                    url: newsletters_list_url,
+                    method: "GET"
+                }).done(function(resp){
+                    renderList(resp);
+                }).fail(function(xhr){
+                    $("#subs-list").html('<p class="text-muted mb-0">Sign in or use a manage link to view subscriptions.</p>');
+                });
+            }
+        {% endif %}
+
+        $(document).on("change", ".clear_session", function(){
+            const url = "{% url 'news-sub-manage-clear-session' %}";
+            $.ajax({
+                url: url,
+                method: "GET",
+            }).done(function(){
+                location.reload();
+            }).fail(function(){
+                alert("Error clearing session.");
+            });
+        });
+
+
+        // Toggle subscribe/unsubscribe
+        $(document).on("change", ".sub-toggle", function(){
+            const payload = { newsletter_slug: $(this).data('slug'),
+                action: $(this).is(":checked") ? "subscribe" : "unsubscribe",
+                email: email };
+
+            $("#subs-status").text("Saving…");
+            $.ajax({
+                url: sub_toggle_url,
+                method: 'PATCH',
+                data: payload,
+
+            }).done(function(){
+                $("#subs-status").text("Saved");
+                setTimeout(function(){ $("#subs-status").text(""); }, 1500);
+            }).fail(function(xhr){
+                $("#subs-status").html('<div class="text-danger">Error saving change.</div>');
+            });
+        });
+
+
+    </script>
+{% endblock %}

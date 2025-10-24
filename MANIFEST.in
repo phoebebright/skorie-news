@@ -1,0 +1,2 @@
+recursive-include skorie-news/static *
+recursive-include skorie-news/templates *

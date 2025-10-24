@@ -1,0 +1,33 @@
+{% extends "admin/administrator_base.html" %}
+{% block title %}Submissions{% endblock %}
+{% block content %}
+<h1 class="h3 mt-3">Submissions</h1>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle">
+  <thead>
+    <tr>
+      <th>Message</th>
+      <th>Newsletter</th>
+      <th>Prepared</th>
+      <th>Sent</th>
+      <th>Sending</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for s in object_list %}
+    <tr>
+      <td>{{ s.message }}</td>
+      <td>{{ s.newsletter }}</td>
+      <td>{{ s.prepared }}</td>
+      <td>{{ s.sent }}</td>
+      <td>{{ s.sending }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="text-center text-muted">No submissions yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

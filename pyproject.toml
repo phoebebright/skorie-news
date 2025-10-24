@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=65.5.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skorie-news"
+version = "0.1.0"
+description = "A reusable Django app for newsletters and direct emails."
+readme = "README.md"
+license = {text = "MIT License"}
+authors = [
+    {name = "Phoebe Bright", email = "phoebebright310@gmail.com"}
+]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "Django>=3.2,<5.4",
+    "setuptools>=65.5.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/phoebebright/skorie-news"
+Repository = "https://github.com/phoebebright/skorie-news"
+
+[tool.setuptools]
+include-package-data = true
+
+# these setuptools required to get templates dir to be included
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["skorie_news"]
+
+[tool.setuptools.package-data]
+# key is the import path of your app
+"skorie_news" = ["templates/**/*.html", "templates/**/*.txt","templates/**/*.handlebars", "static/**/*"]

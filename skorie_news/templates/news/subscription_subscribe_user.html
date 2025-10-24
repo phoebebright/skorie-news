@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+{% block title %}{% trans "Activate Newsletter Subscription" %}{% endblock title %}
+
+{% block page_header %}
+{% trans "Activate Newsletter Subscription to " %} {{ newsletter.title }}
+{% endblock %}
+
+{% block content %}
+
+<p>Welcome, {{ user }}!</p>
+
+{% if messages %}
+<ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+{% trans "Confirm you want to subscribe to this newsletter?" %}
+<form  method="post" action="{% url "newsletter:newsletter_subscribe_confirm" newsletter.slug %}">
+    {% csrf_token %}
+
+        <input id="id_submit" name="submit" value="{% trans "Activate" %}" type="submit" class="btn btn-primary mt-3" />
+</form>
+{% endif %}
+{% endblock  %}
