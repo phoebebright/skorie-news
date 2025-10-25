@@ -2,11 +2,11 @@ from django import forms
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.utils.text import slugify
 from tinymce.widgets import TinyMCE
-import secrets, imghdr
-from pathlib import Path
+from django.utils.translation import gettext_lazy as _
 from skorie_news.models import Issue, Newsletter, Article, Attachment, Subscription, EventDispatch, IssueArticle
 from django.forms import inlineformset_factory
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 
 class NewsletterForm(forms.ModelForm):
