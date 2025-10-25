@@ -36,8 +36,10 @@ from tools.permission_mixins import UserCanOrganiseEventMixin
 from users.models import VerificationCode
 from web.models import Event, CommsTemplate
 from web.views import is_superuser
-from .forms import NewsletterForm,  CSVImportForm, SubscriptionForm, \
-    ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm
+
+from .forms import NewsletterForm, CSVImportForm, SubscriptionForm, \
+    ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm, \
+    NewsForm
 
 User = get_user_model()
 
