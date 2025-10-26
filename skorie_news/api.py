@@ -157,15 +157,15 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
         if existing:
             if existing.subscribed:
                 return Response("Already subscribed", status=status.HTTP_200_OK)
-            else:
-                with transaction.atomic():
-                    sub = Subscription.objects.create(
-                        newsletter=newsletter, email=user.email, name=user.formal_name, user=user
-                    )
-                    consent = {'consent_text': f'Subscribed by {request.user}'}
-                    sub.subscribe(consent=consent, user=request.user)
+        else:
+            with transaction.atomic():
+                sub = Subscription.objects.create(
+                    newsletter=newsletter, email=user.email, name=user.formal_name, user=user
+                )
+                consent = {'consent_text': f'Subscribed by {request.user}'}
+                sub.subscribe(consent=consent, user=request.user)
 
-                return Response("Subscribed", status=status.HTTP_201_CREATED)
+            return Response("Subscribed", status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["patch"])
     def subscribe_me(self, request, *args, **kwargs):

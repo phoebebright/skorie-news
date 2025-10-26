@@ -93,8 +93,8 @@
         }
 
                 const email = "{{ request.user.email }}";
-        const sub_toggle_url = "{% url "news-sub-manage-toggle"  %}";
-        const newsletters_list_url = "{% url "news-sub-manage-list-current" %}"
+        const sub_toggle_url = "{% url "newsapi:news-sub-manage-toggle"  %}";
+        const newsletters_list_url = "{% url "newsapi:news-sub-manage-list-current" %}"
 
         $(document).ready(function(){
             {% if user.is_authenticated or managed_email %}

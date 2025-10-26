@@ -105,9 +105,9 @@
                 }
 
                 const nlSlug = $("#subs-root").data("newsletter");
-                const unsub_url = "{% url 'news-subscription-api-unsubscribe' 0 %}";
-                const resub_url = "{% url 'news-subscription-api-resubscribe' 0 %}";
-                const sub_url = "{% url 'news-subscription-api-list' %}";
+                const unsub_url = "{% url 'newsapi:news-subscription-api-unsubscribe' 0 %}";
+                const resub_url = "{% url 'newsapi:news-subscription-api-resubscribe' 0 %}";
+                const sub_url = "{% url 'newsapi:news-subscription-api-list' %}";
                 const subscribers_url = "{% url 'news-admin-subscribers-list' %}?newsletter={{ newsletter.slug|urlencode }}";
 
 
