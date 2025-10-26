@@ -141,24 +141,3 @@ class NewsletterDownloadForm(forms.Form):
 
     scope = forms.ChoiceField(choices=SCOPE_CHOICES, initial="all", widget=forms.RadioSelect)
     fmt = forms.ChoiceField(choices=FORMAT_CHOICES, initial="csv_dates", widget=forms.RadioSelect)
-
-
-# this is the log type news related to an event
-class NewsEventFormBase(forms.ModelForm):
-    datetime_attributes = {'type': 'datetime-local', 'class': 'date_picker'}
-    publish_start = forms.DateTimeField(widget=forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs=datetime_attributes),
-                                     required=False,
-                                     help_text=_("News is publicly available from this date"))
-    publish_end = forms.DateTimeField(widget=forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs=datetime_attributes), required=False, help_text=_("News is publicly available until this date"))
-    class Meta:
-        model = Newsletter
-        fields = [ "competition","entry",  "summary", "body", "public", "for_organisers", "for_staff", "url",
-        "publish_start", "publish_end"]
-
-class NewsForm(forms.ModelForm):
-
-
-    class Meta:
-        model = Newsletter
-        fields = [  "summary", "body", "public", "for_organisers", "for_staff", "url",
-        "publish_start", "publish_end"]
