@@ -36,4 +36,4 @@ include = ["skorie_news"]
 
 [tool.setuptools.package-data]
 # key is the import path of your app
-"skorie_news" = ["templates/**/*.html", "templates/**/*.txt","templates/**/*.handlebars", "static/**/*", "management/**/*", "docs/**/*", "migrations/**/*" ]
+"skorie_news" = ["templates/**/*", "static/**/*", "management/**/*", "docs/**/*", "migrations/**/*" ]
