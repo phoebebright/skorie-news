@@ -143,6 +143,30 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
 
         return Response("Subscribed", status=status.HTTP_201_CREATED)
 
+    @action(
+        detail=False, methods=['post'],
+        url_path=r'(?P<user_id>\d+)/(?P<newsletter_id>\d+)/subscribe',
+        url_name='subscribe'
+    )
+    def subscribe(self, request, user_id=None, newsletter_id=None):
+        # subscribe a user to a newsletter
+        user = get_object_or_404(User, pk=user_id)
+        newsletter = get_object_or_404(Newsletter, pk=newsletter_id)
+
+        existing = Subscription.objects.filter(newsletter=newsletter, user=user).first()
+        if existing:
+            if existing.subscribed:
+                return Response("Already subscribed", status=status.HTTP_200_OK)
+            else:
+                with transaction.atomic():
+                    sub = Subscription.objects.create(
+                        newsletter=newsletter, email=user.email, name=user.formal_name, user=user
+                    )
+                    consent = {'consent_text': f'Subscribed by {request.user}'}
+                    sub.subscribe(consent=consent, user=request.user)
+
+                return Response("Subscribed", status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["patch"])
     def subscribe_me(self, request, *args, **kwargs):
         """
