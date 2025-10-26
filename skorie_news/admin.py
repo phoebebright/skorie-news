@@ -152,14 +152,14 @@ class ArticleAdmin(admin.ModelAdmin):
 #
 #     def preview_link(self, obj):
 #         # If you have a front-end preview view, point to it:
-#         # e.g., name="skorie_news:message-preview"
-#         link = _admin_link("Preview", "skorie_news:message-preview", obj.pk)
+#         # e.g., name="news:message-preview"
+#         link = _admin_link("Preview", "news:message-preview", obj.pk)
 #         return format_html(link) if link else "-"
 #     preview_link.short_description = "Preview"
 #
 #     def queue_link(self, obj):
 #         # If you have an API/URL for queue in the front-end, add it; otherwise admin action above handles bulk.
-#         link = _admin_link("Queue", "skorie_news:message-queue", obj.pk)
+#         link = _admin_link("Queue", "news:message-queue", obj.pk)
 #         return format_html(link) if link else "-"
 #     queue_link.short_description = "Queue"
 #

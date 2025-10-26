@@ -132,17 +132,17 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
 
     # ----- URLs in your site (optional) -----
     def get_absolute_url(self):
-        return reverse(f"skorie_news:newsletter-edit", kwargs={"pk": self.id})
-        #return reverse(f"skorie_news:newsletter_detail", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"news:newsletter-edit", kwargs={"pk": self.id})
+        #return reverse(f"news:newsletter_detail", kwargs={"newsletter_slug": self.slug})
 
     def subscribe_url(self):
-        return reverse(f"skorie_news:newsletter_subscribe_request", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"news:newsletter_subscribe_request", kwargs={"newsletter_slug": self.slug})
 
     def unsubscribe_url(self):
-        return reverse(f"skorie_news:newsletter_unsubscribe_request", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"news:newsletter_unsubscribe_request", kwargs={"newsletter_slug": self.slug})
 
     def archive_url(self):
-        return reverse(f"skorie_news:newsletter_archive", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"news:newsletter_archive", kwargs={"newsletter_slug": self.slug})
 
     @classmethod
     def is_subscribed_to_newsletter(cls, user, newsletter=None):
@@ -590,7 +590,7 @@ class Subscription(CreatedUpdatedMixin):
         Secure unsubscribe link using activation_code
         """
 
-        path = reverse("skorie_news:confirm-subscribe", args=[self.pk, self.activation_code])
+        path = reverse("news:confirm-subscribe", args=[self.pk, self.activation_code])
         return f"{settings.SITE_URL}{path}"
 
     @property
@@ -599,7 +599,7 @@ class Subscription(CreatedUpdatedMixin):
         Secure unsubscribe link using activation_code
         """
 
-        path = reverse("skorie_news:unsubscribe-now", args=[self.pk, self.activation_code])
+        path = reverse("news:unsubscribe-now", args=[self.pk, self.activation_code])
         return f"{settings.SITE_URL}{path}"
 
     @property
@@ -608,7 +608,7 @@ class Subscription(CreatedUpdatedMixin):
         Secure subscribe link using activation_code
         """
         # link will subscribe and confirm
-        path = reverse("skorie_news:confirm-subscribe", args=[self.pk, self.activation_code])
+        path = reverse("news:confirm-subscribe", args=[self.pk, self.activation_code])
         return f"{settings.SITE_URL}{path}"
 
     @classmethod

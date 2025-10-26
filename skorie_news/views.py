@@ -146,20 +146,20 @@ class NewsletterCreateView(UserCanAdministerMixin, GoNextMixin,CreateView):
     model = Newsletter
     form_class = NewsletterForm
     template_name = "skorie_news/admin/newsletter_form_create.html"
-    success_url = reverse_lazy("skorie_news:skorie_news-home")
+    success_url = reverse_lazy("news:news-home")
 
 @method_decorator(never_cache, name='dispatch')
 class NewsletterUpdateView(UserCanAdministerMixin, UpdateView):
     model = Newsletter
     form_class = NewsletterForm
     template_name = "skorie_news/admin/newsletter_form.html"
-    success_url = reverse_lazy("skorie_news:skorie_news-home")
+    success_url = reverse_lazy("news:news-home")
 
 
 class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
     model = Newsletter
     template_name = "skorie_news/admin/newsletter_confirm_delete.html"
-    success_url = reverse_lazy("skorie_news:skorie_news-home")
+    success_url = reverse_lazy("news:news-home")
 #
 # @method_decorator(never_cache, name='dispatch')
 # class MessageListView(UserCanAdministerMixin, ListView):
@@ -179,7 +179,7 @@ class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
 #     model = Issue
 #     form_class = MessageForm
 #     template_name = "skorie_news/admin/issues/issue_form.html"
-#     success_url = reverse_lazy("skorie_news:issue-list")
+#     success_url = reverse_lazy("news:issue-list")
 #
 #     def get_form_kwargs(self):
 #         """Return the keyword arguments for instantiating the form."""
@@ -203,7 +203,7 @@ class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
 #     template_name = "skorie_news/admin/issues/issue_form.html"
 #     article_formset_class = ArticleForm
 #     attachment_formset_class = AttachmentForm
-#     success_url = reverse_lazy("skorie_news:issue-list")
+#     success_url = reverse_lazy("news:issue-list")
 #
 #
 #     def get(self, request, *args, **kwargs):
@@ -275,7 +275,7 @@ class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
 # class MessageDeleteView(UserCanAdministerMixin, DeleteView):
 #     model = Issue
 #     template_name = "skorie_news/admin/message_confirm_delete.html"
-#     success_url = reverse_lazy("skorie_news:issue-list")
+#     success_url = reverse_lazy("news:issue-list")
 #
 # @method_decorator(never_cache, name='dispatch')
 # class MessagePreviewView(UserCanAdministerMixin, View):
@@ -329,7 +329,7 @@ def issue_queue_submission(request: HttpRequest, pk: int) -> HttpResponse:
         request,
         "Submission queued. The management command will deliver it to all current subscribers.",
     )
-    return redirect("skorie_news:submission-list")
+    return redirect("news:submission-list")
 
 class SubscriptionThanks(TemplateView):
     template_name = "skorie_news/user/subscription_thanks.html"
@@ -400,7 +400,7 @@ class SubscriberManageView(UserCanAdministerMixin, TemplateView):
 @method_decorator(never_cache, name='dispatch')
 class NewsletterSubscriptionsView(MixinNewsletterNMessage, UserCanAdministerMixin, View):
     """
-    Admin page to manage subscriptions for a single skorie_news:
+    Admin page to manage subscriptions for a single news:
     - List (with search + paginate)
     - Add single subscriber
     - Bulk import CSV
@@ -445,7 +445,7 @@ class NewsletterSubscriptionsView(MixinNewsletterNMessage, UserCanAdministerMixi
             return redirect(self._list_url(nl))
 
     def _list_url(self, nl):
-        return reverse("skorie_news:subscriptions-manage", kwargs={"newsletter_pk": nl.pk})
+        return reverse("news:subscriptions-manage", kwargs={"newsletter_pk": nl.pk})
 
     # -- Actions --
 
@@ -588,7 +588,7 @@ class SubscribeWithEmailRedirect(RedirectView):
 
     permanent = False
     query_string = True
-    pattern_name = "skorie_news:subscribe-with-email-only"
+    pattern_name = "news:subscribe-with-email-only"
 
     def get_redirect_url(self, *args, **kwargs):
         nl = get_object_or_404(Newsletter, slug=settings.NEWSLETTER_GENERAL_SLUG)
@@ -606,7 +606,7 @@ class SubscribeWithEmailUnconfirmed(View):
         #TODO: if the email matches the logged in user, then redirect to manage subscriptions
         raw_email = (request.GET.get("email") or "").strip().replace(' ','+')
         name = (request.GET.get("name") or "").strip()
-        next_url = reverse("skorie_news:manage-subs")
+        next_url = reverse("news:manage-subs")
 
         if not newsletter_slug or not raw_email:
             messages.error(request, "Newsletter and email are required.")
@@ -685,7 +685,7 @@ class MessageArticlesView(MixinNewsletterNMessage, ListView):
 #         return super().form_valid(form)
 #
 #     def get_success_url(self):
-#         return reverse_lazy("skorie_news:message-articles", args=[self.kwargs["message_pk"]])
+#         return reverse_lazy("news:message-articles", args=[self.kwargs["message_pk"]])
 #
 # class ArticleUpdateView(MixinNewsletterNMessage, UpdateView):
 #     model = Article
@@ -693,14 +693,14 @@ class MessageArticlesView(MixinNewsletterNMessage, ListView):
 #     template_name = "skorie_news/message/article_form.html"
 #
 #     def get_success_url(self):
-#         return reverse_lazy("skorie_news:message-articles", args=[self.object.post.pk])
+#         return reverse_lazy("news:message-articles", args=[self.object.post.pk])
 #
 # class ArticleDeleteView(MixinNewsletterNMessage,DeleteView):
 #     model = Article
 #     template_name = "skorie_news/message/article_confirm_delete.html"
 #
 #     def get_success_url(self):
-#         return reverse_lazy("skorie_news:message-articles", args=[self.object.post.pk])
+#         return reverse_lazy("news:message-articles", args=[self.object.post.pk])
 #
 #
 #
@@ -740,7 +740,7 @@ class ArticleEditView(UpdateView):
             formset.instance = article
             formset.save()
             messages.success(request, "Article saved.")
-            return redirect(reverse("skorie_news:article-list"))
+            return redirect(reverse("news:article-list"))
         return self.render_to_response(self.get_context_data(form=form, formset=formset))
 
 
@@ -831,7 +831,7 @@ class EventSendView(UserCanOrganiseEventMixin, View):
         except Exception as e:
             messages.error(request, str(e))
 
-        return redirect(reverse("skorie_news:event-send", args=[self.event.ref]))
+        return redirect(reverse("news:event-send", args=[self.event.ref]))
 
 
 
@@ -905,7 +905,7 @@ class IssueCreateView(UserCanAdministerMixin, TemplateView):
             })
         issue = form.save()
         messages.success(request, "Issue created. Add articles below, then Queue or Publish.")
-        return redirect(reverse("skorie_news:issue-edit", args=[issue.pk]))
+        return redirect(reverse("news:issue-edit", args=[issue.pk]))
 
 
 
@@ -948,7 +948,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
 
         def get_success_url(self):
             # stay on the same page after save
-            return reverse("skorie_news:issue-edit", args=[self.object.pk])
+            return reverse("news:issue-edit", args=[self.object.pk])
     #
     # def get(self, request, pk):
     #     issue = get_object_or_404(Issue, pk=pk)
@@ -972,7 +972,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
     #     if form.is_valid():
     #         form.save()
     #         messages.success(request, "Issue updated.")
-    #         return redirect(reverse("skorie_news:issue-edit", args=[issue.pk]))
+    #         return redirect(reverse("news:issue-edit", args=[issue.pk]))
     #     library = Article.objects.all().order_by("-is_template", "-updated")[:50]
     #     links = issue.issue_articles.select_related("article").order_by("position", "id")
     #     return render(request, self.template_name, {
@@ -1002,11 +1002,11 @@ class ClaimEmailManageLinkView(TemplateView):
             email = signing.TimestampSigner(salt=MANAGE_EMAIL_SALT).unsign(token, max_age=MANAGE_EMAIL_MAX_AGE)
         except signing.BadSignature:
             messages.error(request, "Invalid or expired link.")
-            return redirect("skorie_news:manage-subs")
+            return redirect("news:manage-subs")
 
         request.session["managed_email"] = email
         messages.success(request, f"You can now manage subscriptions for {email}.")
-        return redirect("skorie_news:manage-subs")
+        return redirect("news:manage-subs")
 
 
 # class ManageSubscriptionsView(TemplateView):
@@ -1048,7 +1048,7 @@ class UnsubscribeView(TemplateView):
         # Only for email-only subs (guests). For user-linked subs, require login/manage page.
         if sub.user_id is not None:
             messages.info(request, "Please log in to manage your subscriptions.")
-            return redirect("skorie_news:manage-subs")
+            return redirect("news:manage-subs")
         sub.unsubscribe()
         self.subscription = sub
         return super().dispatch(request, *args, **kwargs)

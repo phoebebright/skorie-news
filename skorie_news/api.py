@@ -280,7 +280,7 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
             return Response({"msg": f"You are already subscribed with {email} ."}, status=200)
 
         # Build confirm URL
-        confirm_path = reverse("skorie_news:confirm-subscribe", args=[sub.pk, sub.activation_code])
+        confirm_path = reverse("news:confirm-subscribe", args=[sub.pk, sub.activation_code])
         confirm_url = f"{settings.SITE_URL}{confirm_path}"
 
         # Send confirmation email (privacy-safe regardless of state)
