@@ -357,10 +357,11 @@ class Migration(migrations.Migration):
             model_name='delivery',
             index=models.Index(fields=['esp_name'], name='skorie_news_esp_nam_eef19f_idx'),
         ),
-        migrations.AddConstraint(
-            model_name='delivery',
-            constraint=models.UniqueConstraint(condition=models.Q(('message_id__isnull', False)), fields=('esp_name', 'message_id'), name='uniq_delivery_esp_message'),
-        ),
+        # causing psycopg2.errors.DuplicateTable: relation "uniq_delivery_esp_message" already exists
+        # migrations.AddConstraint(
+        #     model_name='delivery',
+        #     constraint=models.UniqueConstraint(condition=models.Q(('message_id__isnull', False)), fields=('esp_name', 'message_id'), name='uniq_delivery_esp_message'),
+        # ),
         migrations.AlterUniqueTogether(
             name='issue',
             unique_together={('slug', 'newsletter')},
