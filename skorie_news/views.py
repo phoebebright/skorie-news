@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites import requests
 from django.core import signing
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
@@ -38,8 +38,7 @@ from web.models import Event, CommsTemplate
 from web.views import is_superuser
 
 from .forms import NewsletterForm, CSVImportForm, SubscriptionForm, \
-    ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm, \
-    NewsForm
+    ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm
 
 User = get_user_model()
 
@@ -1339,7 +1338,7 @@ class NewsAdminListViewBase(UserCanAdministerMixin, GoNextMixin, ListView):
 class NewsAdminCreateViewBase(UserCanAdministerMixin, GoNextMixin, CreateView):
     model = None
     template_name = "admin/news/news_form.html"
-    form_class = NewsForm
+    form_class = NewsletterForm
 
     def get_success_url(self):
         return reverse_lazy("admin_news_list")
@@ -1347,7 +1346,7 @@ class NewsAdminCreateViewBase(UserCanAdministerMixin, GoNextMixin, CreateView):
 class NewsAdminUpdateViewBase(UserCanAdministerMixin, GoNextMixin, UpdateView):
     model = None
     template_name = "admin/news/news_form.html"
-    form_class = NewsForm
+    form_class = NewsletterForm
 
     def get_queryset(self):
         return  self.model.objects.exclude(event__isnull=False).order_by("-publish_start")
