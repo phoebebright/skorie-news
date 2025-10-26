@@ -109,7 +109,7 @@
                 }
                 $("#guest-status").text("Sending…");
                 $.ajax({
-                    url: "/api/v2/news/subscription-manage/request_manage_link/",
+                    url: '{% url "newsapi:news-sub-manage-request-manage-link" %}',
                     method: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({ email: email })
@@ -161,7 +161,7 @@
         {% endif %}
 
         $(document).on("change", ".clear_session", function(){
-            const url = "{% url 'news-sub-manage-clear-session' %}";
+            const url = "{% url 'newsapi:news-sub-manage-clear-session' %}";
             $.ajax({
                 url: url,
                 method: "GET",
