@@ -2,13 +2,13 @@ from django.urls import path, register_converter
 
 from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
     SubmissionListView, \
-    NewsletterSubscriptionsView, UpdateMySubscription,  \
+    NewsletterSubscriptionsView, UpdateMySubscription, \
     MessageArticlesView, SubscribeWithEmail, EventSendView, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
-    SendFromTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission
-
+    SendFromTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission, NewsListView, \
+    NewsCreateView, NewsUpdateView, NewsDeleteView
 
 app_name = "skorie_news"
 

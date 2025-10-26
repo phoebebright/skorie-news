@@ -1265,7 +1265,7 @@ def fix_subscribers(request):
 
 # === NEWS LIST VIEW ===
 @method_decorator(never_cache, name="dispatch")
-class NewsListViewBase(UserCanOrganiseEventMixin, ListView):
+class NewsListView(UserCanOrganiseEventMixin, ListView):
     model = None
     template_name = "organiser/news/news_list.html"
     context_object_name = "news_list"
@@ -1283,7 +1283,7 @@ class NewsListViewBase(UserCanOrganiseEventMixin, ListView):
 
 
 # === NEWS CREATE VIEW ===
-class NewsCreateViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, CreateView):
+class NewsCreateView(UserCanOrganiseEventMixin, GoNextTemplateMixin, CreateView):
     model = None
     fields = "__all__"
     template_name = "organiser/news/news_form.html"
@@ -1293,7 +1293,7 @@ class NewsCreateViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, CreateV
 
 
 # === NEWS UPDATE VIEW ===
-class NewsUpdateViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, UpdateView):
+class NewsUpdateView(UserCanOrganiseEventMixin, GoNextTemplateMixin, UpdateView):
     model = None
     fields = "__all__"
     template_name = "organiser/news/news_form.html"
@@ -1309,7 +1309,7 @@ class NewsUpdateViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, UpdateV
 
 
 # === NEWS DELETE VIEW ===
-class NewsDeleteViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, DeleteView):
+class NewsDeleteView(UserCanOrganiseEventMixin, GoNextTemplateMixin, DeleteView):
     model = None
     success_url = reverse_lazy("news_list")
     template_name = "organiser/news/news_confirm_delete.html"
@@ -1319,7 +1319,7 @@ class NewsDeleteViewBase(UserCanOrganiseEventMixin, GoNextTemplateMixin, DeleteV
 
 
 # === NEWS DETAIL VIEW ===
-class NewsDetailViewBase(UserCanOrganiseEventMixin, DetailView):
+class NewsDetailView(UserCanOrganiseEventMixin, DetailView):
     model = None
     template_name = "organiser/news/news_detail.html"
     context_object_name = "news"
@@ -1327,7 +1327,7 @@ class NewsDetailViewBase(UserCanOrganiseEventMixin, DetailView):
 # === ADMIN NEWS VIEWS ===
 
 @method_decorator(never_cache, name="dispatch")
-class NewsAdminListViewBase(UserCanAdministerMixin, GoNextMixin, ListView):
+class NewsAdminListView(UserCanAdministerMixin, GoNextMixin, ListView):
     model = None
     template_name = "admin/news/news_list.html"
     context_object_name = "news_list"
@@ -1335,7 +1335,7 @@ class NewsAdminListViewBase(UserCanAdministerMixin, GoNextMixin, ListView):
     def get_queryset(self):
         return  self.model.objects.filter(event__isnull=True).order_by("-publish_start")
 
-class NewsAdminCreateViewBase(UserCanAdministerMixin, GoNextMixin, CreateView):
+class NewsAdminCreateView(UserCanAdministerMixin, GoNextMixin, CreateView):
     model = None
     template_name = "admin/news/news_form.html"
     form_class = NewsletterForm
@@ -1343,7 +1343,7 @@ class NewsAdminCreateViewBase(UserCanAdministerMixin, GoNextMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy("admin_news_list")
 
-class NewsAdminUpdateViewBase(UserCanAdministerMixin, GoNextMixin, UpdateView):
+class NewsAdminUpdateView(UserCanAdministerMixin, GoNextMixin, UpdateView):
     model = None
     template_name = "admin/news/news_form.html"
     form_class = NewsletterForm
@@ -1356,7 +1356,7 @@ class NewsAdminUpdateViewBase(UserCanAdministerMixin, GoNextMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy("admin_news_list")
 
-class NewsAdminDeleteViewBase(UserCanAdministerMixin, GoNextMixin, DeleteView):
+class NewsAdminDeleteView(UserCanAdministerMixin, GoNextMixin, DeleteView):
     model = None
     success_url = reverse_lazy("news_list")
     template_name = "admin/news/news_confirm_delete.html"
