@@ -365,9 +365,10 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='issue',
             unique_together={('slug', 'newsletter')},
-        ),
-        migrations.AddConstraint(
-            model_name='subscription',
-            constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
-        ),
+         ),
+        #django.db.utils.ProgrammingError: relation "uniq_newsletter_email" already exists
+        # migrations.AddConstraint(
+        #     model_name='subscription',
+        #     constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
+        # ),
     ]
