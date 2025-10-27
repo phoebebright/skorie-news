@@ -7,7 +7,7 @@ from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, Newsle
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
-    SendFromTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission, NewsListView, \
+    SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission, NewsListView, \
     NewsCreateView, NewsUpdateView, NewsDeleteView
 
 app_name = "skorie_news"
@@ -81,15 +81,15 @@ urlpatterns = [
 
     path(
         "send-from-template/<int:pk>/",
-        SendFromTemplateView.as_view(),
-        name="skorie_news-admin-send-from-template",
+        SendFromArticleTemplateView.as_view(),
+        name="admin-send-from-template",
     ),
 
     # with template_id
     path(
         "send-from-template/<int:pk>/<int:template_id>/",
-        SendFromTemplateView.as_view(),
-        name="skorie_news-admin-send-from-template",
+        SendFromArticleTemplateView.as_view(),
+        name="admin-send-from-template",
     ),
 
     path("subscribers/<int:pk>/download/", AdminNewsletterDownloadView.as_view(),

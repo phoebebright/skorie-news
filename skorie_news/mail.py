@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Iterable, Mapping, Optional, Sequence
 
 from django.conf import settings
+from django.contrib import messages
 
 from .models import DirectEmail
 import logging
@@ -33,6 +34,7 @@ class mail:
         bcc: Optional[Sequence[str]] = None,
         reply_to: Optional[Sequence[str]] = None,
         scheduled_time=None,
+        channel='email',           # only email currently supported
         backend: Optional[str] = None,
             user = None, # the skorie user sending the email (may not be the sender on the email)
             receiver=None,   # User instance - only where there is one recipient, might need to rethink this.
