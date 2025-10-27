@@ -66,6 +66,10 @@ class mail:
             else:
                 email.save()
 
+            if settings.DEBUG:
+                logger.info(f"DEBUG ON: Would send email {email} to {to_email}")
+                continue
+
             try:
                 deliveries.append(email.send())
             except Exception as e:
