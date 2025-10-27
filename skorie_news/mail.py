@@ -67,7 +67,7 @@ class mail:
                 email.save()
 
             if settings.DEBUG:
-                logger.info(f"DEBUG ON: Would send email {email} to {to_email}")
+                logger.info(f"DEBUG ON: Would send email {email} to {to_email}: {email.body_text}")
                 continue
 
             try:
