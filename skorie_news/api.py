@@ -145,11 +145,20 @@ class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
 
     @action(
         detail=False, methods=['post'],
+        url_name='subscribe_from_form'
+    )
+    def subscribe_from_form(self, request):
+        self.create(request)
+        return Response("Subscribed", status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=False, methods=['post'],
         url_path=r'(?P<user_id>\d+)/(?P<newsletter_id>\d+)/subscribe',
         url_name='subscribe'
     )
-    def subscribe(self, request, user_id=None, newsletter_id=None):
+    def subscribe(self, request, user_id, newsletter_id):
         # subscribe a user to a newsletter
+
         user = get_object_or_404(User, pk=user_id)
         newsletter = get_object_or_404(Newsletter, pk=newsletter_id)
 
