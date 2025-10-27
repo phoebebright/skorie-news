@@ -33,7 +33,7 @@
     <div class="card mb-3">
         <div class="card-body">
             <h3>Add New Subscriber</h3>
-            <form id="add-form" class="row g-2 align-items-end" action="{% url 'newsapi:news-subscription-api-subscribe-from-form' %}" method="post">
+            <form id="add-form" class="row g-2 align-items-end" action="{% url 'newsapi:news-subscription-api-subscribe_from_form' %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="newsletter" value="{{ newsletter.slug }}">
                 <div class="col-md-5">
@@ -107,8 +107,8 @@
                 const nlSlug = $("#subs-root").data("newsletter");
                 const unsub_url = "{% url 'newsapi:news-subscription-api-unsubscribe' 0 %}";
                 const resub_url = "{% url 'newsapi:news-subscription-api-resubscribe' 0 %}";
-                const sub_url = "{% url 'newsapi:news-subscription-api-subscribe-from-form' %}";
-                const subscribers_url = "{% url 'news-admin-subscribers-subscribe' %}?newsletter={{ newsletter.slug|urlencode }}";
+                const sub_url = "{% url 'newsapi:news-subscription-api-subscribe_from_form' %}";
+                const subscribers_url = "{% url 'newsapi:news-subscription-api-list' %}?newsletter={{ newsletter.slug|urlencode }}";
 
 
                 function toast(msg, kind){
