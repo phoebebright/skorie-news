@@ -33,7 +33,7 @@
 
                 $.ajax({
                     method: "PATCH",
-                    url:  SKORIE_API + "/api/v2/news/subscription/{{ subscription.pk }}/subscribe_me/",
+                    url:  SUBSCRIBE_ME_API_URL,
                     contentType: "application/json",
 
                     success: function(resp) {
@@ -48,7 +48,8 @@
             $("#unsubscribe-btn").on("click", function() {
                 $.ajax({
                     method: "PATCH",
-                    url:  SKORIE_API + "/api/v2/news/subscription/{{ subscription.pk }}/unsubscribe_me/",
+                    //url:  SKORIE_API + "/api/v2/news/subscription/{{ subscription.pk }}/unsubscribe_me/",
+                    url:  SUBSCRIBE_ME_API_URL,
                     contentType: "application/json",
 
                     success: function(resp) {
