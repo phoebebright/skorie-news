@@ -42,13 +42,15 @@ from skorie.common.api import verify_signature
 from tools.permissions import IsAdministratorPermission
 
 from .models import Newsletter, Subscription, Mailing, Issue, SubscriptionEvent, IssueArticle, Article, Delivery, \
-    DirectEmail, DeliveryEvent
+    DirectEmail, DeliveryEvent, get_mail_class
 from .serializers import SubscriptionSerializer, MessageSerializer, SubmissionSerializer, SubscriptionEventSerializer, \
     ArticleSerializer, IssueArticleSerializer, IssueArticlesUpdateSerializer, \
     SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer
 
 User = get_user_model()
 logger = logging.getLogger('django')
+
+mail = get_mail_class()
 
 MANAGE_EMAIL_SALT = "skorie_news.manage_email"
 MANAGE_EMAIL_MAX_AGE = 60 * 60 * 24  # 24h
@@ -289,6 +291,7 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
         Body: { "email": "...", "newsletter_slug": "...", "name": "Optional" }
         Guest (no login) double-opt-in: send a confirmation email with secure link.
         """
+        #TODO: look up email and see if user already
         email = request.data.get("email").strip().lower()
         slug = (request.data.get("newsletter_slug") or settings.NEWSLETTER_GENERAL_SLUG).strip()
         name = (request.data.get("name") or "").strip()
@@ -315,21 +318,16 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
         # Build confirm URL
         confirm_path = reverse("news:confirm-subscribe", args=[sub.pk, sub.activation_code])
         confirm_url = f"{settings.SITE_URL}{confirm_path}"
+        context = {"newsletter": nl, "confirm_url": confirm_url}
 
-        # Send confirmation email (privacy-safe regardless of state)
-        ctx = {"newsletter": nl, "confirm_url": confirm_url}
-        subject = f"Confirm your subscription – {nl.title}"
-        text = render_to_string("skorie_news/email/sub_request.txt", ctx)
-        html = render_to_string("skorie_news/email/sub_request.html", ctx)
-
-        from django.core.mail import EmailMultiAlternatives
-        msg = EmailMultiAlternatives(
-            subject, text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
+        mail.send(
+            email,
+            sender=request.user,
+            template="subscribe_request",
+            context=context,
         )
-        msg.attach_alternative(html, "text/html")
-        msg.send()
+
+
 
         return Response({"msg": f"We have emailed a link to {email} to confirm your subscription."}, status=200)
 
