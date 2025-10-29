@@ -1361,7 +1361,8 @@ class DirectEmail(CreatedUpdatedMixin):
         elif self.template:
             # template is the name in the template/email directory
             context = self.context_processor(context)
-            self.context = context
+            #TODO: remove context field - too big - don't know what's going to be in it - might be private.
+            #self.context = context -
 
             if not self.subject:
                 try:

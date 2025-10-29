@@ -1146,7 +1146,6 @@ class UnsubscribeView(TemplateView):
         sub = get_object_or_404(Subscription, pk=kwargs["pk"], activation_code=kwargs["code"])
         # Only for email-only subs (guests). For user-linked subs, require login/manage page.
         if sub.user_id is not None:
-            messages.info(request, "Please log in to manage your subscriptions.")
             return redirect("news:manage-subs")
         sub.unsubscribe()
         self.subscription = sub
