@@ -13,7 +13,7 @@
       {% with nl=pair.newsletter sub=pair.subscription %}
         <tr data-newsletter_id="{{ nl.slug }}"
             data-subscription_id="{% if sub %}{{ sub.id }}{% endif %}"
-        data-subscribe_url='{% if sub %}{% url "newsapi:news-subscription-api-resubscribe" sub.id %}{% else %}{% url "newsapi:news-subscription-api" %}{% endif %}'
+        data-subscribe_url='{% if sub %}{% url "newsapi:news-subscription-api-resubscribe" sub.id %}{% else %}{% url "newsapi:news-subscription-api-list" %}{% endif %}'
             {% if sub %}data-unsubscribe_url='{% url "newsapi:news-subscription-api-unsubscribe" sub.id %} {% endif %}'>
           <td>{{ nl.title }}</td>
 
