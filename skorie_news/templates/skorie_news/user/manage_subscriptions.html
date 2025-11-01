@@ -137,9 +137,15 @@
               <div class="fw-semibold">${d.newsletter.title}</div>
     <div class="small text-muted">${d.newsletter.about}</div>
             </div>
+
+         <div class="d-flex align-items-center">
+            <span class="me-2 text-muted small">Off</span>
             <div class="form-check form-switch m-0">
-              <input class="form-check-input sub-toggle" data-slug="${d.newsletter.slug}" type="checkbox" ${checked}>
+                 <input class="form-check-input sub-toggle" data-slug="${d.newsletter.slug}" type="checkbox" ${checked}>
             </div>
+            <span class="ms-2 text-muted small">On</span>
+          </div>
+
           </li>`;
             });
             html += '</ul>';
