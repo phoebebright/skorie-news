@@ -3,7 +3,7 @@ Django
 qrcode
 djangorestframework
 djangorestframework-api-key
-
+djangorestframework-datatables
 git+https://github.com/phoebebright/django-docserve
 django-anymail[mailgun]
 django-tinymce

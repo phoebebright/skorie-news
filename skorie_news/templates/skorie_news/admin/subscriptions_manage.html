@@ -108,7 +108,7 @@
                 const unsub_url = "{% url 'newsapi:news-subscription-api-unsubscribe' 0 %}";
                 const resub_url = "{% url 'newsapi:news-subscription-api-resubscribe' 0 %}";
                 const sub_url = "{% url 'newsapi:news-subscription-api-subscribe_from_form' %}";
-                const subscribers_url = "{% url 'newsapi:news-subscription-api-list' %}?newsletter={{ newsletter.slug|urlencode }}";
+                const subscribers_url = "{% url 'newsapi:news-admin-subscribers-list' %}?newsletter={{ newsletter.slug|urlencode }}";
 
 
                 function toast(msg, kind){
