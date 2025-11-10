@@ -1,0 +1,14 @@
+<li class="list-group-item d-flex align-items-center" data-id="{{ id|default:'' }}">
+  <span class="handle me-3" title="Drag">☰</span>
+  <div class="flex-grow-1">
+    <div class="fw-semibold">{% if title %}{{ title }}{% endif %}</div>
+  </div>
+  <div class="form-check me-3">
+    <input class="form-check-input appear" type="checkbox" {% if is_blog %}checked{% endif %}>
+    <label class="form-check-label">Blog</label>
+  </div>
+  <div class="btn-group btn-group-sm">
+    <button class="btn btn-outline-secondary edit_article">Edit</button>
+    <button class="btn btn-outline-danger remove-article">Remove</button>
+  </div>
+</li>

@@ -1,48 +1,69 @@
-      <div class="col nl-card" data-title="{{ nl.title|lower }}">
-        <div class="card h-100">
-    <div class="card-body d-flex">
+<style>/* Make all buttons in the right column the same height */
+.nl-card .col-5.d-flex a {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px; /* consistent button height */
+}
 
-      <!-- Left side: title, info, and stats -->
-      <div class="flex-grow-1 d-flex flex-column">
-            <div class="d-flex align-items-start justify-content-between">
+/* Optional: keep text aligned left but vertically centered */
+.nl-card .col-5.d-flex a.text-start {
+  justify-content: flex-start;
+  padding-left: 12px;
+}
+</style>
+
+<div class="col nl-card" data-title="{{ nl.title|lower }}">
+  <div class="card h-100">
+    <div class="card-body d-flex flex-column">
+
+      <!-- Header -->
+      <div class="d-flex align-items-start justify-content-between mb-2">
         <div>
-              <h5 class="card-title mb-1">{{ nl.title }}</h5>
-          <div class="text-muted small mb-2">{{ nl.slug }}</div>
+          <h5 class="card-title mb-1">{{ nl.title }}</h5>
+          <div class="text-muted small">{{ nl.slug }}</div>
         </div>
-              {% if nl.has_pending %}
-            <span class="badge bg-warning text-dark">Pending</span>
-              {% endif %}
+        {% if nl.has_pending %}
+          <span class="badge bg-warning text-dark">Pending</span>
+        {% endif %}
       </div>
 
-      <ul class="list-unstyled small mb-3 mt-2">
-              <li><strong>{{ nl.subscribers_active }}</strong> active subscribers</li>
-              <li><strong>{{ nl.subscribers_unsub }}</strong> unsubscribed</li>
-              <li><strong>{{ nl.subscribers_suppressed }}</strong> suppressed</li>
-              <li><strong>{{ nl.issues_total }}</strong> total issues</li>
-              <li>Last issue: {{ nl.last_issue_at|date:"Y-m-d H:i" | default:"—" }}</li>
-            </ul>
+      <!-- Content area: stats + buttons -->
+      <div class="row flex-grow-1">
 
-        <div class="mt-auto small text-muted">
-          From: {{ nl.sender }} &lt;{{ nl.email }}&gt;
+        <!-- Left: Stats -->
+        <div class="col-7">
+          <ul class="list-unstyled small mb-3">
+            <li><strong>{{ nl.subscribers_active }}</strong> active subscribers</li>
+            <li><strong>{{ nl.subscribers_unsub }}</strong> unsubscribed</li>
+            <li><strong>{{ nl.subscribers_suppressed }}</strong> suppressed</li>
+            <li><strong>{{ nl.issues_total }}</strong> total issues</li>
+            <li>Last issue: {{ nl.last_issue_at|date:"Y-m-d H:i" | default:"—" }}</li>
+          </ul>
+        </div>
+
+        <!-- Right: Buttons (equal height) -->
+        <div class="col-5 d-flex flex-column align-items-stretch gap-2">
+          <a href="{% url 'news:newsletter-edit' nl.id %}?next={{ request.path|urlencode }}"
+             class="btn btn-sm btn-outline-primary flex-fill text-start">Edit</a>
+          <a href="{% url 'news:issue-list' nl.id %}?next={{ request.path|urlencode }}"
+             class="btn btn-sm btn-outline-secondary flex-fill text-start">Issues</a>
+          <a href="{% url 'news:issue-add' nl.id %}?next={{ request.path|urlencode }}"
+             class="btn btn-sm btn-outline-success flex-fill text-start">New Issue</a>
+          <a href="{% url 'news:subscriptions-manage' nl.id %}?next={{ request.path|urlencode }}"
+             class="btn btn-sm btn-outline-info flex-fill text-start">Subscribers</a>
+          <a href="{% url 'news:subscribers-download' nl.id %}?next={{ request.path|urlencode }}"
+             class="btn btn-sm btn-outline-dark flex-fill text-start">Download</a>
+          <a href="{{ nl.get_absolute_url }}?next={{ request.path|urlencode }}"
+             class="btn btn-sm btn-outline-warning flex-fill text-start">Archive</a>
         </div>
       </div>
 
-      <!-- Right side: vertical buttons -->
-      <div class="ms-3 d-flex flex-column justify-content-start align-items-stretch gap-2" style="min-width: 140px;">
-        <a href="{% url 'news:newsletter-edit' nl.id %}?next={{ request.path|urlencode }}"
-           class="btn btn-sm btn-outline-primary w-100">Edit</a>
-        <a href="{% url 'news:issue-list' nl.id %}?next={{ request.path|urlencode }}"
-           class="btn btn-sm btn-outline-secondary w-100">Issues</a>
-        <a href="{% url 'news:issue-add' nl.id %}?next={{ request.path|urlencode }}"
-           class="btn btn-sm btn-outline-success w-100">New Issue</a>
-        <a href="{% url 'news:subscriptions-manage' nl.id %}?next={{ request.path|urlencode }}"
-           class="btn btn-sm btn-outline-info w-100">Subscribers</a>
-        <a href="{% url 'news:subscribers-download' nl.id %}?next={{ request.path|urlencode }}"
-           class="btn btn-sm btn-outline-dark w-100">Download</a>
-        <a href="{{ nl.get_absolute_url }}?next={{ request.path|urlencode }}"
-           class="btn btn-sm btn-outline-warning w-100">Archive</a>
-          </div>
+    </div>
 
-          </div>
-        </div>
-      </div>
+    <div class="card-footer small text-muted">
+      From: {{ nl.sender }} &lt;{{ nl.email }}&gt;
+    </div>
+  </div>
+</div>

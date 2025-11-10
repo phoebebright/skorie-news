@@ -142,6 +142,13 @@
 
 {% block js %}
     <script>
+        window.ARTICLE_EDIT = "{% url 'news:article-edit' 0 %}";
+        window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;
+        window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;
+        window.ARTICLE_DELETE_API = (issue_id, article_id) => `${NEWS_API_URL}news/${issue_id}/articles/${article_id}/`;
+        window.ARTICLE_CREATE_API = NEWS_API_URL + 'news/articles/';
+        window.ISSUE_QUEUE_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/queue/`;
+        window.ISSUE_PUBLISH_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/publish/`;
         (function($){
             $(function(){
 
@@ -158,7 +165,7 @@
                         });
                     });
                     $.ajax({
-                        url: '/api/v2/news/issues/' + issueId + '/articles/',
+                        url: ARTICLE_UPDATE_API(issueId),
                         method: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify({articles: payload}),
@@ -180,7 +187,7 @@
             <label class="form-check-label">Blog</label>\
           </div>\
           <div class="btn-group btn-group-sm">\
-            <a href="#" class="btn btn-outline-secondary disabled">Edit</a>\
+           <button class="btn btn-outline-secondary edit_article" >Edit</button>\
             <button class="btn btn-outline-danger remove-article">Remove</button>\
           </div>\
         </li>');
@@ -201,7 +208,7 @@
                     var $li = $(this).closest('li');
                     var id = $li.data('id');
                     $.ajax({
-                        url: '/api/v2/news/issues/' + issueId + '/articles/' + id + '/',
+                        url: ARTICLE_DELETE_API(issueId, id),
                         method: 'DELETE',
                         success: function(){ $li.remove(); },
                         error: function(){ alert('Error removing article.'); }
@@ -211,7 +218,7 @@
                 // Queue
                 $('#btn-queue').on('click', function(){
                     $.ajax({
-                        url: '/api/v2/news/issues/' + issueId + '/queue/',
+                        url: window.ISSUE_QUEUE_API(issueId),
                         method: 'POST',
                         success: function(){ location.reload(); },
                         error: function(){ alert('Error queueing.'); }
@@ -221,11 +228,17 @@
                 // Publish to blog
                 $('#btn-publish').on('click', function(){
                     $.ajax({
-                        url: '/api/v2/news/issues/' + issueId + '/publish/',
+                        url: ISSUE_PUBLISH_API(issueId),
                         method: 'POST',
                         success: function(){ location.reload(); },
                         error: function(){ alert('Error publishing.'); }
                     });
+                });
+
+                // Edit article
+                              $('.edit_article').on('click', function(){
+                                  document.location.href = ARTICLE_EDIT.replace('/0/', '/'+$(this).closest('li').data('id')+'/');
+
                 });
 
                 // Quick article create (using ArticleViewSet)
@@ -233,11 +246,10 @@
                     e.preventDefault();
                     var fd = new FormData(this);
                     $.ajax({
-                        url: '/api/v2/news/articles/',
+                        url: ARTICLE_CREATE_API,
                         method: 'POST',
                         data: fd,
                         processData: false, contentType: false,
-                        headers: {'X-CSRFToken': '{{ csrf_token }}'},
                         success: function(resp){
                             // add to list immediately
                             var id = resp.id, title = resp.title;
