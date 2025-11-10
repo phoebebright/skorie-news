@@ -73,11 +73,7 @@
                         <ul id="issue-articles" class="list-group">
                             {% for article in form.instance.articles.all %}
 
-                            {% include "skorie_news/admin/article/include_article_item.html" with
-                               id=article.id
-                               title=article.title
-                               is_blog=article.appear_in_blog
-                            }
+                            {% include "skorie_news/admin/article/include_article_item.html" with  id=article.id title=article.title is_blog=article.appear_in_blog %}
                             {% empty %}
                                 <li class="list-group-item text-muted">No articles yet. Pick or create on the right.</li>
                             {% endfor %}
@@ -229,7 +225,7 @@
 
                 // Edit article
                               $('.edit_article').on('click', function(){
-                                  document.location.href = ARTICLE_EDIT.replace('/0/', '/'+$(this).closest('li').data('id')+'/');
+                                  document.location.href = ARTICLE_EDIT.replace('/0/', '/'+$(this).closest('li').data('id')+'/') + '?next={{ request.path|urlencode }}';
 
                 });
 
@@ -255,10 +251,11 @@
                                 error: function(){ alert('Error attaching article.'); }
                             });
                             // optimistic UI
-                            const html = renderTemplate("article-item-template", d);
-
-                            $('#issue-articles').append(html);
-                            $('#quick-article-form')[0].reset();
+                            document.location.reload();
+                            {#const html = renderTemplate("article-item-template", d);#}
+                            {##}
+                            {#$('#issue-articles').append(html);#}
+                            {#$('#quick-article-form')[0].reset();#}
                         },
                         error: function(xhr){ alert(xhr.responseJSON?.detail || 'Error creating article.'); }
                     });

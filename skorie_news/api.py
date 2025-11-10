@@ -461,7 +461,7 @@ class IssueViewSet(ModelViewSet):
                 "submission_id": submission.pk,
                 "message": f"Submission queued for '{message.title}' (#{submission.pk}).",
             },
-            status=201,
+            status=status.HTTP_201_CREATED
         )
 
     @action(detail=True, methods=["post"], url_path="send_test")
@@ -658,7 +658,7 @@ class IssueViewSet(ModelViewSet):
             return Response({"detail": "Missing 'article'."}, status=400)
         last_pos = issue.issue_articles.order_by("-position").values_list("position", flat=True).first() or 0
         IssueArticle.objects.create(issue=issue, article_id=int(article_id), position=last_pos + 1)
-        return Response({"ok": True}, status=201)
+        return Response({"ok": True}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["delete"], url_path=r"articles/(?P<article_id>\d+)")
     def article_remove(self, request, pk=None, article_id=None):

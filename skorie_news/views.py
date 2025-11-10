@@ -814,7 +814,7 @@ class ArticleListView(ListView):
     def get_queryset(self):
         return Article.objects.order_by("-created")
 
-class ArticleEditView(UpdateView):
+class ArticleEditView(GoNextMixin, UpdateView):
     model = Article
     form_class = ArticleForm
     template_name = "skorie_news/admin/article/article_edit.html"
