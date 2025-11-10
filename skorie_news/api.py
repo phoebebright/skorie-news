@@ -649,9 +649,9 @@ class IssueViewSet(ModelViewSet):
 
         return Response({"ok": True})
 
-    # ----- add / remove single article -----
-    @action(detail=True, methods=["post"], url_path="articles/add")
-    def article_add(self, request, pk=None):
+    # ----- attach or remove a single article from an issue -----
+    @action(detail=True, methods=["post"], url_path="article/attach")
+    def article_attach(self, request, pk=None):
         issue = self.get_object()
         article_id = request.data.get("article")
         if not article_id:

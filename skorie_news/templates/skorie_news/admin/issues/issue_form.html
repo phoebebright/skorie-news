@@ -71,7 +71,7 @@
                     </div>
                     <div class="card-body">
                         <ul id="issue-articles" class="list-group">
-                            {% for article in articles_set %}
+                            {% for article in form.instance.articles.all %}
 
                             {% include "skorie_news/admin/article/include_article_item.html" with
                                id=article.id
@@ -132,16 +132,23 @@
 {% endblock %}
 
 {% block templates %}
+<template id="article-item-template">
+{% include_raw "skorie_news/admin/article/include_article_item.html" %}
+    </template>
 {% endblock %}
 
 
 {% block js %}
     <script>
         window.ARTICLE_EDIT = "{% url 'news:article-edit' 0 %}";
-        window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;
-        window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;
-        window.ARTICLE_DELETE_API = (issue_id, article_id) => `${NEWS_API_URL}news/${issue_id}/articles/${article_id}/`;
-        window.ARTICLE_CREATE_API = NEWS_API_URL + 'news/articles/';
+
+
+       window.ARTICLE_UPDATE_API = "{% url "newsapi:news-article-detail" 0 %}"
+       window.ARTICLE_CREATE_API = "{% url "newsapi:news-article-list"  %}"
+        {#window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;#}
+
+        window.ARTICLE_DELETE_API = "{% url "newsapi:news-issue-article-remove" 0 9999999999 %}";
+        window.ARTICLE_ATTACH_API = "{% url "newsapi:news-issue-article-attach" 0 %}";
         window.ISSUE_QUEUE_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/queue/`;
         window.ISSUE_PUBLISH_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/publish/`;
         (function($){
@@ -172,22 +179,12 @@
                 // Add from library
                 $('#lib-list').on('click', '.lib-item', function(e){
                     e.preventDefault();
-                    var id = $(this).data('id'), title = $(this).text().trim();
+                    const vars = {id: $(this).data('id'),
+                        title: $(this).text().trim()};
                     // optimistic UI
-                    var li = $('<li class="list-group-item d-flex align-items-center" data-id="'+id+'">\
-          <span class="handle me-3" title="Drag">☰</span>\
-          <div class="flex-grow-1"><div class="fw-semibold"></div></div>\
-          <div class="form-check me-3">\
-            <input class="form-check-input appear" type="checkbox">\
-            <label class="form-check-label">Blog</label>\
-          </div>\
-          <div class="btn-group btn-group-sm">\
-           <button class="btn btn-outline-secondary edit_article" >Edit</button>\
-            <button class="btn btn-outline-danger remove-article">Remove</button>\
-          </div>\
-        </li>');
-                    li.find('.fw-semibold').text(title);
-                    $('#issue-articles').append(li);
+                    const html = renderTemplate("article-item-template", vars);
+                    $('#issue-articles').append(html);
+
 
                     $.ajax({
                         url: '/api/v2/news/issues/' + issueId + '/articles/add/',
@@ -241,27 +238,26 @@
                     e.preventDefault();
                     var fd = new FormData(this);
                     $.ajax({
-                        url: ARTICLE_CREATE_API,
+                        url: ARTICLE_CREATE_API.replace('/0/', '/'+issueId+'/'),
                         method: 'POST',
                         data: fd,
                         processData: false, contentType: false,
-                        success: function(resp){
-                            // add to list immediately
-                            var id = resp.id, title = resp.title;
-                            var li = $('<li class="list-group-item d-flex align-items-center" data-id="'+id+'">\
-              <span class="handle me-3" title="Drag">☰</span>\
-              <div class="flex-grow-1"><div class="fw-semibold"></div></div>\
-              <div class="form-check me-3">\
-                <input class="form-check-input appear" type="checkbox">\
-                <label class="form-check-label">Blog</label>\
-              </div>\
-              <div class="btn-group btn-group-sm">\
-                <a href="#" class="btn btn-outline-secondary disabled">Edit</a>\
-                <button class="btn btn-outline-danger remove-article">Remove</button>\
-              </div>\
-            </li>');
-                            li.find('.fw-semibold').text(title);
-                            $('#issue-articles').append(li);
+                        success: function(d){
+                            // add to issue
+                            const payload = {article: d.id};
+                            const url = ARTICLE_ATTACH_API.replace('/0/', '/'+issueId+'/');
+                            $.ajax({
+                                url: url,
+                                data: JSON.stringify(payload),
+                                contentType: 'application/json',
+                                method: 'POST',
+                                success: function(){},
+                                error: function(){ alert('Error attaching article.'); }
+                            });
+                            // optimistic UI
+                            const html = renderTemplate("article-item-template", d);
+
+                            $('#issue-articles').append(html);
                             $('#quick-article-form')[0].reset();
                         },
                         error: function(xhr){ alert(xhr.responseJSON?.detail || 'Error creating article.'); }
