@@ -2,3 +2,4 @@ recursive-include skorie_news/static *
 recursive-include skorie_news/templates *
 recursive-include skorie_news/migrations *
 recursive-include skorie_news/mangement *
+recursive-include skorie_news/templatetags *
