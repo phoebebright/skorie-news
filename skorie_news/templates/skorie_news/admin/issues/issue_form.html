@@ -1,5 +1,6 @@
 {% extends "skorie_news/admin/newsletter_base.html" %}
 {% load bootstrap5 %}
+{% load newstags %}
 
 {% block page_header %}{% if issue %}Edit Issue – {{ issue.title }}{% else %}Create Issue – {{ newsletter.title }}{% endif %}{% endblock %}
 
@@ -70,22 +71,13 @@
                     </div>
                     <div class="card-body">
                         <ul id="issue-articles" class="list-group">
-                            {% for link in articles %}
-                                <li class="list-group-item d-flex align-items-center" data-id="{{ link.article.id }}">
-                                    <span class="handle me-3" title="Drag">☰</span>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold">{{ link.article.title }}</div>
-                                        <div class="small text-muted">{{ link.article.url|default:"" }}</div>
-                                    </div>
-                                    <div class="form-check me-3">
-                                        <input class="form-check-input appear" type="checkbox" {% if link.appear_in_blog %}checked{% endif %}>
-                                        <label class="form-check-label">Blog</label>
-                                    </div>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'news:article-edit' link.article.id %}" class="btn btn-outline-secondary">Edit</a>
-                                        <button class="btn btn-outline-danger remove-article">Remove</button>
-                                    </div>
-                                </li>
+                            {% for article in articles_set %}
+
+                            {% include "skorie_news/admin/article/include_article_item.html" with
+                               id=article.id
+                               title=article.title
+                               is_blog=article.appear_in_blog
+                            }
                             {% empty %}
                                 <li class="list-group-item text-muted">No articles yet. Pick or create on the right.</li>
                             {% endfor %}
@@ -137,6 +129,9 @@
             </div>
         </div>
     {% endif %}
+{% endblock %}
+
+{% block templates %}
 {% endblock %}
 
 
