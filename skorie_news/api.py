@@ -979,7 +979,7 @@ def mailgun_webhook(request):
                     "provider_message_size": _safe_int(storage.get("size")) or 0,
                     "tags": list(tags) if hasattr(Delivery, "tags") else [],
                     "campaigns": list(campaigns) if hasattr(Delivery, "campaigns") else [],
-                    "user_variables": dict(user_vars) if hasattr(Delivery, "user_variables") else {},
+                    "metadata": dict(user_vars) if hasattr(Delivery, "metadata") else {},
                 },
             )
 
@@ -1001,27 +1001,28 @@ def mailgun_webhook(request):
                 delivery.campaigns = sorted(set((delivery.campaigns or []) + campaigns))
                 changed = True
             if hasattr(delivery, "user_variables") and user_vars:
-                delivery.user_variables = {**(delivery.user_variables or {}), **user_vars}
+                delivery.metadata = {**(delivery.metadata or {}), **user_vars}
                 changed = True
 
-            # Idempotent insert for the event
             try:
-                DeliveryEvent.objects.create(
-                    delivery=delivery,
+                DeliveryEvent.objects.get_or_create(
                     provider_event_id=provider_event_id or f"{provider_message_id}:{event}:{occurred_at.timestamp()}",
-                    event=event,
-                    occurred_at=occurred_at,
-                    recipient=recipient or delivery.email or "",
-                    ip=ip,
-                    user_agent=user_agent or "",
-                    geo=ed.get("geolocation") or {},
-                    url=url or "",
-                    delivery_status=ds or {},
-                    raw_payload=ed,
+                    defaults={
+                        "delivery": delivery,
+                        "event": event,
+                        "occurred_at": occurred_at,
+                        "recipient": recipient or delivery.email or "",
+                        "ip": ip,
+                        "user_agent": user_agent or "",
+                        "geo": ed.get("geolocation") or {},
+                        "url": url or "",
+                        "delivery_status": ds or {},
+                        "raw_payload": ed,
+                    },
                 )
             except IntegrityError:
-                # Duplicate event (Mailgun retries or we already processed) -> OK
-                pass
+                # ultra-rare race: clear rollback and carry on
+                transaction.set_rollback(False)
 
             # Roll up state on Delivery
             delivery.last_event = event[:20]
