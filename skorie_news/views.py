@@ -1363,6 +1363,7 @@ def fix_subscribers(request):
 
 
 # === NEWS LIST VIEW ===
+
 @method_decorator(never_cache, name="dispatch")
 class NewsListView(UserCanOrganiseEventMixin, ListView):
     model = None
@@ -1466,7 +1467,7 @@ class NewsAdminDeleteView(UserCanAdministerMixin, GoNextMixin, DeleteView):
 
 class DirectEmailDetailView(UserCanAdministerMixin, GoNextMixin, DetailView):
     model = DirectEmail
-    template_name = "admin/direct_email_detail.html"
+    template_name = "skorie_news/admin/direct_email_detail.html"
     context_object_name = "email"
 
     def get_queryset(self):
