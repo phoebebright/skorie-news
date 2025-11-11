@@ -1,0 +1,175 @@
+{% extends "admin/administrator_base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-xxl py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Email to {{ email.to_email }}</h1>
+    <div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ request.META.HTTP_REFERER|default:'#' }}">Back</a>
+    </div>
+  </div>
+
+  <!-- Top meta -->
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="mb-2">
+            <span class="badge bg-secondary text-uppercase">{{ email.status }}</span>
+            {% if rollup.last_event_at %}
+              <small class="text-muted ms-2">Last activity: {{ rollup.last_event_at|naturaltime }}</small>
+            {% endif %}
+          </div>
+          <h2 class="h4">{{ email.subject|default:"(no subject)" }}</h2>
+          <dl class="row mb-0 small">
+            <dt class="col-sm-3">To</dt><dd class="col-sm-9">{{ email.to_email }}</dd>
+            {% if email.from_email %}<dt class="col-sm-3">From</dt><dd class="col-sm-9">{{ email.from_email }}</dd>{% endif %}
+            {% if email.sender %}<dt class="col-sm-3">Triggered by</dt><dd class="col-sm-9">{{ email.sender.get_full_name|default:email.sender.username }}</dd>{% endif %}
+            {% if email.event %}<dt class="col-sm-3">Event</dt><dd class="col-sm-9">{{ email.event }}</dd>{% endif %}
+            {% if email.article %}<dt class="col-sm-3">Article</dt><dd class="col-sm-9">{{ email.article }}</dd>{% endif %}
+            <dt class="col-sm-3">Created</dt><dd class="col-sm-9">{{ email.created|date:"Y-m-d H:i" }}</dd>
+            {% if email.updated %}<dt class="col-sm-3">Updated</dt><dd class="col-sm-9">{{ email.updated|date:"Y-m-d H:i" }}</dd>{% endif %}
+          </dl>
+        </div>
+      </div>
+
+      <!-- Body tabs -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#html" type="button">HTML</button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#text" type="button">Text</button>
+            </li>
+            {% if primary_delivery and primary_delivery.provider_storage_url %}
+            <li class="nav-item ms-auto">
+              <a class="nav-link" target="_blank" href="{{ primary_delivery.provider_storage_url }}">Provider Copy</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="card-body">
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="html">
+              {% if email.body_html %}
+                <div class="border rounded p-3 overflow-auto" style="max-height: 60vh;">
+                  {{ email.body_html|safe }}
+                </div>
+              {% else %}
+                <p class="text-muted mb-0">No HTML body.</p>
+              {% endif %}
+            </div>
+            <div class="tab-pane fade" id="text">
+              {% if email.body_text %}
+                <pre class="mb-0" style="white-space: pre-wrap">{{ email.body_text }}</pre>
+              {% else %}
+                <p class="text-muted mb-0">No text body.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column: deliveries & rollup -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Delivery summary</div>
+        <div class="card-body">
+          <ul class="list-unstyled mb-0 small">
+            <li>Total deliveries: <strong>{{ rollup.total_deliveries }}</strong></li>
+            <li>Delivered: <strong>{{ rollup.delivered_count }}</strong></li>
+            <li>Failed: <strong class="text-danger">{{ rollup.failed_count }}</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">Deliveries</div>
+        <div class="list-group list-group-flush">
+          {% for d in deliveries %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <div>
+                <span class="badge {% if d.state in 'delivered opened clicked' %}bg-success{% elif d.state == 'failed' %}bg-danger{% else %}bg-secondary{% endif %}">
+                  {{ d.state }}
+                </span>
+              </div>
+              <small class="text-muted">{{ d.created|date:"Y-m-d H:i" }}</small>
+            </div>
+            <div class="small mt-1">
+              <div><strong>ESP:</strong> {{ d.esp_name }}</div>
+              {% if d.message_id %}<div><strong>Message-ID:</strong> <code>{{ d.message_id }}</code></div>{% endif %}
+              {% if d.mailgun_id %}<div><strong>Mailgun-ID:</strong> <code>{{ d.mailgun_id }}</code></div>{% endif %}
+              {% if d.provider_message_size %}<div><strong>Size:</strong> {{ d.provider_message_size|intcomma }} bytes</div>{% endif %}
+              {% if d.failure_reason %}<div class="text-danger"><strong>Failure:</strong> {{ d.failure_reason }} ({{ d.failure_severity }})</div>{% endif %}
+              {% if d.smtp_code %}<div class="text-muted"><strong>SMTP:</strong> {{ d.smtp_code }} — {{ d.smtp_message }}</div>{% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="list-group-item">
+            <span class="text-muted small">No deliveries recorded yet.</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card mt-4">
+    <div class="card-header">Event timeline</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 160px;">When</th>
+            <th style="width: 140px;">Event</th>
+            <th>Recipient</th>
+            <th>URL</th>
+            <th>Delivery</th>
+            <th>IP / Geo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev in timeline %}
+          <tr>
+            <td><span title="{{ ev.occurred_at }}">{{ ev.occurred_at|naturaltime }}</span></td>
+            <td>
+              <span class="badge
+                {% if ev.event in 'delivered opened clicked' %}bg-success
+                {% elif ev.event in 'failed rejected' %}bg-danger
+                {% elif ev.event == 'complained' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ ev.event }}
+              </span>
+            </td>
+            <td class="small">{{ ev.recipient }}</td>
+            <td class="small">
+              {% if ev.url %}
+                <a href="{{ ev.url }}" target="_blank" rel="noopener">link</a>
+              {% endif %}
+            </td>
+            <td class="small">
+              {{ ev.message_id|default:"—" }}
+            </td>
+            <td class="small">
+              {% if ev.ip %}IP: {{ ev.ip }}{% endif %}
+              {% if ev.geo and ev.geo.country %}<br>Geo: {{ ev.geo.country }}{% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-muted small">No events yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

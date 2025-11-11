@@ -8,7 +8,7 @@ from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, Newsle
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
     SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission, NewsListView, \
-    NewsCreateView, NewsUpdateView, NewsDeleteView
+    NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView
 
 app_name = "skorie_news"
 
@@ -96,4 +96,7 @@ urlpatterns = [
          name="subscribers-download"),
 
     path('fix_subscribers/', fix_subscribers, name="fix_subscribers"),
+
+    path("mail/direct/<int:pk>/", DirectEmailDetailView.as_view(), name="directemail-detail"),
+
 ]

@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.db import transaction, IntegrityError
-from django.db.models import Count, Q, Subquery, OuterRef, Exists, Value, CharField
+from django.db.models import Count, Q, Subquery, OuterRef, Exists, Value, CharField, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -28,8 +28,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, RedirectView, DetailView
 from django_users.tools.permission_mixins import UserCanAdministerMixin
 from django.conf import settings
-from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch
-
+from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \
+    DeliveryEvent
 
 from tools.permission_mixins import UserCanOrganiseEventMixin
 from users.models import VerificationCode
@@ -1462,3 +1462,76 @@ class NewsAdminDeleteView(UserCanAdministerMixin, GoNextMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy("admin_news_list")
+
+
+class DirectEmailDetailView(UserCanAdministerMixin, GoNextMixin, DetailView):
+    model = DirectEmail
+    template_name = "admin/direct_email_detail.html"
+    context_object_name = "email"
+
+    def get_queryset(self):
+        deliveries_qs = (
+            Delivery.objects
+            .select_related("direct_mail")
+            .prefetch_related(
+                Prefetch(
+                    "events",
+                    queryset=DeliveryEvent.objects.order_by("-occurred_at"),
+                    to_attr="prefetched_events",
+                )
+            )
+            .order_by("-created")
+        )
+
+        return (
+            DirectEmail.objects
+            .select_related("user", "sender", "receiver", "event", "eventrole", "competitor", "article")
+            .prefetch_related(Prefetch("direct_deliveries", queryset=deliveries_qs, to_attr="prefetched_deliveries"))
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        email: DirectEmail = ctx["email"]
+
+        deliveries = getattr(email, "prefetched_deliveries", [])
+
+        # simple rollups at the email level
+        rollup = {
+            "total_deliveries": len(deliveries),
+            "sent_count": sum(1 for d in deliveries if d.state in {"sending", "delivered", "opened", "clicked"}),
+            "delivered_count": sum(1 for d in deliveries if d.state in {"delivered", "opened", "clicked"}),
+            "failed_count": sum(1 for d in deliveries if d.state in {"failed", "rejected"}),
+            "last_event_at": max(
+                (e.occurred_at for d in deliveries for e in getattr(d, "prefetched_events", [])),
+                default=None,
+            ),
+        }
+
+        # flattened event timeline across all deliveries
+        timeline = []
+        for d in deliveries:
+            for ev in getattr(d, "prefetched_events", []):
+                timeline.append({
+                    "delivery_id": d.id,
+                    "message_id": d.message_id or d.mailgun_id,
+                    "event": ev.event,
+                    "occurred_at": ev.occurred_at,
+                    "recipient": ev.recipient,
+                    "url": ev.url,
+                    "ip": ev.ip,
+                    "geo": ev.geo or {},
+                    "delivery_status": ev.delivery_status or {},
+                    "provider_event_id": ev.provider_event_id,
+                })
+        timeline.sort(key=lambda x: x["occurred_at"], reverse=True)
+
+        # pick a “primary” delivery (most recent successful-ish, else newest)
+        primary = next((d for d in deliveries if d.state in {"clicked","opened","delivered","sending"}), None) or (deliveries[0] if deliveries else None)
+
+        ctx.update({
+            "deliveries": deliveries,
+            "primary_delivery": primary,
+            "timeline": timeline,
+            "rollup": rollup,
+        })
+        return ctx
