@@ -971,15 +971,16 @@ def mailgun_webhook(request):
     try:
         with transaction.atomic():
             # Find or create the Delivery row created at send-time; or create a placeholder
+            metadata = dict(user_vars)
             delivery, created = Delivery.objects.select_for_update().get_or_create(
                 mailgun_id=provider_message_id,
                 defaults={
                     "email": recipient or "",
                     "provider_storage_url": storage.get("url"),
                     "provider_message_size": _safe_int(storage.get("size")) or 0,
-                    "tags": list(tags) if hasattr(Delivery, "tags") else [],
-                    "campaigns": list(campaigns) if hasattr(Delivery, "campaigns") else [],
-                    "metadata": dict(user_vars) if hasattr(Delivery, "metadata") else {},
+                    "tags": list(tags),
+                    "metadata": metadata,
+                    'direct_mail_id': metadata.get('direct_email_id', None),    # NOTE inconsistent var name
                 },
             )
 
