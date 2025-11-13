@@ -8,7 +8,7 @@ from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, Newsle
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
     SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission, NewsListView, \
-    NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView
+    NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView, ArticlePreviewView
 
 app_name = "skorie_news"
 
@@ -46,7 +46,7 @@ urlpatterns = [
     path("articles/", ArticleListView.as_view(), name="article-list"),
     path("articles/<int:pk>/edit/", ArticleEditView.as_view(), name="article-edit"),
     path("articles/new/", ArticleEditView.as_view(), name="article-new"),
-
+    path("articles/<int:pk>/preview/", ArticlePreviewView.as_view(), name="article-preview"),
     # path("event/<event_ref:event_ref>/send/", EventSendView.as_view(), name="event-send"),
 
     # Subscriptions

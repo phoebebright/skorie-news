@@ -1536,3 +1536,12 @@ class DirectEmailDetailView(UserCanAdministerMixin, GoNextMixin, DetailView):
             "rollup": rollup,
         })
         return ctx
+
+class ArticlePreviewView(UserCanAdministerMixin, DetailView):
+    model = Article
+    template_name = "skorie_news/admin/article/article_preview.html"
+    context_object_name = "article"
+
+    def get_queryset(self):
+        # Ensure attachments are ready
+        return Article.objects.prefetch_related("attachments")

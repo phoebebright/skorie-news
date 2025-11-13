@@ -33,7 +33,7 @@
       <div class="row flex-grow-1">
 
         <!-- Left: Stats -->
-        <div class="col-7">
+        <div class="col-8">
           <ul class="list-unstyled small mb-3">
             <li><strong>{{ nl.subscribers_active }}</strong> active subscribers</li>
             <li><strong>{{ nl.subscribers_unsub }}</strong> unsubscribed</li>
@@ -44,7 +44,7 @@
         </div>
 
         <!-- Right: Buttons (equal height) -->
-        <div class="col-5 d-flex flex-column align-items-stretch gap-2">
+        <div class="col-4 d-flex flex-column align-items-stretch gap-2">
           <a href="{% url 'news:newsletter-edit' nl.id %}?next={{ request.path|urlencode }}"
              class="btn btn-sm btn-outline-primary flex-fill text-start">Edit</a>
           <a href="{% url 'news:issue-list' nl.id %}?next={{ request.path|urlencode }}"

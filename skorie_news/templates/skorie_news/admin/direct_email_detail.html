@@ -45,11 +45,7 @@
             <li class="nav-item">
               <button class="nav-link" data-bs-toggle="tab" data-bs-target="#text" type="button">Text</button>
             </li>
-            {% if primary_delivery and primary_delivery.provider_storage_url %}
-            <li class="nav-item ms-auto">
-              <a class="nav-link" target="_blank" href="{{ primary_delivery.provider_storage_url }}">Provider Copy</a>
-            </li>
-            {% endif %}
+
           </ul>
         </div>
         <div class="card-body">
