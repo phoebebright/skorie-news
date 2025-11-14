@@ -839,7 +839,7 @@ class ArticleEditView(GoNextMixin, UpdateView):
             formset.instance = article
             formset.save()
             messages.success(request, "Article saved.")
-            return redirect(reverse("news:article-list"))
+            return redirect(get_success_url(request))
         return self.render_to_response(self.get_context_data(form=form, formset=formset))
 
 

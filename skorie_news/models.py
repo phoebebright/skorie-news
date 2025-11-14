@@ -31,9 +31,9 @@ from rest_framework.exceptions import AuthenticationFailed
 
 # can't import from skorie.common as get circular import
 from .model_mixins import EventMixin, CreatedUpdatedMixin
-from .skorie_storage.storage_backends import HetznerPrivateStorage
+from .skorie_storage.storage_backends import HetznerPublicStorage
 
-private_storage = HetznerPrivateStorage
+public_storage = HetznerPublicStorage
 
 logger = logging.getLogger("django")
 #User = get_user_model() .  # don't do this - ends up with circular import
@@ -95,7 +95,16 @@ def get_address(name: str | None, email: str) -> str:
     return f"{name} <{email}>" if name else email
 
 def attachment_upload_to(instance, filename):
-    # Store under article/<id>/YYYY-MM-DD/filename
+    # HETZNER_AWS_S3_FILE_OVERWRITE is True so ensure the same filename in different attachments is unique
+    return os.path.join(
+        "newsletter", "attachments",
+        datetime.utcnow().strftime("%Y-%m-%d"),
+        f"article-{instance.article_id or 'new'}",
+        filename,
+    )
+
+def article_upload_to(instance, filename):
+    # HETZNER_AWS_S3_FILE_OVERWRITE is True so ensure the same filename in different articles is unique
     return os.path.join(
         "newsletter", "attachments",
         datetime.utcnow().strftime("%Y-%m-%d"),
@@ -827,7 +836,7 @@ class Article(CreatedUpdatedMixin):
     body_text = models.TextField(blank=True)
     url = models.URLField(blank=True, null=True)
 
-    image = models.ImageField(upload_to="newsletter/articles/", storage=private_storage, blank=True, null=True)
+    image = models.ImageField(upload_to="newsletter/articles/", storage=public_storage, blank=True, null=True)
     image_position = models.CharField(max_length=10, choices=IMAGE_POSITION_CHOICES, default=ABOVE)
 
     is_template = models.BooleanField(default=False)
@@ -968,7 +977,7 @@ class Article(CreatedUpdatedMixin):
 
 class Attachment(CreatedUpdatedMixin):
     name = models.CharField(max_length=60, null=True, blank=True, help_text=_("Optional name/description"))
-    file = models.FileField(upload_to=attachment_upload_to, storage=private_storage, verbose_name=_("attachment"))
+    file = models.FileField(upload_to=attachment_upload_to, storage=public_storage, verbose_name=_("attachment"))
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="attachments")
 
     class Meta:
@@ -1068,6 +1077,20 @@ class Issue(CreatedUpdatedMixin):
     def html_template(self):
         return self._templates[2]
 
+    def render_html(self):
+        html = ""
+        for ia in self.issue_articles.select_related("article"):
+            if self.html_template:
+                html += ia.article.render_html(base_url=self.newsletter.base_url) + "<br><br>"
+        return html
+
+    def render_text(self):
+        text = ""
+        for ia in self.issue_articles.select_related("article"):
+            text += ia.article.render_text(base_url=self.newsletter.base_url) + "\n\n"
+
+        return text
+
     def render_email(self, extra_context=None):
         """
         Prepare subject, text, html, and attachments for this message.
@@ -1081,8 +1104,9 @@ class Issue(CreatedUpdatedMixin):
             ctx.update(extra_context)
 
         subject = self.subject_template.render(ctx).strip()
-        text = self.text_template.render(ctx)
-        html = self.html_template.render(ctx) if self.html_template else None
+
+        text = self.render_text()
+        html = self.render_html()
 
 
         files = []

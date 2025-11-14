@@ -2,6 +2,7 @@
 {% load bootstrap5 %}
 {% load static %}
 
+{% block title %}{{ object|default:"New Article" }}{% endblock %}
 {% block page_header %}{{ object|default:"New Article" }}{% endblock %}
 
 
