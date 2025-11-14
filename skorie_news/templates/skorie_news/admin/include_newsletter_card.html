@@ -49,8 +49,6 @@
              class="btn btn-sm btn-outline-primary flex-fill text-start">Edit</a>
           <a href="{% url 'news:issue-list' nl.id %}?next={{ request.path|urlencode }}"
              class="btn btn-sm btn-outline-secondary flex-fill text-start">Issues</a>
-          <a href="{% url 'news:issue-add' nl.id %}?next={{ request.path|urlencode }}"
-             class="btn btn-sm btn-outline-success flex-fill text-start">New Issue</a>
           <a href="{% url 'news:subscriptions-manage' nl.id %}?next={{ request.path|urlencode }}"
              class="btn btn-sm btn-outline-info flex-fill text-start">Subscribers</a>
           <a href="{% url 'news:subscribers-download' nl.id %}?next={{ request.path|urlencode }}"

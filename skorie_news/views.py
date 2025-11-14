@@ -1537,11 +1537,25 @@ class DirectEmailDetailView(UserCanAdministerMixin, GoNextMixin, DetailView):
         })
         return ctx
 
-class ArticlePreviewView(UserCanAdministerMixin, DetailView):
-    model = Article
-    template_name = "skorie_news/admin/article/article_preview.html"
-    context_object_name = "article"
+class ArticlePreviewHTMLView(View):
+    """
+    Displays a rendered HTML version of the article using the same method
+    as when generating the email HTML part.
+    """
 
-    def get_queryset(self):
-        # Ensure attachments are ready
-        return Article.objects.prefetch_related("attachments")
+    def get(self, request, pk):
+        article = get_object_or_404(Article, pk=pk)
+        html = article.render_html(base_url=settings.SITE_URL)
+        return HttpResponse(html)
+
+
+class ArticlePreviewTextView(View):
+    """
+    Displays a plain text preview using the same method
+    as when generating the text-only email version.
+    """
+
+    def get(self, request, pk):
+        article = get_object_or_404(Article, pk=pk)
+        txt = article.render_text(base_url=settings.SITE_URL)
+        return HttpResponse(txt, content_type="text/plain; charset=utf-8")

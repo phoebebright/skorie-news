@@ -4,11 +4,12 @@ import logging
 import secrets
 from datetime import datetime
 from typing import Optional
+from urllib.parse import urljoin
 
 import requests
 from anymail.message import AnymailMessage
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, apps
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
@@ -22,6 +23,7 @@ from django.template.loader import select_template, render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.html import strip_tags
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -29,6 +31,9 @@ from rest_framework.exceptions import AuthenticationFailed
 
 # can't import from skorie.common as get circular import
 from .model_mixins import EventMixin, CreatedUpdatedMixin
+from .skorie_storage.storage_backends import HetznerPrivateStorage
+
+private_storage = HetznerPrivateStorage
 
 logger = logging.getLogger("django")
 #User = get_user_model() .  # don't do this - ends up with circular import
@@ -39,6 +44,14 @@ logger = logging.getLogger("django")
 # ---------------------------------------------------------------------
 
 NEWSLETTER_BASENAME = getattr(settings, "NEWSLETTER_BASENAME", "")
+
+def _abs_url(url: str, base_url: str) -> str:
+    if not url:
+        return ""
+    # if already absolute, leave it
+    if url.startswith("http://") or url.startswith("https://"):
+        return url
+    return urljoin(base_url.rstrip("/") + "/", url.lstrip("/"))
 
 def get_mail_class():
     """
@@ -802,6 +815,9 @@ class Article(CreatedUpdatedMixin):
         (TEMPLATE_TYPE_EMAIL, "Email"),
     )
 
+    ABOVE = "above"; BELOW = "below"; LEFT = "left"; RIGHT = "right"
+    IMAGE_POSITION_CHOICES = [(ABOVE,"Above text"),(BELOW,"Below text"),(LEFT,"Left of text"),(RIGHT,"Right of text")]
+
     template_type = models.CharField(
         max_length=1, choices=TEMPLATE_TYPE_CHOICES, default=TEMPLATE_TYPE_NEWSLETTER
     )
@@ -811,9 +827,7 @@ class Article(CreatedUpdatedMixin):
     body_text = models.TextField(blank=True)
     url = models.URLField(blank=True, null=True)
 
-    image = models.ImageField(upload_to="newsletter/articles/", blank=True, null=True)
-    ABOVE = "above"; BELOW = "below"; LEFT = "left"; RIGHT = "right"
-    IMAGE_POSITION_CHOICES = [(ABOVE,"Above text"),(BELOW,"Below text"),(LEFT,"Left of text"),(RIGHT,"Right of text")]
+    image = models.ImageField(upload_to="newsletter/articles/", storage=private_storage, blank=True, null=True)
     image_position = models.CharField(max_length=10, choices=IMAGE_POSITION_CHOICES, default=ABOVE)
 
     is_template = models.BooleanField(default=False)
@@ -827,10 +841,134 @@ class Article(CreatedUpdatedMixin):
         return self.title
 
 
+    def render_html(
+        self,
+        *,
+        base_url: str | None = None,
+        include_attachments: bool = True,
+        include_title: bool = True,
+    ) -> str:
+        """
+        Return an HTML string for this article (image positioned + body_html + attachments list).
+        Uses inline styles suitable for email clients.
+        """
+        base_url = (base_url or getattr(settings, "SITE_URL", "")).rstrip("/")
+        pieces: list[str] = []
+
+        # Optional title
+        if include_title and self.title:
+            pieces.append(f'<h2 style="margin:0 0 12px 0;font-family:inherit;">{self.title}</h2>')
+
+        # Prepare image HTML (absolute URL + inline style)
+        img_html = ""
+        if self.image:
+            img_url = _abs_url(getattr(self.image, "url", ""), base_url)
+            if self.image_position == "above":
+                img_html = f'<p style="margin:0 0 12px 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>'
+            elif self.image_position == "below":
+                # inject later, after body
+                pass
+            elif self.image_position == "left":
+                img_html = (
+                    f'<img src="{img_url}" alt="" '
+                    f'style="max-width:40%;height:auto;border:0;float:left;'
+                    f'margin:0 12px 12px 0;">'
+                )
+            elif self.image_position == "right":
+                img_html = (
+                    f'<img src="{img_url}" alt="" '
+                    f'style="max-width:40%;height:auto;border:0;float:right;'
+                    f'margin:0 0 12px 12px;">'
+                )
+
+        # Image before body for above/left/right
+        if img_html and self.image_position in {"above", "left", "right"}:
+            pieces.append(img_html)
+
+        # Body HTML (as-is; assume it’s clean)
+        if self.body_html:
+            pieces.append(f'<div style="font-family:inherit;line-height:1.5;">{self.body_html}</div>')
+
+        # Image after body for below
+        if self.image and self.image_position == "below":
+            img_url = _abs_url(getattr(self.image, "url", ""), base_url)
+            pieces.append(f'<p style="margin:12px 0 0 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>')
+
+        # Clear floats for left/right layouts
+        if self.image_position in {"left", "right"}:
+            pieces.append('<div style="clear:both;"></div>')
+
+        # Optional attachments
+        if include_attachments:
+            atts = list(self.attachments.all())
+            if atts:
+                pieces.append('<hr style="border:none;border-top:1px solid #ddd;margin:16px 0;">')
+                pieces.append('<div style="font-size:90%;">Attachments:</div>')
+                pieces.append('<ul style="margin:8px 0 0 18px;padding:0;">')
+                for a in atts:
+                    url = _abs_url(getattr(a.file, "url", ""), base_url)
+                    name = a.name or a.file.name
+                    pieces.append(
+                        f'<li style="margin:0 0 6px 0;"><a href="{url}" '
+                        f'style="color:#0d6efd;text-decoration:underline;">{name}</a></li>'
+                    )
+                pieces.append('</ul>')
+
+        return "".join(pieces)
+
+    def render_text(
+        self,
+        *,
+        base_url: str | None = None,
+        include_attachments: bool = True,
+        include_title: bool = True,
+    ) -> str:
+        """
+        Return a plain-text version of this article (good for text part of emails).
+        """
+        base_url = (base_url or getattr(settings, "SITE_URL", "")).rstrip("/")
+        lines: list[str] = []
+
+        if include_title and self.title:
+            lines.append(self.title)
+            lines.append("")
+
+        # Image note
+        if self.image:
+            img_url = _abs_url(getattr(self.image, "url", ""), base_url)
+            lines.append(f"[Image: {img_url}]")
+            lines.append("")
+
+        # Body text: strip tags
+        if self.body_html:
+            body_text = strip_tags(self.body_html)
+            # Normalize whitespace a bit
+            body_text = "\n".join([ln.rstrip() for ln in body_text.splitlines()]).strip()
+            lines.append(body_text)
+            lines.append("")
+
+        # Optional link
+        if self.url:
+            lines.append(f"More: {_abs_url(self.url, base_url)}")
+            lines.append("")
+
+        # Attachments
+        if include_attachments:
+            atts = list(self.attachments.all())
+            if atts:
+                lines.append("Attachments:")
+                for a in atts:
+                    url = _abs_url(getattr(a.file, "url", ""), base_url)
+                    name = a.name or a.file.name
+                    lines.append(f" - {name}: {url}")
+                lines.append("")
+
+        return "\n".join(lines).rstrip()
+
 
 class Attachment(CreatedUpdatedMixin):
     name = models.CharField(max_length=60, null=True, blank=True, help_text=_("Optional name/description"))
-    file = models.FileField(upload_to=attachment_upload_to, verbose_name=_("attachment"))
+    file = models.FileField(upload_to=attachment_upload_to, storage=private_storage, verbose_name=_("attachment"))
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="attachments")
 
     class Meta:
@@ -1802,7 +1940,7 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
         Map Article -> your existing public News model.
         Adjust import/path and flags per your project.
         """
-        from web.models import News  # TODO: adjust to your app
+        News = apps.get_model("web", "News")  # adjust app/model name as needed
         News.objects.create(
             event=self.event,
             summary=self.article.title[:200],
