@@ -67,13 +67,13 @@
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <strong>Articles in this Issue</strong>
-                        <button class="btn btn-sm btn-outline-secondary" id="save-order">Save Order</button>
+
                     </div>
                     <div class="card-body">
                         <ul id="issue-articles" class="list-group">
                             {% for article in form.instance.articles.all %}
 
-                            {% include "skorie_news/admin/article/include_article_item.html" with  id=article.id title=article.title is_blog=article.appear_in_blog %}
+                                {% include "skorie_news/admin/article/include_article_item.html" with  id=article.id title=article.title is_blog=article.appear_in_blog %}
                             {% empty %}
                                 <li class="list-group-item text-muted">No articles yet. Pick or create on the right.</li>
                             {% endfor %}
@@ -128,49 +128,75 @@
 {% endblock %}
 
 {% block templates %}
-<template id="article-item-template">
-{% include_raw "skorie_news/admin/article/include_article_item.html" %}
+    <template id="article-item-template">
+        {% include_raw "skorie_news/admin/article/include_article_item.html" %}
     </template>
 {% endblock %}
 
 
 {% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         window.ARTICLE_EDIT = "{% url 'news:article-edit' 0 %}";
 
 
-       window.ARTICLE_UPDATE_API = "{% url "newsapi:news-article-detail" 0 %}"
-       window.ARTICLE_CREATE_API = "{% url "newsapi:news-article-list"  %}"
+        window.ARTICLE_UPDATE_API = "{% url 'newsapi:news-article-detail' 0 %}"
+        window.ARTICLE_CREATE_API = "{% url 'newsapi:news-article-list'  %}"
         {#window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;#}
 
-        window.ARTICLE_DELETE_API = "{% url "newsapi:news-issue-article-remove" 0 9999999999 %}";
-        window.ARTICLE_ATTACH_API = "{% url "newsapi:news-issue-article-attach" 0 %}";
+        window.ARTICLE_DELETE_API = "{% url 'newsapi:news-issue-article-remove' 0 9999999999 %}";
+        window.ARTICLE_ATTACH_API = "{% url 'newsapi:news-issue-article-attach' 0 %}";
         window.ISSUE_QUEUE_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/queue/`;
         window.ISSUE_PUBLISH_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/publish/`;
+
+                        const issueId = {{ issue.id|default:"null" }};
+
+        function saveIssueArticles() {
+            var payload = [];
+            $('#issue-articles > li').each(function(idx){
+                payload.push({
+                    article: $(this).data('id'),
+                    position: idx + 1,
+                    appear_in_blog: $(this).find('.appear').is(':checked')
+                });
+            });
+
+            return $.ajax({
+                url: ARTICLE_UPDATE_API.replace('/0/','/'+issueId+'/'),
+                method: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({articles: payload}),
+                success: function(){ console.log('Order saved'); },
+                error: function(xhr){
+                    alert(xhr.responseJSON?.detail || 'Error saving article order');
+                }
+            });
+        }
+
+        new Sortable(document.getElementById('issue-articles'), {
+            handle: '.handle',     // only drag by the ☰ handle
+            animation: 150,        // smooth movement
+            ghostClass: 'bg-light',
+            onEnd: function (evt) {
+                // called whenever an item is dropped in a new position
+                saveIssueArticles();
+            }
+        });
+
         (function($){
             $(function(){
 
-                var issueId = {{ issue.id|default:"null" }};
 
-                // Save article ordering
+
+
+
+
+                // (optional) if you keep the button, you can still wire it to the same function:
                 $('#save-order').on('click', function(){
-                    var payload = [];
-                    $('#issue-articles > li').each(function(idx){
-                        payload.push({
-                            article: $(this).data('id'),
-                            position: idx + 1,
-                            appear_in_blog: $(this).find('.appear').is(':checked')
-                        });
-                    });
-                    $.ajax({
-                        url: ARTICLE_UPDATE_API(issueId),
-                        method: 'PUT',
-                        contentType: 'application/json',
-                        data: JSON.stringify({articles: payload}),
-                        success: function(){ alert('Saved.'); },
-                        error: function(xhr){ alert(xhr.responseJSON?.detail || 'Error'); }
-                    });
+                    saveIssueArticles();
                 });
+
+
 
                 // Add from library
                 $('#lib-list').on('click', '.lib-item', function(e){
@@ -196,7 +222,7 @@
                     var $li = $(this).closest('li');
                     var id = $li.data('id');
                     $.ajax({
-                        url: ARTICLE_DELETE_API(issueId, id),
+                        url: ARTICLE_DELETE_API.replace('/0/','/'+issueId+'/').replace('9999999999', id),
                         method: 'DELETE',
                         success: function(){ $li.remove(); },
                         error: function(){ alert('Error removing article.'); }
@@ -206,7 +232,7 @@
                 // Queue
                 $('#btn-queue').on('click', function(){
                     $.ajax({
-                        url: window.ISSUE_QUEUE_API(issueId),
+                        url: window.ISSUE_QUEUE_API.replace('/0/','/'+issueId+'/'),
                         method: 'POST',
                         success: function(){ location.reload(); },
                         error: function(){ alert('Error queueing.'); }
@@ -216,7 +242,7 @@
                 // Publish to blog
                 $('#btn-publish').on('click', function(){
                     $.ajax({
-                        url: ISSUE_PUBLISH_API(issueId),
+                        url: ISSUE_PUBLISH_API.replace('/0/','/'+issueId+'/'),
                         method: 'POST',
                         success: function(){ location.reload(); },
                         error: function(){ alert('Error publishing.'); }
@@ -224,8 +250,8 @@
                 });
 
                 // Edit article
-                              $('.edit_article').on('click', function(){
-                                  document.location.href = ARTICLE_EDIT.replace('/0/', '/'+$(this).closest('li').data('id')+'/') + '?next={{ request.path|urlencode }}';
+                $('.edit_article').on('click', function(){
+                    document.location.href = ARTICLE_EDIT.replace('/0/', '/'+$(this).closest('li').data('id')+'/') + '?next={{ request.path|urlencode }}';
 
                 });
 
@@ -281,9 +307,9 @@
                     {#        $("#test-status").html('<div class="alert alert-danger">Error: '+xhr.responseText+'</div>');#}
                     {#    }#}
                     {#});#}
+                    });
                 });
-            });
-        })(jQuery);
+            })(jQuery);
     </script>
 
 {% endblock %}

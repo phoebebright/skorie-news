@@ -27,7 +27,7 @@ from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action, authentication_classes
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListAPIView
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin, UpdateModelMixin
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -600,6 +600,7 @@ class MailgunWebhookView(APIView):
 class ArticleViewSet(CreateModelMixin,
                      RetrieveModelMixin,
                      ListModelMixin,
+                     UpdateModelMixin,
                      GenericViewSet):
     queryset = Article.objects.all().order_by("-is_template", "-updated")
     serializer_class = ArticleSerializer
