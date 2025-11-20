@@ -64,6 +64,7 @@ class ArticleSerializer(serializers.ModelSerializer):
 class ArticleOrderSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     order = serializers.IntegerField()
+    appear_in_blog = serializers.BooleanField()
 
     def validate_id(self, value):
         if not Article.objects.filter(id=value).exists():
