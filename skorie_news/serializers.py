@@ -61,6 +61,14 @@ class ArticleSerializer(serializers.ModelSerializer):
 
         return article
 
+class ArticleOrderSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    order = serializers.IntegerField()
+
+    def validate_id(self, value):
+        if not Article.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Article with this id does not exist.")
+        return value
 
 class IssueArticleSerializer(serializers.ModelSerializer):
     # Flatten for the UI

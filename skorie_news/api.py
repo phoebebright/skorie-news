@@ -45,7 +45,7 @@ from .models import Newsletter, Subscription, Mailing, Issue, SubscriptionEvent,
     DirectEmail, DeliveryEvent, get_mail_class
 from .serializers import SubscriptionSerializer, MessageSerializer, SubmissionSerializer, SubscriptionEventSerializer, \
     ArticleSerializer, IssueArticleSerializer, IssueArticlesUpdateSerializer, \
-    SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer
+    SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer, ArticleOrderSerializer
 
 User = get_user_model()
 logger = logging.getLogger('django')
@@ -604,6 +604,37 @@ class ArticleViewSet(CreateModelMixin,
                      GenericViewSet):
     queryset = Article.objects.all().order_by("-is_template", "-updated")
     serializer_class = ArticleSerializer
+
+    @action(detail=False, methods=["patch"], url_path="reorder")
+    @transaction.atomic
+    def reorder(self, request):
+        """
+        Expect payload like:
+        [
+          {"id": 1, "order": 1},
+          {"id": 5, "order": 2},
+          {"id": 3, "order": 3}
+        ]
+        """
+        serializer = ArticleOrderSerializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        items = serializer.validated_data
+        ids = [item["id"] for item in items]
+
+        # Fetch all articles in one query
+        articles = list(Article.objects.filter(id__in=ids))
+        article_map = {a.id: a for a in articles}
+
+        # Apply new orders
+        for item in items:
+            article = article_map[item["id"]]
+            article.order = item["order"]
+
+        # One bulk update instead of N saves
+        Article.objects.bulk_update(articles, ["order"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # Issues (Messages)
 class IssueViewSet(ModelViewSet):
