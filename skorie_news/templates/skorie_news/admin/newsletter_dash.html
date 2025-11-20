@@ -38,9 +38,9 @@
 {% endblock %}
 
 {% block js %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.ui.position.js"></script>
+    <link rel="stylesheet" href="{% static 'css/jquery.contextMenu.min.css' %}">
+    <script src="{% static 'js/jquery.contextMenu.min.js' %}"></script>
+    <script src="{% static 'js/jquery.ui.position.js' %}"></script>
 <script>
   // requires jQuery and jquery-contextMenu + its CSS loaded on the page
   // here = current page URL used for ?next= return param
