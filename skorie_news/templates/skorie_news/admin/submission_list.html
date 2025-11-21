@@ -1,7 +1,7 @@
 {% extends "admin/administrator_base.html" %}
-{% block title %}Submissions{% endblock %}
+{% block title %}Mailings{% endblock %}
 {% block content %}
-<h1 class="h3 mt-3">Submissions</h1>
+<h1 class="h3 mt-3">Mailings</h1>
 
 <div class="table-responsive">
 <table class="table table-hover align-middle">
@@ -24,7 +24,7 @@
       <td>{{ s.sending }}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="4" class="text-center text-muted">No submissions yet.</td></tr>
+    <tr><td colspan="4" class="text-center text-muted">No Mailings yet.</td></tr>
   {% endfor %}
   </tbody>
 </table>

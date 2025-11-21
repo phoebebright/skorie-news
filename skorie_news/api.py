@@ -43,7 +43,7 @@ from tools.permissions import IsAdministratorPermission
 
 from .models import Newsletter, Subscription, Mailing, Issue, SubscriptionEvent, IssueArticle, Article, Delivery, \
     DirectEmail, DeliveryEvent, get_mail_class
-from .serializers import SubscriptionSerializer, MessageSerializer, SubmissionSerializer, SubscriptionEventSerializer, \
+from .serializers import SubscriptionSerializer, MessageSerializer,  SubscriptionEventSerializer, \
     ArticleSerializer, IssueArticleSerializer, IssueArticlesUpdateSerializer, \
     SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer, ArticleOrderSerializer
 
@@ -439,68 +439,10 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
         return Response({"ok": True})
 
 
-class IssueViewSet(ModelViewSet):
-    queryset = Issue.objects.all()
-    serializer_class = MessageSerializer
-    permission_classes = (IsAuthenticated, IsAdministratorPermission)
-    http_method_names = ["post", "get"]
-
-    @action(detail=True, methods=["post"], url_path="queue")
-    def queue(self, request, pk=None):
-        message = self.get_object()
-        if not message.newsletter_id:
-            return Response({"status": "error", "detail": "No newsletter linked."}, status=400)
-
-        submission = message.submit()
-        logger.info(f"Message {message.pk} manually queued as submission {submission.pk} by user {request.user}")
-
-
-        return Response(
-            {
-                "status": "ok",
-                "submission_id": submission.pk,
-                "message": f"Submission queued for '{message.title}' (#{submission.pk}).",
-            },
-            status=status.HTTP_201_CREATED
-        )
-
-    @action(detail=True, methods=["post"], url_path="send_test")
-    def send_test(self, request, pk=None):
-            """Send this issue (Message) to a test email via Mailgun."""
-            message = self.get_object()
-            test_email = (request.data.get("email") or "").strip().lower()
-            if not test_email:
-                return Response({"error": "Missing email"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # use the model helper
-            rendered = message.render_email()
-
-            url = f"https://api.mailgun.net/v3/{settings.MAILGUN_DOMAIN}/messages"
-            auth = ("api", settings.MAILGUN_API_KEY)
-
-            data = {
-                "from": message.newsletter.get_sender(),
-                "to": [test_email],
-                "subject": f"[TEST] {rendered['subject']}",
-                "text": rendered["text"],
-            }
-            if rendered["html"]:
-                data["html"] = rendered["html"]
-
-            r = requests.post(url, auth=auth, data=data, files=rendered["files"])
-
-            # cleanup: close file handles
-            for _, (_, f) in rendered["files"]:
-                f.close()
-
-            if r.ok:
-                return Response({"status": "ok", "msg": f"Sent test to {test_email}"})
-            else:
-                return Response({"error": r.text}, status=r.status_code)
 
 class MailingViewSet(ModelViewSet):
     queryset = Mailing.objects.all()
-    serializer_class = SubmissionSerializer
+    serializer_class = MailingSerializer
     permission_classes = (IsAuthenticated, IsAdministratorPermission)
     http_method_names = ["post", "get"]
 
@@ -517,7 +459,7 @@ class MailingViewSet(ModelViewSet):
             return Response(
                 {
                     "status": "ok",
-                    "message": f"Submission {sub.pk} has already been sent.",
+                    "message": f"Mailing {sub.pk} has already been sent.",
                 },
                 status=200,
             )
@@ -525,19 +467,19 @@ class MailingViewSet(ModelViewSet):
             return Response(
                 {
                     "status": "ok",
-                    "message": f"Submission {sub.pk} is sending.",
+                    "message": f"Mailing {sub.pk} is sending.",
                 },
                 status=200,
             )
         elif sub.is_error:
             return Response({
                 "status": "error",
-                "message": f"Submission {sub.pk} failed ",
+                "message": f"Mailing {sub.pk} failed ",
             }, status=400)
         else:
             return Response({
                 "status": "error",
-                "message": f"Unknown error in Submission send {sub.pk} ",
+                "message": f"Unknown error in Mailing send {sub.pk} ",
             }, status=400)
 
     @action(detail=True, methods=["post"], url_path="send")
@@ -553,7 +495,7 @@ class MailingViewSet(ModelViewSet):
             return Response(
                 {
                     "status": "ok",
-                    "message": f"Submission {sub.pk} has already been sent.",
+                    "message": f"Mailing {sub.pk} has already been sent.",
                 },
                 status=200,
             )
@@ -561,19 +503,19 @@ class MailingViewSet(ModelViewSet):
             return Response(
                 {
                     "status": "ok",
-                    "message": f"Submission {sub.pk} is sending.",
+                    "message": f"Mailing {sub.pk} is sending.",
                 },
                 status=200,
             )
         elif sub.is_error:
             return Response({
                 "status": "error",
-                "message": f"Submission {sub.pk} failed ",
+                "message": f"Mailing {sub.pk} failed ",
             }, status=400)
         else:
             return Response({
                 "status": "error",
-                "message": f"Unknown error in Submission submit {sub.pk} ",
+                "message": f"Unknown error in Mailing submit {sub.pk} ",
             }, status=400)
 
 class MailgunWebhookView(APIView):
@@ -614,7 +556,7 @@ class IssueViewSet(ModelViewSet):
       - PUT /issues/{id}/articles/           -> replace ordering/flags
       - POST /issues/{id}/articles/add/      -> add one article (appended)
       - DELETE /issues/{id}/articles/{aid}/  -> remove article
-      - POST /issues/{id}/queue/             -> create/reuse Submission + queue
+      - POST /issues/{id}/queue/             -> create/reuse Mailing + queue
       - POST /issues/{id}/publish/           -> set published_at
     """
     queryset = Issue.objects.select_related("newsletter").all().order_by("-created")
@@ -668,12 +610,53 @@ class IssueViewSet(ModelViewSet):
         IssueArticle.objects.filter(issue=issue, article_id=article_id).delete()
         return Response(status=204)
 
-    # ----- queue / publish actions -----
-    @action(detail=True, methods=["post"])
-    def queue(self, request, pk=None):
+
+    @action(detail=True, methods=["post"], url_path="send_test")
+    def send_test(self, request, pk=None):
+            """Send this issue (Message) to a test email via Mailgun."""
+            message = self.get_object()
+            test_email = (request.data.get("email") or "").strip().lower()
+            if not test_email:
+                return Response({"error": "Missing email"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # use the model helper
+            rendered = message.render_email()
+
+            url = f"https://api.mailgun.net/v3/{settings.MAILGUN_DOMAIN}/messages"
+            auth = ("api", settings.MAILGUN_API_KEY)
+
+            data = {
+                "from": message.newsletter.get_sender(),
+                "to": [test_email],
+                "subject": f"[TEST] {rendered['subject']}",
+                "text": rendered["text"],
+            }
+            if rendered["html"]:
+                data["html"] = rendered["html"]
+
+            r = requests.post(url, auth=auth, data=data, files=rendered["files"])
+
+            # cleanup: close file handles
+            for _, (_, f) in rendered["files"]:
+                f.close()
+
+            if r.ok:
+                return Response({"status": "ok", "msg": f"Sent test to {test_email}"})
+            else:
+                return Response({"error": r.text}, status=r.status_code)
+
+
+    @action(detail=True, methods=['post'])
+    def create_mailing(self, request, pk=None):
         issue = self.get_object()
-        sub = issue.submit()  # your model method
-        return Response({"ok": True, "submission": SubmissionSerializer(sub).data})
+        serializer = MailingCreateSerializer(
+            data=request.data,
+            context={'issue': issue, 'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        mailing = serializer.save()
+        return Response(MailingSerializer(mailing).data, status=status.HTTP_201_CREATED)
+
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
@@ -811,7 +794,7 @@ class AdminSubscriberViewSet(
             return Response([], status=200)
 
         # Minimal feed from Delivery; customize if you log more event types
-        qs = Delivery.objects.filter(email__iexact=email, submission__newsletter=sub.newsletter).order_by("-timestamp")[:200]
+        qs = Delivery.objects.filter(email__iexact=email, mailing__newsletter=sub.newsletter).order_by("-timestamp")[:200]
         data = [
             {"event": d.status, "at": d.timestamp.isoformat(), "mailgun_id": d.mailgun_id}
             for d in qs

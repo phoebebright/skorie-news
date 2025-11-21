@@ -191,7 +191,7 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
             newsletter=OuterRef("pk")
         ).order_by("-created").values("created")[:1]
 
-        pending_submissions_exists = Mailing.objects.filter(
+        pending_mailings_exists = Mailing.objects.filter(
             newsletter=OuterRef("pk"),
             status__in=[Mailing.Status.QUEUED, Mailing.Status.SENDING]
         )
@@ -206,7 +206,7 @@ class NewsletterDashboardView(UserCanAdministerMixin, TemplateView):
                 subscribers_suppressed=Subquery(suppressed_count),
                 issues_total=Subquery(issues_count),
                 last_issue_at=Subquery(last_issue),
-                has_pending=Exists(pending_submissions_exists),
+                has_pending=Exists(pending_mailings_exists),
             )
             .order_by("-created")
         )
@@ -395,10 +395,10 @@ class NewsletterDeleteView(UserCanAdministerMixin, DeleteView):
 
 
 @method_decorator(never_cache, name='dispatch')
-class SubmissionListView(UserCanAdministerMixin, ListView):
+class MailingListView(UserCanAdministerMixin, ListView):
     model = Mailing
     paginate_by = 20
-    template_name = "skorie_news/admin/submission_list.html"
+    template_name = "skorie_news/admin/mailing_list.html"
 
     def get_queryset(self):
         return Mailing.objects.select_related("message", "newsletter").order_by("-prepared")
@@ -406,29 +406,29 @@ class SubmissionListView(UserCanAdministerMixin, ListView):
 
 
 @user_passes_test(lambda u: u.is_authenticated and u.is_staff)
-def issue_queue_submission(request: HttpRequest, pk: int) -> HttpResponse:
-    """Create or reuse a Submission for a Message and set it queued.
+def issue_queue_mailing(request: HttpRequest, pk: int) -> HttpResponse:
+    """Create or reuse a Mailing for a Message and set it queued.
 
     NOTE: django-skorie_news actually sends via the management command
-    `submit_newsletter`. This view only creates the Submission and marks
+    `submit_newsletter`. This view only creates the Mailing and marks
     it QUEUED, so your scheduled job will send it.
     """
     msg = get_object_or_404(Issue, pk=pk)
     if not msg.newsletter_id:
         raise Http404("Message must be linked to a Newsletter before queueing.")
 
-    submission, created = Mailing.objects.get_or_create(
+    mailing, created = Mailing.objects.get_or_create(
         message=msg, newsletter=msg.newsletter
     )
     # Status constants vary across versions; using strings for portability
-    submission.status = Mailing.STATUS.QUEUE if hasattr(Mailing, "STATUS") else "queued"
-    submission.save()
+    mailing.status = Mailing.STATUS.QUEUE if hasattr(Mailing, "STATUS") else "queued"
+    mailing.save()
 
     messages.success(
         request,
-        "Submission queued. The management command will deliver it to all current subscribers.",
+        "Mailing queued. The management command will deliver it to all current subscribers.",
     )
-    return redirect("news:submission-list")
+    return redirect("news:mailing-list")
 
 class SubscriptionThanks(TemplateView):
     template_name = "skorie_news/user/subscription_thanks.html"
@@ -943,7 +943,7 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
         nl = get_object_or_404(Newsletter, id=kwargs['newsletter_pk'])
 
 
-        # Subquery: latest submission status per issue
+        # Subquery: latest mailing status per issue
         latest_sub = Mailing.objects.filter(issue=OuterRef("pk")).order_by("-created", "-pk")
         latest_status = Subquery(latest_sub.values("status")[:1])
 
@@ -961,10 +961,10 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
         # quick counts
         counts = {
             "all": Issue.objects.filter(newsletter=nl).count(),
-            "queued": Issue.objects.filter(newsletter=nl, submissions__status=Mailing.Status.QUEUED).distinct().count(),
-            "sending": Issue.objects.filter(newsletter=nl, submissions__status=Mailing.Status.SENDING).distinct().count(),
-            "sent": Issue.objects.filter(newsletter=nl, submissions__status=Mailing.Status.SENT).distinct().count(),
-            "draft": Issue.objects.filter(newsletter=nl).exclude(submissions__isnull=False).count(),
+            "queued": Issue.objects.filter(newsletter=nl, mailings__status=Mailing.Status.QUEUED).distinct().count(),
+            "sending": Issue.objects.filter(newsletter=nl, mailings__status=Mailing.Status.SENDING).distinct().count(),
+            "sent": Issue.objects.filter(newsletter=nl, mailings__status=Mailing.Status.SENT).distinct().count(),
+            "draft": Issue.objects.filter(newsletter=nl).exclude(mailings__isnull=False).count(),
         }
 
         context.update({
@@ -1037,7 +1037,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
             )
 
             context["newsletter"] = issue.newsletter
-            context["submission"] = issue.active_mailing if issue else None
+            context["mailing"] = issue.active_mailing if issue else None
             return context
 
         def form_valid(self, form):

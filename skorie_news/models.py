@@ -1029,7 +1029,7 @@ class Issue(CreatedUpdatedMixin):
     def active_mailing(self):
         """Return queued/sending mailing if present (or None)."""
         # If you haven't renamed Submission -> Mailing yet, use Submission.Status.*
-        qs = self.submissions.filter(
+        qs = self.mailings.filter(
             status__in=[Mailing.Status.QUEUED, Mailing.Status.SENDING]
         ).order_by("-created")
         if qs.count() > 1:
@@ -1048,7 +1048,7 @@ class Issue(CreatedUpdatedMixin):
                 m.queue()
             return m
 
-        m = Mailing.send_issue(self)  # or Submission.from_message(self)
+        m = Mailing.send_issue(self)  # or Mailing.from_message(self)
         m.queue()
         return m
 
@@ -1151,7 +1151,7 @@ class IssueArticle(models.Model):
         super().save(*args, **kwargs)
 
 # ---------------------------------------------------------------------
-# Submission + Delivery
+# Mailing + Delivery
 # ---------------------------------------------------------------------
 
 class Mailing(CreatedUpdatedMixin):
@@ -1165,11 +1165,11 @@ class Mailing(CreatedUpdatedMixin):
         SENT     = "3", "Sent"
         ERROR    = "9", "Error"
 
-    newsletter = models.ForeignKey(Newsletter, on_delete=models.CASCADE, related_name="submissions", editable=False)
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="submissions")
+    newsletter = models.ForeignKey(Newsletter, on_delete=models.CASCADE, related_name="mailings", editable=False)
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="mailings")
 
     # Optional: restrict to a subset; if empty, we resolve all active
-    subscriptions = models.ManyToManyField(Subscription, blank=True, related_name="submissions")
+    subscriptions = models.ManyToManyField(Subscription, blank=True, related_name="mailings")
 
     publish_date = models.DateTimeField(default=timezone.now, db_index=True)
     publish = models.BooleanField(default=True, help_text=_("Publish in archive."), db_index=True)
@@ -1177,8 +1177,8 @@ class Mailing(CreatedUpdatedMixin):
     status = models.CharField(max_length=1, choices=Status.choices, default=Status.INACTIVE)
 
     class Meta:
-        verbose_name = _("submission")
-        verbose_name_plural = _("submissions")
+        verbose_name = _("mailing")
+        verbose_name_plural = _("mailings")
         ordering = ["-created"]
 
     def __str__(self):
@@ -1192,8 +1192,11 @@ class Mailing(CreatedUpdatedMixin):
 
     @property
     def prepared(self):
-        # is this correct?
-        return True
+        # "prepared" = has an Issue + Newsletter + at least one potential recipient
+        if not self.issue_id or not self.newsletter_id:
+            return False
+        return bool(self.subscriptions.exists() or self.newsletter.get_subscriptions())
+
     @property
     def sending(self):
         return self.status == self.Status.SENDING
@@ -1265,7 +1268,7 @@ class Mailing(CreatedUpdatedMixin):
     #     context = Context({
     #         "subscription": None,
     #         "site": Site.objects.get_current(),
-    #         "submission": self,
+    #         "mailing": self,
     #         "issue": self.issue,
     #         "skorie_news": self.skorie_news,
     #         "date": self.publish_date,
@@ -1336,7 +1339,7 @@ class Mailing(CreatedUpdatedMixin):
         ctx = {
             "subscription": None,
             "site": Site.objects.get_current(),
-            "submission": self,
+            "mailing": self,
             "issue": self.issue,
             "newsletter": self.newsletter,
             "date": self.publish_date,

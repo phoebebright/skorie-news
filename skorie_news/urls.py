@@ -1,13 +1,13 @@
 from django.urls import path, register_converter
 
 from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
-    SubmissionListView, \
+    MailingListView, \
     NewsletterSubscriptionsView, UpdateMySubscription, \
     MessageArticlesView, SubscribeWithEmail, EventSendView, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
-    SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_submission, NewsListView, \
+    SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_mailing, NewsListView, \
     NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView, ArticlePreviewHTMLView, ArticlePreviewTextView
 
 app_name = "skorie_news"
@@ -33,10 +33,10 @@ urlpatterns = [
     path("issue/add/<int:newsletter_pk>/", IssueCreateView.as_view(), name="issue-add"),
     path("issue/<int:pk>/edit/", IssueEditView.as_view(), name="issue-edit"),
     path("issue/<int:pk>/preview/", IssuePreviewView.as_view(), name="issue-preview"),
-    path("issues/<int:pk>/queue/", issue_queue_submission, name="issue-queue" ),
+    path("issues/<int:pk>/queue/", issue_queue_mailing, name="issue-queue" ),
 
-    # Submissions
-    path("submissions/", SubmissionListView.as_view(), name="submission-list"),
+    # Mailings
+    path("mailings/", MailingListView.as_view(), name="mailing-list"),
 
 
 

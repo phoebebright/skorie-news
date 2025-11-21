@@ -101,10 +101,6 @@ class IssueArticlesUpdateSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Each item needs 'article'.")
         return value
 
-class SubmissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Mailing
-        fields = ("id", "status", "publish_date")
 
 # assume we only ever see subscriptions for one newsletter
 class SubscriptionManageDTSerializer(serializers.ModelSerializer):
@@ -206,3 +202,97 @@ class DirectEmailReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = DirectEmail
         fields = '__all__'
+
+
+class MailingSerializer(serializers.ModelSerializer):
+    newsletter_title = serializers.CharField(source="newsletter.title", read_only=True)
+    issue_title = serializers.CharField(source="issue.title", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    subscription_count = serializers.SerializerMethodField()
+
+    # expose your convenience flags directly for the UI
+    is_active = serializers.BooleanField(read_only=True)
+    is_inactive = serializers.BooleanField(read_only=True)
+    is_queued = serializers.BooleanField(read_only=True)
+    is_sending = serializers.BooleanField(read_only=True)
+    is_sent = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Mailing
+        fields = [
+            "id",
+
+            "newsletter",
+            "newsletter_title",
+            "issue",
+            "issue_title",
+
+            "publish_date",
+            "publish",
+
+            "status",
+            "status_display",
+
+            "created",
+            "updated",
+
+            "subscription_count",
+
+            "is_active",
+            "is_inactive",
+            "is_queued",
+            "is_sending",
+            "is_sent",
+        ]
+
+    def get_subscription_count(self, obj):
+        # Only count if the M2M is set up; falls back to 0 if something odd
+        try:
+            return obj.subscriptions.count()
+        except Exception:
+            return 0
+
+class MailingCreateSerializer(serializers.Serializer):
+    publish_date = serializers.DateTimeField(required=False, allow_null=True)
+    publish = serializers.BooleanField(default=False)
+    subscriptions = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Subscription.objects.all(), required=False
+    )
+
+    def create(self, validated_data):
+        issue = self.context['issue']
+        newsletter = issue.newsletter
+
+        subs = validated_data.pop('subscriptions', None)
+        publish_now = validated_data.pop('publish', False)
+
+        mailing = Mailing.from_issue(
+            newsletter=newsletter,
+            issue=issue,
+            subscriptions=subs,
+            **validated_data
+        )
+
+        if publish_now:
+            mailing.status = Mailing.STATUS_QUEUED
+
+        mailing.save()
+        return mailing
+
+class IssueSerializer(serializers.ModelSerializer):
+    mailings = MailingSerializer(
+        many=True,
+        source="mailings",   # related_name on Mailing.issue
+        read_only=True,
+    )
+
+    class Meta:
+        model = Issue
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "newsletter",
+            "published_at",
+            "mailings",
+        ]

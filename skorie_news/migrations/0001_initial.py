@@ -236,7 +236,7 @@ class Migration(migrations.Migration):
                 ('publish', models.BooleanField(db_index=True, default=True, help_text='Publish in archive.')),
                 ('status', models.CharField(choices=[('0', 'Inactive'), ('1', 'Queued'), ('2', 'Sending'), ('3', 'Sent'), ('9', 'Error')], default='0', max_length=1)),
                 ('creator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_creator', to=settings.AUTH_USER_MODEL)),
-                ('issue', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='skorie_news.issue')),
+                ('issue', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mailings', to='skorie_news.issue')),
                 ('updator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_updator', to=settings.AUTH_USER_MODEL)),
             ],
             options={
