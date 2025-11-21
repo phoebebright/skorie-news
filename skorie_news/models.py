@@ -702,7 +702,10 @@ class Subscription(CreatedUpdatedMixin):
         elif not already_active and self.active:
             self._send_tx_email("subscribed")
 
-
+        if self.active and self.user and hasattr(self.user, 'subscribe_news'):
+            self.user.subscribe_news = self.subscribe_date
+            self.user.unsubscribe_news = self.unsubscribe_date
+            self.user.save()
 
     def unsubscribe(self, consent:dict={}, user=None):
         '''not really consent as we do not require it for unsubscribe, but we can log some metadata'''
