@@ -841,6 +841,7 @@ class Article(CreatedUpdatedMixin):
 
     is_template = models.BooleanField(default=False)
 
+
     class Meta:
         verbose_name = _("article")
         verbose_name_plural = _("articles")
