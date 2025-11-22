@@ -443,7 +443,7 @@ def issue_queue_mailing(request: HttpRequest, pk: int) -> HttpResponse:
         raise Http404("Message must be linked to a Newsletter before queueing.")
 
     mailing, created = Mailing.objects.get_or_create(
-        message=msg, newsletter=msg.newsletter
+        newsletter=msg.newsletter
     )
     # Status constants vary across versions; using strings for portability
     mailing.status = Mailing.STATUS.QUEUE if hasattr(Mailing, "STATUS") else "queued"

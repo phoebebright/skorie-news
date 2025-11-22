@@ -1594,7 +1594,7 @@ class Mailing(CreatedUpdatedMixin):
             deliveries.append(Delivery(
                 mailing=self,
                 email=email,
-                esp_name=anymail_status.esp_name,         # normally 'mailgun'
+                esp_name=esp_name,         # normally 'mailgun'
                 message_id=r.get("message_id"),           # provider id
                 state="sending",                          # accepted by ESP
                 sent_at=timezone.now(),
