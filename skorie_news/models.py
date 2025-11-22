@@ -1025,6 +1025,10 @@ class Issue(CreatedUpdatedMixin):
         super().save(*args, **kwargs)
 
     @property
+    def ordered_articles(self):
+        return self.issue_articles.select_related("article").order_by("position", "id")
+
+    @property
     def is_blog_published(self):  # simple helper
         return self.published_at is not None
 
@@ -1248,8 +1252,6 @@ class Issue(CreatedUpdatedMixin):
             self.published_at = timezone.now()
             self.save(update_fields=["published_at"])
 
-    def ordered_articles(self):
-        return self.issue_articles.select_related("article").order_by("position", "id")
 
     # ---- Templates for send ----
     @cached_property

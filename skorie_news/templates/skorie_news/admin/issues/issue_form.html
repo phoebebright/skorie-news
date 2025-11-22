@@ -35,7 +35,7 @@
                                 </a>
 
 
-                               <a href="{% url 'news:issue-mailings' issue.pk %}" class="btn btn-outline-primary flex-fill" id="btn-queue">
+                                <a href="{% url 'news:issue-mailings' issue.pk %}" class="btn btn-outline-primary flex-fill" id="btn-queue">
                                     Mailing Options
                                 </a>
 
@@ -69,9 +69,9 @@
                     </div>
                     <div class="card-body">
                         <ul id="issue-articles" class="list-group">
-                            {% for article in form.instance.articles.all %}
+                            {% for issue_article in form.instance.ordered_articles %}
 
-                                {% include "skorie_news/admin/article/include_article_item.html" with  id=article.id title=article.title is_blog=article.appear_in_blog %}
+                                {% include "skorie_news/admin/article/include_article_item.html" with  id=issue_article.article.id title=issue_article.article.title is_blog=issue_article.article.appear_in_blog %}
                             {% empty %}
                                 <li class="list-group-item text-muted">No articles yet. Pick or create on the right.</li>
                             {% endfor %}
@@ -140,16 +140,17 @@
 
         window.ARTICLE_UPDATE_API = "{% url 'newsapi:news-article-detail' 0 %}"
         window.ARTICLE_CREATE_API = "{% url 'newsapi:news-article-list'  %}"
-        {#window.ARTICLE_UPDATE_API = (issue_id) => `${NEWS_API_URL}news/${issue_id}/articles/`;#}
 
+    window.ISSUE_ARTICLES_API = "{% url 'newsapi:news-issue-articles' 0 %}";
         window.ARTICLE_DELETE_API = "{% url 'newsapi:news-issue-article-remove' 0 9999999999 %}";
         window.ARTICLE_ATTACH_API = "{% url 'newsapi:news-issue-article-attach' 0 %}";
+
 
         window.ISSUE_UPDATE_API = "{% url 'newsapi:news-issue-list' %}";
         window.ISSUE_QUEUE_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/queue/`;
         window.ISSUE_PUBLISH_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/publish/`;
 
-                        const issueId = {{ issue.id|default:"null" }};
+        const issueId = {{ issue.id|default:"null" }};
 
         function saveIssueArticles() {
             var payload = [];
@@ -162,8 +163,8 @@
             });
 
             return $.ajax({
-                url: ISSUE_UPDATE_API.replace('/0/','/'+issueId+'/'),
-                method: 'PATCH',
+                url: ISSUE_ARTICLES_API.replace('/0/','/'+issueId+'/'),
+                method: 'PUT',
                 contentType: 'application/json',
                 data: JSON.stringify({articles: payload}),
                 success: function(){ console.log('Order saved'); },

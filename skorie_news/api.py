@@ -551,48 +551,40 @@ class ArticleViewSet(CreateModelMixin,
 
 # Issues (Messages)
 class IssueViewSet(ModelViewSet):
-    """
-    Admin-only CRUD for issues + custom actions:
-      - GET /issues/{id}/articles/           -> current list (ordered)
-      - PUT /issues/{id}/articles/           -> replace ordering/flags
-      - POST /issues/{id}/articles/add/      -> add one article (appended)
-      - DELETE /issues/{id}/articles/{aid}/  -> remove article
-      - POST /issues/{id}/queue/             -> create/reuse Mailing + queue
-      - POST /issues/{id}/publish/           -> set published_at
-    """
+    permission_classes = (IsAuthenticated, IsAdministratorPermission)
+    http_method_names = ["post", "get", "put"]
     queryset = Issue.objects.select_related("newsletter").all().order_by("-created")
     serializer_class = MessageSerializer
 
-
-    # ----- articles list / save -----
-    @action(detail=True, methods=["get"], url_path="articles")
-    def articles_list(self, request, pk=None):
+    @action(detail=True, methods=["get", "put"], url_path="articles")
+    def articles(self, request, pk=None):
         issue = self.get_object()
-        links = issue.issue_articles.select_related("article").order_by("position", "id")
-        data = IssueArticleSerializer(links, many=True).data
-        return Response(data)
 
-    @articles_list.mapping.put
-    def articles_save(self, request, pk=None):
-        issue = self.get_object()
-        ser = IssueArticlesUpdateSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        items = ser.validated_data["articles"]
+        if request.method == "GET":
+            links = issue.issue_articles.select_related("article").order_by("position", "id")
+            data = IssueArticleSerializer(links, many=True).data
+            return Response(data)
 
-        with transaction.atomic():
-            IssueArticle.objects.filter(issue=issue).delete()
-            pos = 1
-            for it in items:
-                art_id = int(it["article"])
-                appear = bool(it.get("appear_in_blog", False))
-                position = int(it.get("position") or pos)
-                IssueArticle.objects.create(
-                    issue=issue, article_id=art_id,
-                    position=position, appear_in_blog=appear
-                )
-                pos += 1
+            # PUT → save ordering/flags
+            ser = IssueArticlesUpdateSerializer(data=request.data)
+            ser.is_valid(raise_exception=True)
+            items = ser.validated_data["articles"]
 
-        return Response({"ok": True})
+            with transaction.atomic():
+                IssueArticle.objects.filter(issue=issue).delete()
+                pos = 1
+                for it in items:
+                    art_id = int(it["article"])
+                    appear = bool(it.get("appear_in_blog", False))
+                    position = int(it.get("position") or pos)
+                    IssueArticle.objects.create(
+                        issue=issue, article_id=art_id,
+                        position=position,
+                        appear_in_blog=appear,
+                    )
+                    pos += 1
+
+        return Response({"ok": True}, status=status.HTTP_200_OK)
 
     # ----- attach or remove a single article from an issue -----
     @action(detail=True, methods=["post"], url_path="article/attach")
