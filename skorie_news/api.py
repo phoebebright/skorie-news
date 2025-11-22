@@ -43,9 +43,10 @@ from tools.permissions import IsAdministratorPermission
 
 from .models import Newsletter, Subscription, Mailing, Issue, SubscriptionEvent, IssueArticle, Article, Delivery, \
     DirectEmail, DeliveryEvent, get_mail_class
-from .serializers import SubscriptionSerializer, MessageSerializer,  SubscriptionEventSerializer, \
+from .serializers import SubscriptionSerializer, MessageSerializer, SubscriptionEventSerializer, \
     ArticleSerializer, IssueArticleSerializer, IssueArticlesUpdateSerializer, \
-    SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer, ArticleOrderSerializer
+    SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer, ArticleOrderSerializer, \
+    MailingCreateSerializer, MailingSerializer
 
 User = get_user_model()
 logger = logging.getLogger('django')

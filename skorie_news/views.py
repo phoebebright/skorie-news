@@ -20,6 +20,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template import engines
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from django.views import View
@@ -31,10 +32,8 @@ from django.conf import settings
 from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \
     DeliveryEvent
 
-from tools.permission_mixins import UserCanOrganiseEventMixin
-from users.models import VerificationCode
-from web.models import Event
-from web.views import is_superuser
+from tools.permission_mixins import UserCanOrganiseEventMixin, UserCanAdministerMixin
+
 
 from .forms import NewsletterForm, CSVImportForm, SubscriptionForm, \
     ArticleForm, ArticleQuickForm, DispatchForm, AttachmentForm, IssueForm, AttachmentFormSet, NewsletterDownloadForm
@@ -1459,7 +1458,7 @@ class NewsAdminUpdateView(UserCanAdministerMixin, GoNextMixin, UpdateView):
 class NewsAdminDeleteView(UserCanAdministerMixin, GoNextMixin, DeleteView):
     model = None
     success_url = reverse_lazy("news_list")
-    template_name = "admin/news/news_confirm_delete.html"
+    template_name = "skorie_news/admin/news/news_confirm_delete.html"
 
     def get_success_url(self):
         return reverse_lazy("admin_news_list")
@@ -1559,3 +1558,85 @@ class ArticlePreviewTextView(View):
         article = get_object_or_404(Article, pk=pk)
         txt = article.render_text(base_url=settings.SITE_URL)
         return HttpResponse(txt, content_type="text/plain; charset=utf-8")
+
+class IssueQueueMailingView(View):
+    """
+    Simple POST endpoint (with CSRF) to queue a mailing for an Issue.
+    Uses Issue.queue_mailing() for all data changes.
+    """
+
+    def post(self, request, pk):
+        issue = get_object_or_404(Issue, pk=pk)
+
+        # TODO: your permissions here (e.g. user must be staff / organiser for this newsletter)
+
+        # Parse publish_date from POST (datetime-local)
+        publish_str = request.POST.get("publish_date") or ""
+        publish_date = None
+        if publish_str:
+            publish_date = parse_datetime(publish_str)
+        if publish_date is None:
+            publish_date = timezone.now()
+
+        publish_to_archive = request.POST.get("publish", "on") == "on"
+
+        try:
+            issue.queue_mailing(
+                publish_date=publish_date,
+                publish=publish_to_archive,
+                # subscriptions=None means "all active subscribers"
+            )
+            messages.success(request, "Mailing has been queued.")
+        except ValueError as e:
+            messages.error(request, str(e))
+
+        # Redirect back to the issue edit/detail page
+        return redirect("news-issue-detail", pk=issue.pk)
+
+
+class IssueMailingsView(DetailView):
+    """
+    Dedicated page to manage mailings for an Issue:
+    - GET: show mailing history + queue form
+    - POST: queue a new mailing via Issue.queue_mailing
+    """
+    model = Issue
+    template_name = "skorie_news/admin/issues/issue_mailings.html"
+    context_object_name = "issue"
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        issue = self.object
+
+        # TODO: permission checks here (staff / organiser, etc.)
+
+        publish_str = request.POST.get("publish_date") or ""
+        publish_date = parse_datetime(publish_str) if publish_str else None
+        if publish_date is None:
+            publish_date = timezone.now()
+
+        publish_to_archive = request.POST.get("publish", "on") == "on"
+
+        try:
+            issue.queue_mailing(
+                publish_date=publish_date,
+                publish=publish_to_archive,
+                # subscriptions=None -> all active subscribers
+            )
+            messages.success(request, "Mailing has been queued.")
+        except ValueError as e:
+            messages.error(request, str(e))
+
+        # Redirect back to this page to avoid resubmits
+        return redirect("news:news-issue-mailings", pk=issue.pk)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        issue = self.object
+
+        # explicit ordering and prefetch
+        mailings = issue.mailings.select_related("newsletter").prefetch_related("subscriptions").order_by(
+            "-publish_date", "-created"
+        )
+        ctx["mailings"] = mailings
+        return ctx

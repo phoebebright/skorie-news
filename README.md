@@ -13,7 +13,7 @@ And require:
 
     USE_SUBSCRIBE = True    # provide a subscribe to newsletter option, false to hide
 
-    NEWSLETTER_ON = True
+    USE_NEWSLETTER = True
 
     # these 3 used?
     NEWSLETTER_THUMBNAIL = 'sorl-thumbnail'

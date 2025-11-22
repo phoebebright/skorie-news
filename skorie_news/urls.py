@@ -34,6 +34,7 @@ urlpatterns = [
     path("issue/<int:pk>/edit/", IssueEditView.as_view(), name="issue-edit"),
     path("issue/<int:pk>/preview/", IssuePreviewView.as_view(), name="issue-preview"),
     path("issues/<int:pk>/queue/", issue_queue_mailing, name="issue-queue" ),
+    path("issue/<int:pk>/mailings/", IssueMailingsView.as_view(), name="issue-mailings"),
 
     # Mailings
     path("mailings/", MailingListView.as_view(), name="mailing-list"),
