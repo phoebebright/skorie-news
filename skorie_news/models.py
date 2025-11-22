@@ -1213,7 +1213,9 @@ class Issue(CreatedUpdatedMixin):
                 msg.send()
 
                 anymail_status = msg.anymail_status
-                esp_name = anymail_status.esp_name
+                print(anymail_status)
+                # esp_name = anymail_status.esp_name
+                esp_name='mailgun'
 
                 # 6) Create Delivery rows for this batch
                 for email_addr, r in anymail_status.recipients.items():
@@ -1582,6 +1584,11 @@ class Mailing(CreatedUpdatedMixin):
         # Create Delivery rows
         # anymail_status.recipients maps each email -> {'status': 'queued/sent', 'message_id': '...'}
         anymail_status = msg.anymail_status
+        print(anymail_status)
+        # esp_name = anymail_status.esp_name
+        esp_name = 'mailgun'
+
+
         deliveries = []
         for email, r in anymail_status.recipients.items():
             deliveries.append(Delivery(
