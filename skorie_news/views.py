@@ -2,6 +2,7 @@ import csv
 import io
 import json
 
+from django.apps import apps
 from django.contrib import  messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test
@@ -27,7 +28,7 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, RedirectView, DetailView
-from django_users.tools.permission_mixins import UserCanAdministerMixin
+
 from django.conf import settings
 from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \
     DeliveryEvent
@@ -42,7 +43,8 @@ from skorie_news.api import MANAGE_EMAIL_SALT, MANAGE_EMAIL_MAX_AGE
 
 User = get_user_model()
 
-
+def is_superuser(user):
+    return user.is_superuser
 
 
 def get_next(request, event_ref):
@@ -1186,6 +1188,7 @@ class SendFromArticleTemplateView(UserCanAdministerMixin, TemplateView):
     template_name = "skorie_news/admin/email/send_email_with_template.html"
 
     def get_context_data(self, **kwargs):
+        VerificationCode = apps.get_model("users", "VerificationCode")
         context = super().get_context_data(**kwargs)
         user = User.objects.get(id=kwargs['pk'])
         context["target_user"] = user
