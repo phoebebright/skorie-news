@@ -1039,21 +1039,207 @@ class Issue(CreatedUpdatedMixin):
             logger.warning("Message %s has more than one active mailing", self.pk)
         return qs.first()
 
-    def submit(self):
+    @property
+    def can_queue_mailing(self) -> bool:
         """
-        Create (or reuse) a Mailing for this issue and queue it.
-        Returns the Mailing.
+        Business rule: allow queue if there is no active mailing.
+        You can tighten this later (e.g. only if not SENT, etc.).
         """
-        m = self.active_mailing
-        if m:
-            # already active; ensure status is queued
-            if m.status != Mailing.Status.QUEUED:
-                m.queue()
-            return m
+        active = self.mailings.filter(
+            status__in=[Mailing.Status.QUEUED, Mailing.Status.SENDING]
+        ).exists()
+        return not active
 
-        m = Mailing.send_issue(self)  # or Mailing.from_message(self)
-        m.queue()
-        return m
+
+    @classmethod
+    def send_due(cls, max_per_run: int | None = None) -> int:
+        """
+        Find all QUEUED mailings whose publish_date is due and send them.
+
+        Returns the number of mailings that were *attempted* (i.e. we called
+        send_via_anymail on them), not the number of individual recipient emails.
+        """
+        now = timezone.now()
+
+        qs = cls.objects.filter(
+            status=cls.Status.QUEUED,
+            publish_date__lte=now,
+        ).order_by("publish_date", "pk")
+
+        if max_per_run is not None:
+            qs = qs[:max_per_run]
+
+        processed = 0
+
+        for mailing in qs:
+            # Optional safety: skip obviously unprepared mailings
+            if not mailing.prepared:
+                logger.warning(f"Mailing {mailing.pk} is not prepared; marking as ERROR.")
+                mailing.status = cls.Status.ERROR
+                mailing.save(update_fields=["status", "updated"])
+                continue
+
+            try:
+                mailing.send_via_anymail()
+                processed += 1
+            except Exception:
+                # send_via_anymail itself sets status to SENT or ERROR
+                logger.exception(f"Error sending mailing {mailing.pk}")
+                # don’t re-raise here, so we continue to other mailings
+
+        return processed
+
+    def schedule_mailing(self, publish_date=None, subscriptions=None, publish=True) -> "Mailing":
+        """
+        Create (but don't necessarily queue) a Mailing for this Issue.
+        Does all data-changing work here, not in the view.
+        """
+        if publish_date is None:
+            publish_date = timezone.now()
+
+        mailing = Mailing(
+            issue=self,
+            newsletter=self.newsletter,
+            publish_date=publish_date,
+            publish=publish,
+            status=Mailing.Status.INACTIVE,
+        )
+        mailing.save()
+
+        # default recipients = all active subscribers, unless explicit subset provided
+        if subscriptions is None:
+            subscriptions = self.newsletter.get_subscriptions()
+        mailing.subscriptions.set(subscriptions)
+
+        return mailing
+
+    def queue_mailing(self, publish_date=None, subscriptions=None, publish=True) -> "Mailing":
+        """
+        High-level operation: create + queue a mailing.
+        This is what the view should call.
+        """
+        if not self.can_queue_mailing:
+            # you can raise or just return existing latest; I’d raise and handle in the view
+            raise ValueError("Issue already has an active mailing queued or sending.")
+
+        mailing = self.schedule_mailing(
+            publish_date=publish_date,
+            subscriptions=subscriptions,
+            publish=publish,
+        )
+        mailing.queue()  # uses Mailing.queue()
+        return mailing
+
+
+    def send_via_anymail(self, batch_size: int = 800):
+        """
+        Send this mailing in batches via Anymail (Mailgun backend).
+
+        Step 1: use Issue.render_email() once to build subject/text/html/files.
+        Step 2: for each batch of recipients, send with merge_data so per-recipient
+                details (name, unsubscribe_url, etc.) are applied by Mailgun.
+        """
+
+        # 1) Resolve recipients
+        subs = list(self.subscriptions.active()) or list(self.newsletter.get_subscriptions())
+        recipients = [s for s in subs if s.email]
+        if not recipients:
+            self.status = self.Status.INACTIVE
+            self.save(update_fields=["status", "updated"])
+            return
+
+        # 2) Render the email ONCE from the Issue (articles + base context)
+        base_ctx = {
+            "mailing": self,                  # extra info if templates want it
+            "site": Site.objects.get_current()
+        }
+        email = self.issue.render_email(extra_context=base_ctx)
+        subject = email["subject"]
+        text = email["text"]
+        html = email["html"]
+        files = email["files"]   # list of ("attachment", (filename, fileobj))
+
+        # 3) Update status
+        self.status = self.Status.SENDING
+        self.save(update_fields=["status", "updated"])
+
+        all_deliveries = []
+
+        try:
+            # 4) Chunk recipients to respect Mailgun limits
+            for start in range(0, len(recipients), batch_size):
+                chunk = recipients[start:start + batch_size]
+
+                # Per-recipient merge data (step 2: apply user details)
+                to_list = [s.email for s in chunk]
+                merge_data = {
+                    s.email: {
+                        "name": s.name or "",
+                        "unsubscribe_url": s.unsubscribe_url,
+                        "subscription_id": s.pk,
+                    }
+                    for s in chunk
+                }
+
+                msg = AnymailMessage(
+                    subject=subject,
+                    body=text,
+                    from_email=self.newsletter.get_sender(),
+                    to=to_list,
+                )
+                if html:
+                    msg.attach_alternative(html, "text/html")
+
+                # Attachments from Issue.render_email()
+                for _kind, (filename, fileobj) in files:
+                    try:
+                        fileobj.open("rb")
+                    except Exception:
+                        pass
+                    msg.attach(filename, fileobj.read())
+
+                # Provider-agnostic bits
+                msg.tags = [NEWSLETTER_BASENAME or "newsletter", self.newsletter.slug]
+                msg.metadata = {
+                    "mailing_id": str(self.pk),
+                    "newsletter_id": str(self.newsletter_id),
+                }
+                msg.merge_data = merge_data
+
+                # This header will be rendered by Mailgun using merge_data (unsubscribe_url)
+                msg.extra_headers = {"List-Unsubscribe": "<{{ unsubscribe_url }}>"}
+
+                # 5) Send this batch (one Mailgun API call)
+                msg.send()
+
+                anymail_status = msg.anymail_status
+                esp_name = anymail_status.esp_name
+
+                # 6) Create Delivery rows for this batch
+                for email_addr, r in anymail_status.recipients.items():
+                    all_deliveries.append(Delivery(
+                        mailing=self,
+                        email=email_addr,
+                        esp_name=esp_name,
+                        message_id=r.get("message_id"),
+                        state=r.get("status", "sending"),
+                        sent_at=timezone.now(),
+                        metadata={"mailing_id": self.pk},
+                        tags=[self.newsletter.slug],
+                    ))
+
+            if all_deliveries:
+                Delivery.objects.bulk_create(all_deliveries)
+
+            # 7) Only mark SENT if all batches succeeded
+            self.status = self.Status.SENT
+            self.save(update_fields=["status", "updated"])
+
+        except Exception:
+            logger.exception(f"Mailing {self.pk} failed to send via Anymail/Mailgun")
+            self.status = self.Status.ERROR
+            self.save(update_fields=["status", "updated"])
+            raise
 
     def publish_to_blog(self):
         if not self.published_at:

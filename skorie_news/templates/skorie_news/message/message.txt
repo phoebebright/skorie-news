@@ -11,5 +11,3 @@
 {% endfor %}
 
 ++++++++++++++++++++
-
-{% trans "Unsubscribe:" %} http://{{ site }}{{newsletter.unsubscribe_url}}

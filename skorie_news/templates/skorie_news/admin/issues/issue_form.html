@@ -16,10 +16,7 @@
                             <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
                             {{ form.title }}
                         </div>
-                        <div class="mb-3">
-                            <label for="{{ form.newsletter.id_for_label }}" class="form-label">Newsletter</label>
-                            {{ form.newsletter }}
-                        </div>
+
                     </div>
 
                     <!-- Right column: actions -->
@@ -37,9 +34,10 @@
                                     Preview
                                 </a>
 
-                                <button type="button" class="btn btn-outline-primary flex-fill" id="btn-queue">
-                                    Queue
-                                </button>
+
+                               <a href="{% url 'news:issue-mailings' issue.pk %}" class="btn btn-outline-primary flex-fill" id="btn-queue">
+                                    Mailing Options
+                                </a>
 
                                 <button type="button" class="btn btn-outline-secondary flex-fill" id="btn-publish">
                                     Publish to Blog
@@ -146,6 +144,8 @@
 
         window.ARTICLE_DELETE_API = "{% url 'newsapi:news-issue-article-remove' 0 9999999999 %}";
         window.ARTICLE_ATTACH_API = "{% url 'newsapi:news-issue-article-attach' 0 %}";
+
+        window.ISSUE_UPDATE_API = "{% url 'newsapi:news-issue-list' %}";
         window.ISSUE_QUEUE_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/queue/`;
         window.ISSUE_PUBLISH_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/publish/`;
 
@@ -162,7 +162,7 @@
             });
 
             return $.ajax({
-                url: ARTICLE_UPDATE_API.replace('/0/','/'+issueId+'/'),
+                url: ISSUE_UPDATE_API.replace('/0/','/'+issueId+'/'),
                 method: 'PATCH',
                 contentType: 'application/json',
                 data: JSON.stringify({articles: payload}),
@@ -209,9 +209,9 @@
 
 
                     $.ajax({
-                        url: '/api/v2/news/issues/' + issueId + '/articles/add/',
+                        url: ARTICLE_ATTACH_API.replace('/0/','/'+issueId+'/'),
                         method: 'POST',
-                        data: { article: id },
+                        data: { article: vars.id },
                         error: function(){ alert('Error adding article.'); }
                     });
                 });

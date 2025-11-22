@@ -1,14 +1,15 @@
 from django.urls import path, register_converter
 
 from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
-    MailingListView, \
+    MailingListView, MailingSendNowView, \
     NewsletterSubscriptionsView, UpdateMySubscription, \
     MessageArticlesView, SubscribeWithEmail, EventSendView, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
-    ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView, \
+    ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView,\
     SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_mailing, NewsListView, \
-    NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView, ArticlePreviewHTMLView, ArticlePreviewTextView
+    NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView, ArticlePreviewHTMLView, \
+    ArticlePreviewTextView, IssueMailingsView
 
 app_name = "skorie_news"
 
@@ -38,7 +39,7 @@ urlpatterns = [
 
     # Mailings
     path("mailings/", MailingListView.as_view(), name="mailing-list"),
-
+    path("mailings/<int:pk>/send-now/", MailingSendNowView.as_view(), name="mailing-send-now"),
 
 
     #Articles

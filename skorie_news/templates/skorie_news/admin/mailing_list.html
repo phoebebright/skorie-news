@@ -1,0 +1,47 @@
+<div class="card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Mailings</span>
+    {% if issue.can_queue_mailing %}
+      <span class="badge bg-success">Ready to queue</span>
+    {% else %}
+      <span class="badge bg-secondary">Active mailing in progress</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+
+    {% if issue.mailings.exists %}
+      <div class="table-responsive mb-3">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Publish date</th>
+              <th>Status</th>
+              <th>Subscriptions</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for mailing in issue.mailings.all %}
+              <tr>
+                <td>{{ mailing.publish_date|date:"Y-m-d H:i" }}</td>
+                <td>
+                  <span class="badge
+                    {% if mailing.is_sent %}bg-success
+                    {% elif mailing.is_sending %}bg-info
+                    {% elif mailing.is_queued %}bg-warning text-dark
+                    {% elif mailing.is_inactive %}bg-secondary
+                    {% else %}bg-danger{% endif %}
+                  ">
+                    {{ mailing.get_status_display }}
+                  </span>
+                </td>
+                <td>{{ mailing.subscriptions.count }}</td>
+                <td>{{ mailing.created|date:"Y-m-d H:i" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">No mailings yet for this issue.</p>
+    {% endif %}

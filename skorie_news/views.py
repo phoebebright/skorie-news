@@ -402,9 +402,33 @@ class MailingListView(UserCanAdministerMixin, ListView):
     template_name = "skorie_news/admin/mailing_list.html"
 
     def get_queryset(self):
-        return Mailing.objects.select_related("message", "newsletter").order_by("-prepared")
+        return Mailing.objects.select_related("message", "newsletter").order_by("-created")
 
 
+class MailingSendNowView(UserCanAdministerMixin, View):
+    """
+    Send a single Mailing immediately via Anymail/Mailgun.
+    Used for manual/dev sends from the Issue Mailings page.
+    """
+
+    def post(self, request, pk):
+        mailing = get_object_or_404(Mailing, pk=pk)
+
+        # TODO: permission checks (e.g. staff, organiser, etc.)
+
+        # Optional soft guard: only allow if queued or inactive
+        if mailing.is_sent:
+            messages.warning(request, "This mailing has already been sent.")
+            return redirect("news:news-issue-mailings", pk=mailing.issue.pk)
+
+        try:
+            mailing.send_via_anymail()
+            messages.success(request, "Mailing has been sent.")
+        except Exception as exc:
+            # send_via_anymail will usually set status=ERROR itself
+            messages.error(request, f"Error sending mailing: {exc!s}")
+
+        return redirect("news:issue-mailings", pk=mailing.issue.pk)
 
 @user_passes_test(lambda u: u.is_authenticated and u.is_staff)
 def issue_queue_mailing(request: HttpRequest, pk: int) -> HttpResponse:
@@ -1631,7 +1655,7 @@ class IssueMailingsView(DetailView):
             messages.error(request, str(e))
 
         # Redirect back to this page to avoid resubmits
-        return redirect("news:news-issue-mailings", pk=issue.pk)
+        return redirect("news:issue-mailings", pk=issue.pk)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
