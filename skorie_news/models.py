@@ -1835,7 +1835,7 @@ class DirectEmail(CreatedUpdatedMixin):
             # recip is AnymailRecipientStatus, not a dict
             recip = st.recipients.get(self.to_email) if hasattr(st, "recipients") else None
             message_id = getattr(recip, "message_id", None) or getattr(st, "message_id", None)
-            esp_name = getattr(st, "esp_name", "mailgun")
+            esp_name = "mailgun"
 
             # Record Delivery (provider-agnostic)
             delivery = Delivery.objects.create(direct_mail=self,
