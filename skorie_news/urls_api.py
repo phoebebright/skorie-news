@@ -12,7 +12,7 @@ from skorie_news.api import (
     SubscriptionAdminViewSet,
     SubscribeMe,
     UnSubscribeMe,
-    SubscriberEventListAPIView, mailgun_webhook,
+    SubscriberEventListAPIView, mailgun_webhook, SubscribeFromRequest, UnSubscribeFromRequest,
 )
 
 # Use DRF's DefaultRouter, not django.db.router
