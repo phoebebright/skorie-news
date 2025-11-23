@@ -27,8 +27,8 @@ router.register(r'news/issues', IssueViewSet, basename='news-issue')
 urlpatterns = [
     path('subscribe_me/', SubscribeMe.as_view(), name='subscribe_me'),
     path('unsubscribe_me/', UnSubscribeMe.as_view(), name='unsubscribe_me'),
-    path('subscribe_from_request/', SubscribeFromRequest.as_view(), name='subscribe_me'),
-    path('unsubscribe_from_request/', UnSubscribeFromRequest.as_view(), name='unsubscribe_me'),
+    path('subscribe_from_request/', SubscribeFromRequest.as_view(), name='subscribe_from_request'),
+    path('unsubscribe_from_request/', UnSubscribeFromRequest.as_view(), name='unsubscribe_from_request'),
 
     path('news/subscribers/<int:pk>/events/', SubscriberEventListAPIView.as_view(), name='news-subscriber-events'),
     path('mailgun_webhook/', mailgun_webhook, name="mailgun_webhook"),
