@@ -423,8 +423,70 @@ class Subscription(CreatedUpdatedMixin):
         }
 
     @classmethod
+    def subscribe_me(cls, newsletter: "Newsletter", request) -> "Subscription":
+        # use this to subscribed the authenticated user
+
+        if not request.user.is_authenticated:
+            raise PermissionDenied("You must be logged in to subscribe.")
+
+        me = request.user
+
+        # check for existing subscription
+        try:
+            sub = cls.get_subscription(newsletter=newsletter, user=me)
+        except cls.DoesNotExist:
+            # look for a previous subscription with just an email and link to the user
+            sub = cls.get_subscription(newsletter=newsletter, email=me.email)
+            sub.user = me
+            sub.save()
+
+        if not sub:
+                    sub = cls(user=user, newsletter=newsletter)
+                    consent = cls.consent_from_request(request)
+                    sub.subscribe(consent)
+        else:
+            if sub.active:
+                # already subscribed - nothing to do
+                return sub
+
+            elif sub.unsubscribed:
+                # resubscribe
+
+                sub._subscribe()  # subscribed=True, unsubscribed=False, dates updated
+                # Clear any previous consent so it stays pending until new consent is obtained
+                sub.consent_at = None
+                sub.consent_source = ""
+                sub.consent_user_agent = ""
+                sub.consent_text = ""
+                sub.save(user=me)
+
+        consent = cls.consent_from_request(request)
+        sub.record_consent(**consent)
+
+    @classmethod
+    def unsubscribe_me(cls, newsletter: "Newsletter", request) -> "Subscription":
+        # use this to subscribed the authenticated user
+
+        if not request.user.is_authenticated:
+            raise PermissionDenied("You must be logged in to subscribe.")
+
+        me = request.user
+
+        sub = cls.get_subscription(email=me.email, newsletter=newsletter)
+
+        if not sub:
+            raise ValidationError("No subscription found for this user and newsletter.")
+
+        consent = cls.consent_from_request(request)
+        sub.unsubscribe(consent, user)
+        return sub
+
+
+
+    @classmethod
     def subscribe_from_request(cls, newsletter: "Newsletter", request) -> "Subscription":
         """
+        # use this for subscribing where info about subscriber is in the payload of the request
         Subscribe (or re-subscribe) an email to a newsletter based on the incoming request.
            #TODO: block logged in user from subscribing with different email
         Rules:

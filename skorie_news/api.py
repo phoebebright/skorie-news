@@ -549,7 +549,8 @@ class ArticleViewSet(CreateModelMixin,
     serializer_class = ArticleSerializer
 
 
-# Issues (Messages)
+
+
 class IssueViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsAdministratorPermission)
     http_method_names = ["post", "get", "put"]
@@ -1121,6 +1122,33 @@ class SubscribeMe(APIView):
         '''get for general newsletter only - only works if email passed as query param'''
         newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
 
+        newsletter.subscribe_me(request)
+
+        # add to django messages framework
+        messages.success(request, f"Subscribed to {newsletter} successfully")
+
+        return Response(status=status.HTTP_200_OK)
+
+class UnSubscribeMe(APIView):
+
+    def get(self, request):
+
+        newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
+
+        newsletter.unsubscribe_me(request)
+
+        # add to django messages framework
+        messages.success(request, f"Unsubscribed from {newsletter} successfully")
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class SubscribeFromRequest(APIView):
+
+    def get(self, request):
+        '''get for general newsletter only - only works if email passed as query param'''
+        newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
+
         newsletter.subscribe_from_request(request)
 
         # add to django messages framework
@@ -1139,7 +1167,7 @@ class SubscribeMe(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
-class UnSubscribeMe(APIView):
+class UnSubscribeFromRequest(APIView):
 
     def get(self, request):
 

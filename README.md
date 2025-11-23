@@ -31,6 +31,16 @@ And require:
 
     SIGNATURE = "Skorie Support Team, info@skor.ie"
 
+## Include in base.html
+
+          SUBSCRIBE_ME_API_URL = "{% url "newsapi:subscribe_me" %}";
+          UNSUBSCRIBE_ME_API_URL = "{% url "newsapi:unsubscribe_me" %}";
+
+## Include in urls.py
+
+    path('api/n1/', include(('skorie_news.urls_api', 'skorie_news'), namespace='newsapi')),
+    path('news/', include('skorie_news.urls', namespace="news")),
+
 ## Scenarios
 
 table shows differnt possible scenarios.  Not that iContact is the temporary flow for people clicking on a link in a iContact email and to say they want to continue receiving emails.  This will be removed when iContact is no longer used.
