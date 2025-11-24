@@ -27,7 +27,8 @@ from django.utils.timezone import now
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, RedirectView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, RedirectView, DetailView, \
+    FormView
 
 from django.conf import settings
 from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \

@@ -33,7 +33,7 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from .model_mixins import EventMixin, CreatedUpdatedMixin
 from .skorie_storage.storage_backends import HetznerPublicStorage
 
-public_storage = HetznerPublicStorage
+public_storage = HetznerPublicStorage()
 
 logger = logging.getLogger("django")
 #User = get_user_model() .  # don't do this - ends up with circular import
