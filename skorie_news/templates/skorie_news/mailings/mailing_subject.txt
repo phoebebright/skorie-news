@@ -1,1 +1,1 @@
-{{ newsletter.title }} - {{ issue.title }}
+{{issue.title}}

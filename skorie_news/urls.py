@@ -3,7 +3,7 @@ from django.urls import path, register_converter
 from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
     MailingListView, MailingSendNowView, \
     NewsletterSubscriptionsView, UpdateMySubscription, \
-    MessageArticlesView, SubscribeWithEmail, EventSendView, \
+    SubscribeWithEmail, EventSendView, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
     IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView,\

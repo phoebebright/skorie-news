@@ -153,18 +153,23 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         return self.title
 
     # ----- URLs in your site (optional) -----
+    @property
+    def base_url(self):
+        # in future might want to customise
+        return settings.SITE_URL
+
     def get_absolute_url(self):
-        return reverse(f"news:newsletter-edit", kwargs={"pk": self.id})
+        return reverse(f"skorie_news:newsletter-edit", kwargs={"pk": self.id})
         #return reverse(f"news:newsletter_detail", kwargs={"newsletter_slug": self.slug})
 
     def subscribe_url(self):
-        return reverse(f"news:newsletter_subscribe_request", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"newsapi:subscribe_from_request", kwargs={"newsletter_slug": self.slug})
 
     def unsubscribe_url(self):
-        return reverse(f"news:newsletter_unsubscribe_request", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"newsapi:unsubscribe_from_request", kwargs={"newsletter_slug": self.slug})
 
     def archive_url(self):
-        return reverse(f"news:newsletter_archive", kwargs={"newsletter_slug": self.slug})
+        return reverse(f"skorie_news:newsletter_archive", kwargs={"newsletter_slug": self.slug})
 
     @classmethod
     def is_subscribed_to_newsletter(cls, user, newsletter=None):
@@ -888,7 +893,7 @@ class Subscription(CreatedUpdatedMixin):
 class Article(CreatedUpdatedMixin):
 
     def image_location(instance, filename):
-        return f"newsletter/{instance.newsletter.slug}/images/{filename}"
+        return f"newsletter/article/images/{filename}"
 
     TEMPLATE_TYPE_NEWSLETTER = "N"
     TEMPLATE_TYPE_EMAIL = "E"
@@ -1361,7 +1366,7 @@ class Issue(CreatedUpdatedMixin):
         Returns a dict suitable for Mailgun.
         """
         ctx = {
-            "message": self,
+            "issue": self,
             "newsletter": self.newsletter,
         }
         if extra_context:
