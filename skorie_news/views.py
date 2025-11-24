@@ -785,8 +785,9 @@ class SubscribeWithEmail(SubscribeWithEmailUnconfirmed):
     confirm_message = "Confirmed from link from legacy icontact email."
     confirm_source = "icontact-email-link"
 
-class MessageArticlesView(MixinNewsletterNMessage, ListView):
-    template_name = "skorie_news/message/message_articles.html"
+# not implemented was MessageArticlesViews
+class ArticlesView(MixinNewsletterNMessage, ListView):
+    template_name = "skorie_news/articles/articles.html"
     context_object_name = "articles"
 
 
