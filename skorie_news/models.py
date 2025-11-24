@@ -886,6 +886,9 @@ class Subscription(CreatedUpdatedMixin):
 
 class Article(CreatedUpdatedMixin):
 
+    def image_location(instance, filename):
+        return f"newsletter/{instance.newsletter.slug}/images/{filename}"
+
     TEMPLATE_TYPE_NEWSLETTER = "N"
     TEMPLATE_TYPE_EMAIL = "E"
     TEMPLATE_TYPE_CHOICES = (
@@ -905,7 +908,7 @@ class Article(CreatedUpdatedMixin):
     body_text = models.TextField(blank=True)
     url = models.URLField(blank=True, null=True)
 
-    image = models.ImageField(upload_to="newsletter/articles/", storage=public_storage, blank=True, null=True)
+    image = models.ImageField(upload_to=image_location, storage=public_storage, blank=True, null=True)
     image_position = models.CharField(max_length=10, choices=IMAGE_POSITION_CHOICES, default=ABOVE)
 
     is_template = models.BooleanField(default=False)
