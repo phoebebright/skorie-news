@@ -330,8 +330,8 @@ class NewsletterUserMixin(object):
     def is_subscribed2newsletter(self):
         Subscription = apps.get_model('skorie_news', 'Subscription')
         try:
-            sub = Subscription.objects.get(newsletter__slug=settings.NEWSLETTER_GENERAL_PK, user=self).exists()
+            sub = Subscription.objects.get(newsletter__slug=settings.NEWSLETTER_GENERAL_SLUG, user=self)
         except Subscription.DoesNotExist:
             return False
 
-        return True
+        return sub.subscribed

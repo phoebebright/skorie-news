@@ -1,0 +1,44 @@
+{# templates/news/email/issue_email.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ issue.title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; padding:0; background-color:#f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f5f5f5;">
+    <tr>
+      <td align="center" style="padding: 20px 10px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%; max-width:600px; background-color:#ffffff; border-radius:4px; overflow:hidden;">
+          <tr>
+            <td style="padding: 20px; font-family: Arial, sans-serif; font-size:14px; line-height:1.5; color:#333333;">
+
+              <h1 style="margin:0 0 8px 0; font-size:24px;">{{ issue.title }}</h1>
+              <p style="margin:0 0 16px 0; color:#777777;">
+                {{ newsletter.title }}
+              </p>
+              <hr style="border:none; border-top:1px solid #dddddd; margin:16px 0;">
+
+              {# Shared article content #}
+              {% include "skorie_news/admin/issues/include_articles.html" %}
+
+              <hr style="border:none; border-top:1px solid #dddddd; margin:24px 0 16px;">
+
+              <p style="font-size:12px; color:#999999; margin:0;">
+                You are receiving this because you subscribed to {{ newsletter.title }}.
+                <br>
+                To unsubscribe, click here:
+                <a href="{{ subscription.unsubscribe_url }}" style="color:#999999;">
+                  unsubscribe
+                </a>
+              </p>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

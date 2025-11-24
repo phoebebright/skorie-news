@@ -1595,6 +1595,13 @@ class Mailing(CreatedUpdatedMixin):
             self.save(update_fields=["status", "updated"])
             return
 
+        # Ordered list of issue articles for this issue
+        articles = (
+            self.issue.issue_articles
+            .select_related("article")
+            .order_by("position")
+        )
+
         ctx = {
             "subscription": None,
             "site": Site.objects.get_current(),
@@ -1604,10 +1611,17 @@ class Mailing(CreatedUpdatedMixin):
             "date": self.publish_date,
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
+            "articles": articles,
         }
-        subject = self.issue.subject_template.render(ctx).strip()
-        text = self.issue.text_template.render(ctx)
-        html = self.issue.html_template.render(ctx) if self.issue.html_template else None
+
+        # Subject: either use template as before, or just issue.title
+        subject = self.issue.subject_template.render(ctx).strip() if self.issue.subject_template else self.issue.title
+
+        # HTML body: use your preview template
+        html = render_to_string("skorie_news/admin/issues/issue_email.html", ctx)
+
+        # Text body: strip HTML (good enough unless you want a separate text template)
+        text = strip_tags(html)
 
         # Build per-recipient merge_data (unsubscribe links etc.)
         merge_data = {}
@@ -1627,8 +1641,7 @@ class Mailing(CreatedUpdatedMixin):
             from_email=self.newsletter.get_sender(),
             to=to_list,  # batched send with merge_data
         )
-        if html:
-            msg.attach_alternative(html, "text/html")
+        msg.attach_alternative(html, "text/html")
 
         # Attachments on the Issue
         for ia in self.issue.issue_articles.select_related("article"):

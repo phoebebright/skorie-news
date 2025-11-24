@@ -445,8 +445,8 @@ def issue_queue_mailing(request: HttpRequest, pk: int) -> HttpResponse:
     mailing, created = Mailing.objects.get_or_create(
         newsletter=msg.newsletter
     )
-    # Status constants vary across versions; using strings for portability
-    mailing.status = Mailing.STATUS.QUEUE if hasattr(Mailing, "STATUS") else "queued"
+
+    mailing.status = Mailing.Status.QUEUED
     mailing.save()
 
     messages.success(
@@ -1114,7 +1114,7 @@ class IssuePreviewView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["articles"] = self.object.ordered_articles()
+        context["articles"] = self.object.ordered_articles
         return context
 
 class ClaimEmailManageLinkView(TemplateView):

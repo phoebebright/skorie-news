@@ -1,0 +1,57 @@
+{# templates/news/issue/_articles_block.html #}
+{% for link in articles %}
+  <div style="margin-bottom: 24px;">
+    <h2 style="font-size: 20px; margin: 0 0 8px 0;">
+      {{ link.article.title }}
+    </h2>
+
+    {% if link.article.image %}
+      {% if link.article.image_position == "above" %}
+        <div style="margin-bottom: 8px;">
+          <img src="https://{{ site.domain }}{{ link.article.image.url }}"
+               alt=""
+               style="max-width: 100%; height: auto; display: block;">
+        </div>
+        <div>{{ link.article.body_html|safe }}</div>
+
+      {% elif link.article.image_position == "below" %}
+        <div>{{ link.article.body_html|safe }}</div>
+        <div style="margin-top: 8px;">
+          <img src="https://{{ site.domain }}{{ link.article.image.url }}"
+               alt=""
+               style="max-width: 100%; height: auto; display: block;">
+        </div>
+
+      {% elif link.article.image_position == "left" %}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="width: 30%; padding-right: 10px;" valign="top">
+              <img src="https://{{ site.domain }}{{ link.article.image.url }}"
+                   alt=""
+                   style="max-width: 100%; height: auto; display: block;">
+            </td>
+            <td valign="top">
+              <div>{{ link.article.body_html|safe }}</div>
+            </td>
+          </tr>
+        </table>
+
+      {% elif link.article.image_position == "right" %}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+          <tr>
+            <td valign="top">
+              <div>{{ link.article.body_html|safe }}</div>
+            </td>
+            <td style="width: 30%; padding-left: 10px;" valign="top">
+              <img src="https://{{ site.domain }}{{ link.article.image.url }}"
+                   alt=""
+                   style="max-width: 100%; height: auto; display: block;">
+            </td>
+          </tr>
+        </table>
+      {% endif %}
+    {% else %}
+      <div>{{ link.article.body_html|safe }}</div>
+    {% endif %}
+  </div>
+{% endfor %}
