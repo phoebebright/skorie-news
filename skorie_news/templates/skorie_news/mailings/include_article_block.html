@@ -1,5 +1,5 @@
 
-{% if article.image and article.image_position in:"left,right" %}
+{% if article.image and (article.image_position == "left" article.image_position == "right") %}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
     <tr>
       {% if article.image_position == "left" %}
