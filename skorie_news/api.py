@@ -629,7 +629,7 @@ class IssueViewSet(ModelViewSet):
             auth = ("api", settings.MAILGUN_API_KEY)
 
             data = {
-                "from": message.newsletter.get_sender(),
+                "from": message.newsletter.get_sender,
                 "to": [test_email],
                 "subject": f"[TEST] {rendered['subject']}",
                 "text": rendered["text"],

@@ -1021,13 +1021,7 @@ class IssueCreateView(UserCanAdministerMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({
-            "newsletter": self.newsletter,
-            "issue": None,            # New issue — no existing object yet
-            "articles": [],           # No issue articles yet
-            "library": Article.objects.all()
-                .order_by("-is_template", "-updated")[:50],
-        })
+        context["newsletter"] = self.newsletter,
         return context
 
     # ---- Handling the validated form ------------------------------------
@@ -1606,7 +1600,6 @@ class IssueQueueMailingView(View):
     def post(self, request, pk):
         issue = get_object_or_404(Issue, pk=pk)
 
-        # TODO: your permissions here (e.g. user must be staff / organiser for this newsletter)
 
         # Parse publish_date from POST (datetime-local)
         publish_str = request.POST.get("publish_date") or ""

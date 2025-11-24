@@ -77,7 +77,7 @@ Key methods:
   * `subscribe_url()`
   * `unsubscribe_url()`
   * `archive_url()`
-* `get_sender() -> str` – returns `"Sender Name <email@example.com>"`.
+* `get_sender -> str` – returns `"Sender Name <email@example.com>"`.
 * `get_templates(action)` – returns `(subject_template, text_template, html_template)` using:
 
   * `newsletter/message/<slug>/<action>_subject.txt`
@@ -576,7 +576,7 @@ Examples of viewsets:
 
   * Uses Mailgun Batch API (`/messages`) with:
 
-    * `from` = `newsletter.get_sender()` or default event from.
+    * `from` = `newsletter.get_sender` or default event from.
     * `to` = list of recipient emails (batched).
     * `subject` = rendered from templates (for issues) or article title (for event dispatch).
     * `html` = from `Issue.render_html()` or `Article.render_html()`.

@@ -196,6 +196,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         return Subscription.subscribe_from_request(self, request)
 
     # ----- From header helper -----
+    @property
     def get_sender(self) -> str:
         return get_address(self.sender, self.email)
 
@@ -208,9 +209,9 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
             skorie_news/message/<action>_subject.txt
         and similarly for .txt and .html
         """
-        assert action in ("message", "subscribe", "update", "unsubscribe"), f"Unknown action: {action}"
+        assert action in ("mailing", "subscribe", "update", "unsubscribe"), f"Unknown action: {action}"
 
-        tpl_root = "skorie_news/message/"
+        tpl_root = "skorie_news/mailings/"
         subs = {"newsletter": self.slug, "action": action}
 
         subject_template = select_template([
@@ -1257,7 +1258,7 @@ class Issue(CreatedUpdatedMixin):
                 msg = AnymailMessage(
                     subject=subject,
                     body=text,
-                    from_email=self.newsletter.get_sender(),
+                    from_email=self.newsletter.get_sender,
                     to=to_list,
                 )
                 if html:
@@ -1326,7 +1327,7 @@ class Issue(CreatedUpdatedMixin):
     @cached_property
     def _templates(self):
         # Rendered for the 'message' action (see Newsletter.get_templates)
-        return self.newsletter.get_templates("message")
+        return self.newsletter.get_templates("mailing")
 
     @property
     def subject_template(self):
@@ -1561,7 +1562,7 @@ class Mailing(CreatedUpdatedMixin):
     #             }
     #
     #             data = {
-    #                 "from": self.skorie_news.get_sender(),
+    #                 "from": self.skorie_news.get_sender,
     #                 "subject": subject,
     #                 "text": text,
     #                 "to": list(recipient_vars.keys()),
@@ -1641,7 +1642,7 @@ class Mailing(CreatedUpdatedMixin):
         msg = AnymailMessage(
             subject=subject,
             body=text,
-            from_email=self.newsletter.get_sender(),
+            from_email=self.newsletter.get_sender,
             to=to_list,  # batched send with merge_data
         )
         msg.attach_alternative(html, "text/html")
