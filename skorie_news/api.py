@@ -46,7 +46,7 @@ from .serializers import SubscriptionSerializer, MessageSerializer, Subscription
     ArticleSerializer, IssueArticleSerializer, IssueArticlesUpdateSerializer, \
     SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer, ArticleOrderSerializer, \
     MailingCreateSerializer, MailingSerializer
-from .tools.permission_mixins import UserCanAdministerMixin
+
 
 User = get_user_model()
 logger = logging.getLogger('django')
@@ -93,7 +93,7 @@ class AdminSubscriptionROViewSet(ReadOnlyModelViewSet):
             qs = qs.filter(newsletter__slug=newsletter_slug)
         return qs
 
-class SubscriptionAdminViewSet(UserCanAdministerMixin, ModelViewSet):
+class SubscriptionAdminViewSet(IsAdministratorPermission, ModelViewSet):
     """
     Admin: list/retrieve/update/destroy (IsAdminUser)
     Public: POST /api/subscriptions/subscribe/  (AllowAny)

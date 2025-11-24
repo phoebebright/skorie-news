@@ -27,7 +27,7 @@ from django.utils.html import strip_tags
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 
 # can't import from skorie.common as get circular import
 from .model_mixins import EventMixin, CreatedUpdatedMixin
@@ -464,6 +464,8 @@ class Subscription(CreatedUpdatedMixin):
 
             consent = cls.consent_from_request(request)
             sub.record_consent(**consent, send_email=False)
+
+        return sub
 
     @classmethod
     def unsubscribe_me(cls, newsletter: "Newsletter", request) -> "Subscription":

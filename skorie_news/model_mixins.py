@@ -325,7 +325,7 @@ class EventMixin(models.Model):
         else:
             return cls.objects.filter(event=event)
 
-class NewsletterUserMixin(models.Model):
+class NewsletterUserMixin(object):
 
     def is_subscribed2newsletter(self):
         Subscription = apps.get_model('skorie_news', 'Subscription')
