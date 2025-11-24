@@ -42,7 +42,7 @@ class IssueForm(forms.ModelForm):
         fields = ["title", "newsletter"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Issue title"}),
-            "newsletter": forms.Select(attrs={"class": "form-select"}),
+            "newsletter": forms.HiddenInput(),
         }
 
 class ArticleQuickForm(forms.ModelForm):

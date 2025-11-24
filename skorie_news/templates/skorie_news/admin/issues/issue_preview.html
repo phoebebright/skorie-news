@@ -12,31 +12,7 @@
   <p class="text-muted">Newsletter: {{ issue.newsletter.title }}</p>
   <hr>
 
-  {% for link in articles %}
-    <div class="mb-4">
-      <h4>{{ link.article.title }}</h4>
-      {% if link.article.image %}
-        {% if link.article.image_position == "above" %}
-          <img src="{{ link.article.image.url }}" class="img-fluid mb-2">
-        {% elif link.article.image_position == "below" %}
-          <div>{{ link.article.body_html|safe }}</div>
-          <img src="{{ link.article.image.url }}" class="img-fluid mt-2">
-        {% elif link.article.image_position == "left" %}
-          <div class="d-flex">
-            <div class="me-3"><img src="{{ link.article.image.url }}" class="img-fluid"></div>
-            <div>{{ link.article.body_html|safe }}</div>
-          </div>
-        {% elif link.article.image_position == "right" %}
-          <div class="d-flex">
-            <div>{{ link.article.body_html|safe }}</div>
-            <div class="ms-3"><img src="{{ link.article.image.url }}" class="img-fluid"></div>
-          </div>
-        {% endif %}
-      {% else %}
-        <div>{{ link.article.body_html|safe }}</div>
-      {% endif %}
-    </div>
-  {% endfor %}
+  {% include "skorie_news/admin/issue/include_articles.html" %}
 
 </body>
 </html>

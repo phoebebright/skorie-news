@@ -999,37 +999,47 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
         })
         return context
 
-class IssueCreateView(UserCanAdministerMixin, TemplateView):
+class IssueCreateView(UserCanAdministerMixin, FormView):
     """
-    Step 1: choose skorie_news + title
+    Step 1: choose newsletter + title
     Step 2 (on same page): pick/add articles, order, mark appear_in_blog
     """
-    template_name = "skorie_news/admin/issues/issue_form.html"
+    template_name = "skorie_news/admin/issues/issue_add.html"
+    form_class = IssueForm
 
-    def get(self, request, newsletter_pk):
-        nl = get_object_or_404(Newsletter, id=newsletter_pk)
-        form = IssueForm(initial={"newsletter": nl})
-        # “library”: templates first, then recent
-        library = Article.objects.all().order_by("-is_template", "-updated")[:50]
-        return render(request, self.template_name, {
-            "newsletter": nl,
-            "form": form,
-            "issue": None,
-            "library": library,
-            "articles": [],  # none yet
+    def dispatch(self, request, *args, **kwargs):
+        # Load newsletter early so both GET/POST can access it
+        self.newsletter = get_object_or_404(Newsletter, pk=kwargs["newsletter_pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    # ---- Context ---------------------------------------------------------
+
+    def get_initial(self):
+        # Pre-fill newsletter in the form
+        return {"newsletter": self.newsletter}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "newsletter": self.newsletter,
+            "issue": None,            # New issue — no existing object yet
+            "articles": [],           # No issue articles yet
+            "library": Article.objects.all()
+                .order_by("-is_template", "-updated")[:50],
         })
+        return context
 
-    def post(self, request, newsletter_pk):
-        nl = get_object_or_404(Newsletter, id=newsletter_pk)
-        form = IssueForm(request.POST)
-        if not form.is_valid():
-            library = Article.objects.all().order_by("-is_template", "-updated")[:50]
-            return render(request, self.template_name, {
-                "newsletter": nl, "form": form, "issue": None, "library": library, "articles": [],
-            })
+    # ---- Handling the validated form ------------------------------------
+
+    def form_valid(self, form):
         issue = form.save()
-        messages.success(request, "Issue created. Add articles below, then Queue or Publish.")
-        return redirect(reverse("news:issue-edit", args=[issue.pk]))
+
+        messages.success(
+            self.request,
+            "Issue created. Add articles below, then Queue or Publish."
+        )
+        return redirect(reverse("skorie_news:issue-edit", args=[issue.pk]))
+
 
 
 
@@ -1621,6 +1631,7 @@ class IssueQueueMailingView(View):
         return redirect("news-issue-detail", pk=issue.pk)
 
 
+@method_decorator(never_cache, name="dispatch")
 class IssueMailingsView(DetailView):
     """
     Dedicated page to manage mailings for an Issue:

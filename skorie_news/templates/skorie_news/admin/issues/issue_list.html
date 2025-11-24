@@ -4,8 +4,9 @@
 {% block page_header %}Issues — {{ newsletter.title }}{% endblock %}
 
 {% block content %}
-
-
+<div class="row">
+<a href="{% url 'skorie_news:issue-add' newsletter.id %}" class="btn btn-primary float-end">Add Issue</a>
+    </div>
 <div class="card">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
@@ -44,12 +45,7 @@
             <div class="btn-group btn-group-sm">
               <a class="btn btn-outline-secondary" href="{% url 'news:issue-edit' item.id %}">Edit</a>
               <button class="btn btn-outline-secondary goto_url" data-url="{% url "news:issue-preview" item.pk %}?next={{ request.path|urlencode }}">Preview</button>
-              {% if m.latest_status == "1" or m.latest_status == "2" %}
-                <button class="btn btn-outline-primary goto_url" disabled title="Already queued">Queue</button>
-              {% else %}
-                <button class="btn btn-outline-primary goto_url" data-url="{% url "news:issue-queue" item.pk %}?next={{ request.path|urlencode }}">Queue</button>
-              {% endif %}
-              <button class="btn btn-outline-secondary disabled">Publish</button>
+
             </div>
           </td>
         </tr>
