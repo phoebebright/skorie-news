@@ -22,7 +22,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django_users.tools.permission_mixins import UserCanAdministerMixin
+
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action, authentication_classes
 from rest_framework.exceptions import NotFound
@@ -37,8 +37,7 @@ from rest_framework_datatables.django_filters.backends import DatatablesFilterBa
 from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 from rest_framework_datatables.renderers import DatatablesRenderer
 
-from config import settings
-from skorie.common.api import verify_signature
+from django.conf import settings
 from tools.permissions import IsAdministratorPermission
 
 from .models import Newsletter, Subscription, Mailing, Issue, SubscriptionEvent, IssueArticle, Article, Delivery, \
@@ -47,6 +46,7 @@ from .serializers import SubscriptionSerializer, MessageSerializer, Subscription
     ArticleSerializer, IssueArticleSerializer, IssueArticlesUpdateSerializer, \
     SubscriptionManageDTSerializer, DirectEmailCreateSerializer, DirectEmailReadSerializer, ArticleOrderSerializer, \
     MailingCreateSerializer, MailingSerializer
+from .tools.permission_mixins import UserCanAdministerMixin
 
 User = get_user_model()
 logger = logging.getLogger('django')
@@ -407,28 +407,37 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
 
         nl = get_object_or_404(Newsletter, slug=slug)
 
-
-        if self.user:
+        # this is a mess!
+        if request.user.is_authenticated:
             if action == "subscribe":
-                sub = nl.subscribe_from_request(request)
+                sub = nl.subscribe_me(request)
                 status_txt = "subscribed"
             else:
-                sub = nl.unsubscribe_from_request(request)
+                sub = nl.unsubscribe_me(request)
                 status_txt = "unsubscribed"
-
         else:
-            sub, _ = Subscription.objects.get_or_create(
-                newsletter=nl, user__isnull=True, email=self.email)
+            # where does user come from?
+            if self.user:
+                if action == "subscribe":
+                    sub = nl.subscribe_from_request(request)
+                    status_txt = "subscribed"
+                else:
+                    sub = nl.unsubscribe_from_request(request)
+                    status_txt = "unsubscribed"
 
-
-            consent = Subscription.consent_from_request(request)
-
-            if action == "subscribe":
-                sub.subscribe(consent=consent, user=request.user)
-                status_txt = "subscribed"
             else:
-                sub.unsubscribe(consent=consent, user=request.user)
-                status_txt = "unsubscribed"
+                sub, _ = Subscription.objects.get_or_create(
+                    newsletter=nl, user__isnull=True, email=self.email)
+
+
+                consent = Subscription.consent_from_request(request)
+
+                if action == "subscribe":
+                    sub.subscribe(consent=consent, user=request.user)
+                    status_txt = "subscribed"
+                else:
+                    sub.unsubscribe(consent=consent, user=request.user)
+                    status_txt = "unsubscribed"
 
         return Response({"ok": True, "status": status_txt, "subscription_id": sub.pk})
 
@@ -688,9 +697,10 @@ class AdminSubscriberViewSet(
     queryset = Subscription.objects.select_related("newsletter").all()
 
     def get_serializer_class(self):
-        if self.action == "create":
-            return AdminSubscriberCreateSerializer
-        return AdminSubscriberSerializer
+        return SubscriptionSerializer
+        # if self.action == "create":
+        #     return AdminSubscriberCreateSerializer
+        # return AdminSubscriberSerializer
 
     # ---- List with server-side filtering/pagination ----
     def get_queryset(self):

@@ -52,3 +52,9 @@ class DeviceKeyAuthentication(TokenAuthentication):
             raise exceptions.AuthenticationFailed("Invalid authentication key")
 
         return device.user, device
+
+def verify_signature(timestamp, token, signature):
+    encoded_key = bytes(settings.ANYMAIL['MAILGUN_WEBHOOK_SIGNING_KEY'], 'utf-8')
+    value = f"{timestamp}{token}".encode('utf-8')
+    computed_signature = hmac.new(encoded_key, value, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(computed_signature, signature)

@@ -324,3 +324,14 @@ class EventMixin(models.Model):
             return cls.objects.filter(event_ref__in=event.event_group)
         else:
             return cls.objects.filter(event=event)
+
+class NewsletterUserMixin(models.Model):
+
+    def is_subscribed2newsletter(self):
+        Subscription = apps.get_model('skorie_news', 'Subscription')
+        try:
+            sub = Subscription.objects.get(newsletter__slug=settings.NEWSLETTER_GENERAL_PK, user=self).exists()
+        except Subscription.DoesNotExist:
+            return False
+
+        return True

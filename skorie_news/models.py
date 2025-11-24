@@ -175,6 +175,14 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         sub = Subscription.get_subscription(email=user.email, newsletter=newsletter)
         return sub.subscribed if sub else False
 
+    def subscribe_me(self, request):
+        # use this to subscribed the authenticated user
+        return Subscription.subscribe_me(self, request)
+
+    def unsubscribe_me(self, request):
+        # use this to subscribed the authenticated user
+        return Subscription.unsubscribe_me(self, request)
+
     def subscribe_from_request(self, request):
         '''subscribe the user in the request to the current newsletter'''
         return Subscription.subscribe_from_request(self, request)
@@ -432,18 +440,12 @@ class Subscription(CreatedUpdatedMixin):
         me = request.user
 
         # check for existing subscription
-        try:
-            sub = cls.get_subscription(newsletter=newsletter, user=me)
-        except cls.DoesNotExist:
-            # look for a previous subscription with just an email and link to the user
-            sub = cls.get_subscription(newsletter=newsletter, email=me.email)
-            sub.user = me
-            sub.save()
+        sub = cls.get_subscription(newsletter=newsletter, email=me.email)
 
         if not sub:
-                    sub = cls(user=user, newsletter=newsletter)
+                    sub = cls(user=me, newsletter=newsletter)
                     consent = cls.consent_from_request(request)
-                    sub.subscribe(consent)
+                    sub.subscribe(consent, send_email=False)
         else:
             if sub.active:
                 # already subscribed - nothing to do
@@ -460,8 +462,8 @@ class Subscription(CreatedUpdatedMixin):
                 sub.consent_text = ""
                 sub.save(user=me)
 
-        consent = cls.consent_from_request(request)
-        sub.record_consent(**consent)
+            consent = cls.consent_from_request(request)
+            sub.record_consent(**consent, send_email=False)
 
     @classmethod
     def unsubscribe_me(cls, newsletter: "Newsletter", request) -> "Subscription":
@@ -478,7 +480,7 @@ class Subscription(CreatedUpdatedMixin):
             raise ValidationError("No subscription found for this user and newsletter.")
 
         consent = cls.consent_from_request(request)
-        sub.unsubscribe(consent, user)
+        sub.unsubscribe(consent, me, send_email=False)
         return sub
 
 
@@ -744,7 +746,7 @@ class Subscription(CreatedUpdatedMixin):
         self.consent_text = ""
 
 
-    def subscribe(self, consent:dict={}, user=None):
+    def subscribe(self, consent:dict={}, user=None, send_email=True):
 
         already_active = self.active
         sub_event = SubscriptionEvent.Event.SUBSCRIBE
@@ -761,7 +763,7 @@ class Subscription(CreatedUpdatedMixin):
         # do we need an email?
         if not already_active and not consent:
             self._send_tx_email("request_consent")
-        elif not already_active and self.active:
+        elif not already_active and self.active and send_email:
             self._send_tx_email("subscribed")
 
         if self.active and self.user and hasattr(self.user, 'subscribe_news'):
@@ -769,7 +771,7 @@ class Subscription(CreatedUpdatedMixin):
             self.user.unsubscribe_news = self.unsubscribe_date
             self.user.save()
 
-    def unsubscribe(self, consent:dict={}, user=None):
+    def unsubscribe(self, consent:dict={}, user=None, send_email=True):
         '''not really consent as we do not require it for unsubscribe, but we can log some metadata'''
 
         was_unsubscribed = self.unsubscribed  # detect transition
@@ -792,7 +794,7 @@ class Subscription(CreatedUpdatedMixin):
         SubscriptionEvent.log(self, sub_event, meta=meta)
 
         # Send a confirmation email only when we actually transitioned to unsubscribed
-        if not was_unsubscribed and self.unsubscribed:
+        if not was_unsubscribed and self.unsubscribed and send_email:
             self._send_tx_email("unsubscribed")
 
 
@@ -801,7 +803,7 @@ class Subscription(CreatedUpdatedMixin):
                        user_agent:str="",
                        consent_text:str="",
                        ip_address:str="",
-                       email=True):
+                       send_email=True):
 
         was_active = getattr(self, "active", False)  # capture pre-state
 
@@ -817,7 +819,7 @@ class Subscription(CreatedUpdatedMixin):
 
 
         # # If this consent made us become active now (fresh after any unsubscribe), send confirmation
-        if email and not was_active and self.active:
+        if send_email and not was_active and self.active:
             self._send_tx_email("subscribed")
 
     def mark_bounce(self, reason:str=""):
