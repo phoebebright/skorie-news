@@ -7,8 +7,9 @@
 {% block content %}
     <div class="card mb-3">
         <div class="card-body">
-            <form method="post" id="issue-form" novalidate>
+            <form method="post" id="issue_form" novalidate>
                 {% csrf_token %}
+                {% bootstrap_field form.newsletter %}
                 <div class="row g-3">
                     <!-- Left column: fields -->
                     <div class="col-md-6">
@@ -151,6 +152,10 @@
         window.ISSUE_PUBLISH_API = (issue_id) => `${NEWS_API_URL}issues/${issue_id}/publish/`;
 
         const issueId = {{ issue.id|default:"null" }};
+
+        $("#issue_form").on('change input', ':input', function() {
+   $("#issue_form").trigger('submit'); // or AJAX submit
+});
 
         function saveIssueArticles() {
             var payload = [];

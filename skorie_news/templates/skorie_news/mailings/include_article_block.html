@@ -1,23 +1,35 @@
 
-{% if article.image and (article.image_position == "left" article.image_position == "right") %}
+{% if article.image and article.image_position == "left"  %}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
     <tr>
-      {% if article.image_position == "left" %}
+
         <td style="vertical-align:top; width:200px; padding:0 12px 12px 0;">
           <img src="{{ article.image.url }}" alt="" style="max-width:200px; height:auto; display:block;">
         </td>
-      {% endif %}
+
       <td style="vertical-align:top;">
         {% if article.title %}<h2 style="margin:0 0 8px 0;">{{ article.title }}</h2>{% endif %}
         <div>{{ article.text|safe }}</div>
       </td>
-      {% if article.image_position == "right" %}
+
+    </tr>
+  </table>
+    {% elif article.image and article.image_position == "right"  %}
+     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+    <tr>
+
+      <td style="vertical-align:top;">
+        {% if article.title %}<h2 style="margin:0 0 8px 0;">{{ article.title }}</h2>{% endif %}
+        <div>{{ article.text|safe }}</div>
+      </td>
+
         <td style="vertical-align:top; width:200px; padding:0 0 12px 12px;">
           <img src="{{ article.image.url }}" alt="" style="max-width:200px; height:auto; display:block;">
         </td>
-      {% endif %}
+
     </tr>
   </table>
+
 {% else %}
   {% if article.image and article.image_position == "above" %}
     <p style="margin:0 0 12px 0;">
