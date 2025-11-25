@@ -627,7 +627,7 @@ class IssueViewSet(ModelViewSet):
 
                 return Response({"status": "ok", "msg": f"Sent test to {test_email}"})
             else:
-                return Response({"error": r.text}, status=r.status_code)
+                return Response({"error": "Error sending Test Email"}, status=status.HTTP_400_BAD_REQUEST)
 
 
     @action(detail=True, methods=['post'])

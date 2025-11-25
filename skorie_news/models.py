@@ -1285,7 +1285,7 @@ class Issue(CreatedUpdatedMixin):
                 mailing=None,
                 email=email_addr,
                 esp_name=esp_name,  # normally 'mailgun'
-                message_id=r.message_id,  # provider id
+
                 state="sending",  # accepted by ESP
                 sent_at=timezone.now(),
                 tags=[self.newsletter.slug],
