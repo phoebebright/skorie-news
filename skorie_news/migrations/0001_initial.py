@@ -367,9 +367,9 @@ class Migration(migrations.Migration):
             unique_together={('slug', 'newsletter')},
          ),
         #django.db.utils.ProgrammingError: relation "uniq_newsletter_email" already exists
-        # is this needed?
-        # migrations.AddConstraint(
-        #     model_name='subscription',
-        #     constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
-        # ),
+        # comment this out when running initial migration then put it back to stop system adding it to new migrations
+        migrations.AddConstraint(
+            model_name='subscription',
+            constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
+        ),
     ]
