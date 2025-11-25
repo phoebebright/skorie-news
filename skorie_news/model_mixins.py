@@ -327,6 +327,10 @@ class EventMixin(models.Model):
 
 class NewsletterUserMixin(object):
 
+    # denormalised field for user to show if subscribed to general newsletter
+    subscribe_news = models.DateTimeField(blank=True, null=True)
+    unsubscribe_news = models.DateTimeField(blank=True, null=True)
+
     def is_subscribed2newsletter(self):
         Subscription = apps.get_model('skorie_news', 'Subscription')
         try:
