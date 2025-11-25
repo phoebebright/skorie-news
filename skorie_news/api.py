@@ -562,7 +562,7 @@ class ArticleViewSet(CreateModelMixin,
 
 class IssueViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated, IsAdministratorPermission)
-    http_method_names = ["post", "get", "put"]
+    http_method_names = ["post", "get", "put","delete"]
     queryset = Issue.objects.select_related("newsletter").all().order_by("-created")
     serializer_class = MessageSerializer
 
@@ -617,33 +617,14 @@ class IssueViewSet(ModelViewSet):
     @action(detail=True, methods=["post"], url_path="send_test")
     def send_test(self, request, pk=None):
             """Send this issue (Message) to a test email via Mailgun."""
-            message = self.get_object()
+            issue = self.get_object()
             test_email = (request.data.get("email") or "").strip().lower()
             if not test_email:
                 return Response({"error": "Missing email"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # use the model helper
-            rendered = message.render_email()
 
-            url = f"https://api.mailgun.net/v3/{settings.MAILGUN_DOMAIN}/messages"
-            auth = ("api", settings.MAILGUN_API_KEY)
+            if issue.send_one(test_email):
 
-            data = {
-                "from": message.newsletter.get_sender,
-                "to": [test_email],
-                "subject": f"[TEST] {rendered['subject']}",
-                "text": rendered["text"],
-            }
-            if rendered["html"]:
-                data["html"] = rendered["html"]
-
-            r = requests.post(url, auth=auth, data=data, files=rendered["files"])
-
-            # cleanup: close file handles
-            for _, (_, f) in rendered["files"]:
-                f.close()
-
-            if r.ok:
                 return Response({"status": "ok", "msg": f"Sent test to {test_email}"})
             else:
                 return Response({"error": r.text}, status=r.status_code)
@@ -667,12 +648,7 @@ class IssueViewSet(ModelViewSet):
         issue.publish_to_blog()
         return Response({"ok": True, "published_at": issue.published_at})
 
-    @action(detail=True, methods=["post"])
-    def send_test(self, request, pk=None):
-        issue = self.get_object()
-        test_email = (request.data.get("email") or "").strip().lower()
-        if not test_email:
-            return Response({"error": "Missing email"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # ---------- ViewSet ----------
 

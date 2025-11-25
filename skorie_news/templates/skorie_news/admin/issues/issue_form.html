@@ -45,14 +45,14 @@
                                 </button>
                             </div>
 
-{#                            <div>#}
-{#                                <label for="test-email" class="form-label">Send Test</label>#}
-{#                                <div class="input-group">#}
-{#                                    <input type="email" id="test-email" class="form-control" placeholder="test@example.com">#}
-{#                                    <button id="send-test" class="btn btn-outline-primary" type="button">Send</button>#}
-{#                                </div>#}
-{#                                <div id="test-status" class="form-text mt-1"></div>#}
-{#                            </div>#}
+                            <div>
+                                <label for="test-email" class="form-label">Send Test</label>
+                                <div class="input-group">
+                                    <input type="email" id="test-email" class="form-control" placeholder="test@example.com">
+                                    <button id="send-test" class="btn btn-outline-primary" type="button">Send</button>
+                                </div>
+                                <div id="test-status" class="form-text mt-1"></div>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -145,6 +145,7 @@
     window.ISSUE_ARTICLES_API = "{% url 'newsapi:news-issue-articles' 0 %}";
         window.ARTICLE_DELETE_API = "{% url 'newsapi:news-issue-article-remove' 0 9999999999 %}";
         window.ARTICLE_ATTACH_API = "{% url 'newsapi:news-issue-article-attach' 0 %}";
+        window.ISSUE_SEND_TEST_API = "{% url 'newsapi:news-issue-send-test' 0 %}";
 
 
         window.ISSUE_UPDATE_API = "{% url 'newsapi:news-issue-list' %}";
@@ -301,18 +302,18 @@
                         return;
                     }
                     $("#test-status").html("Sending...");
-                    {#$.ajax({#}
-                    {#    url: "{% url 'news-issue-send-test' issue.pk %}",#}
-                    {#    method: "POST",#}
-                    {#    contentType: "application/json",#}
-                    {#    data: JSON.stringify({email: email}),#}
-                    {#    success: function(resp){#}
-                    {#        $("#test-status").html('<div class="alert alert-success">'+resp.msg+'</div>');#}
-                    {#    },#}
-                    {#    error: function(xhr){#}
-                    {#        $("#test-status").html('<div class="alert alert-danger">Error: '+xhr.responseText+'</div>');#}
-                    {#    }#}
-                    {#});#}
+                   $.ajax({
+                       url: ISSUE_SEND_TEST_API.replace('/0/', '/'+issueId+'/'),
+                       method: "POST",
+                       contentType: "application/json",
+                       data: JSON.stringify({email: email}),
+                       success: function(resp){
+                           $("#test-status").html('<div class="alert alert-success">'+resp.msg+'</div>');
+                       },
+                       error: function(xhr){
+                           $("#test-status").html('<div class="alert alert-danger">Error: '+xhr.responseText+'</div>');
+                       }
+                   });
                     });
                 });
             })(jQuery);

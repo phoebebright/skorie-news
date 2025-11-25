@@ -25,7 +25,7 @@
         </tr>
         </thead>
         <tbody>
-            {% for item in object.message_set.all %}
+            {% for item in object.issues.all %}
                 <tr class="goto_url" data-url="{% url 'news:issue-edit' item.pk %}">
                     <td>{{ item.title }}</td>
                     <td>{{ item.created|date:"SHORT_DATE_FORMAT" }}</td>

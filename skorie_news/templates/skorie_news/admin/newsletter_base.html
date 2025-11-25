@@ -29,7 +29,7 @@
                                 <ul class="dropdown-menu">
                                     <a href="{% url "news:issue-add" newsletter.pk %}" class="dropdown-item">New Issue</a>
                                     <li><hr class="dropdown-divider"></li>
-                                    {% for item in newsletter.issue_set.all %}
+                                    {% for item in newsletter.issues.all %}
                                         <a href="{% url "news:issue-edit" item.pk%}" class="dropdown-item">{{ item.title}}</a>
                                     {% endfor %}
 

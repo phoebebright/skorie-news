@@ -36,7 +36,7 @@ from .skorie_storage.storage_backends import HetznerPublicStorage
 public_storage = HetznerPublicStorage()
 
 logger = logging.getLogger("django")
-#User = get_user_model() .  # don't do this - ends up with circular import
+# User = get_user_model() .  # don't do this - ends up with circular import
 
 
 # ---------------------------------------------------------------------
@@ -44,6 +44,7 @@ logger = logging.getLogger("django")
 # ---------------------------------------------------------------------
 
 NEWSLETTER_BASENAME = getattr(settings, "NEWSLETTER_BASENAME", "")
+
 
 def _abs_url(url: str, base_url: str) -> str:
     if not url:
@@ -53,6 +54,7 @@ def _abs_url(url: str, base_url: str) -> str:
         return url
     return urljoin(base_url.rstrip("/") + "/", url.lstrip("/"))
 
+
 def get_mail_class():
     """
     Load the configured mail class from settings.APP_MAIL_CLASS.
@@ -60,6 +62,8 @@ def get_mail_class():
     """
     dotted = getattr(settings, "EMAIL_WRAPPER", "django.core.mail")
     return import_string(dotted)
+
+
 #
 # def send_single_email(*, to_email, subject, text=None, html=None, recipient_vars=None):
 #     """
@@ -94,6 +98,7 @@ def get_mail_class():
 def get_address(name: str | None, email: str) -> str:
     return f"{name} <{email}>" if name else email
 
+
 def attachment_upload_to(instance, filename):
     # HETZNER_AWS_S3_FILE_OVERWRITE is True so ensure the same filename in different attachments is unique
     return os.path.join(
@@ -103,6 +108,7 @@ def attachment_upload_to(instance, filename):
         filename,
     )
 
+
 def article_upload_to(instance, filename):
     # HETZNER_AWS_S3_FILE_OVERWRITE is True so ensure the same filename in different articles is unique
     return os.path.join(
@@ -111,6 +117,7 @@ def article_upload_to(instance, filename):
         f"article-{instance.article_id or 'new'}",
         filename,
     )
+
 
 # ---------------------------------------------------------------------
 # Newsletter
@@ -132,12 +139,14 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
 
     title = models.CharField(max_length=200, verbose_name=_("newsletter title"))
     slug = models.SlugField(db_index=True, unique=True)
-    about = models.TextField(blank=True, null=True,  help_text=_("Short description shown on subscribe page"))
+    about = models.TextField(blank=True, null=True, help_text=_("Short description shown on subscribe page"))
     email = models.EmailField(verbose_name=_("e-mail"), help_text=_("Sender e-mail"))
     sender = models.CharField(max_length=200, verbose_name=_("sender"), help_text=_("Sender name"))
 
-    visible = models.BooleanField(default=True,  db_index=True, help_text=_("Should be named active.  Can be active and not public for team use only."))
-    public = models.BooleanField(default=True,  help_text=_("Appears in list that users can subscribe to."), db_index=True)
+    visible = models.BooleanField(default=True, db_index=True, help_text=_(
+        "Should be named active.  Can be active and not public for team use only."))
+    public = models.BooleanField(default=True, help_text=_("Appears in list that users can subscribe to."),
+                                 db_index=True)
     send_html = models.BooleanField(
         default=True, verbose_name=_("send html"),
         help_text=_("Whether or not to send HTML versions of e-mails."),
@@ -160,7 +169,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
 
     def get_absolute_url(self):
         return reverse(f"skorie_news:newsletter-edit", kwargs={"pk": self.id})
-        #return reverse(f"news:newsletter_detail", kwargs={"newsletter_slug": self.slug})
+        # return reverse(f"news:newsletter_detail", kwargs={"newsletter_slug": self.slug})
 
     def subscribe_url(self):
         return reverse(f"newsapi:subscribe_from_request", kwargs={"newsletter_slug": self.slug})
@@ -176,7 +185,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         '''check if a user is currently subscribed to a newsletter'''
         if not newsletter:
             newsletter = cls.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
-        #TODO: this should be a search on user not email - potential for confusion
+        # TODO: this should be a search on user not email - potential for confusion
         sub = Subscription.get_subscription(email=user.email, newsletter=newsletter)
         return sub.subscribed if sub else False
 
@@ -249,6 +258,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         obj = cls.objects.order_by("pk").first()
         return obj.pk if obj else None
 
+
 # ---------------------------------------------------------------------
 # Subscription (user-or-email)
 # ---------------------------------------------------------------------
@@ -258,8 +268,8 @@ class SubscriptionEvent(models.Model):
         SUBSCRIBE = "subscribe", "Subscribe"
         UNSUBSCRIBE = "unsubscribe", "Unsubscribe"
         CONSENT = "consent", "Consent"
-        SUB_AND_CONSENT = "subscribe_consent", "Subscribe and Consent"    # used where a user is logged in and requests subscribe/unsubscribe
-        #UNSUB_AND_CONSENT = "unsubscribe_consent", "Subscribe and Consent"    # used where a user is logged in and requests subscribe/unsubscribe
+        SUB_AND_CONSENT = "subscribe_consent", "Subscribe and Consent"  # used where a user is logged in and requests subscribe/unsubscribe
+        # UNSUB_AND_CONSENT = "unsubscribe_consent", "Subscribe and Consent"    # used where a user is logged in and requests subscribe/unsubscribe
         UPDATE_PREFS = "update_prefs", "Update Preferences"
         BOUNCE = "bounce", "Bounce"
         COMPLAINT = "complaint", "Complaint"
@@ -273,7 +283,6 @@ class SubscriptionEvent(models.Model):
     user_agent = models.TextField(blank=True)
     meta = models.JSONField(default=dict, blank=True)
 
-
     class Meta:
         ordering = ["-at"]
 
@@ -281,8 +290,9 @@ class SubscriptionEvent(models.Model):
         return f"{self.subscription_id} {self.event} @ {self.at:%Y-%m-%d %H:%M}"
 
     @classmethod
-    def log(cls, sub:"Subscription", event:"SubscriptionEvent.Event", **kwargs):
+    def log(cls, sub: "Subscription", event: "SubscriptionEvent.Event", **kwargs):
         cls.objects.create(subscription=sub, event=event, **kwargs)
+
 
 def generate_activation_code():
     return secrets.token_urlsafe(24)[:40]  # 24 bytes → ~32 chars, slice to 40 max
@@ -308,6 +318,7 @@ class SubscriptionQuerySet(models.QuerySet):
         return self.filter(
             Q(bounced=True) | Q(complained=True) | Q(active=False) | Q(gdpr_erased_at__isnull=False)
         )
+
     def subscribed(self):
         return self.filter(active=True, unsubscribed=False)
 
@@ -315,14 +326,12 @@ class SubscriptionQuerySet(models.QuerySet):
         # includes not bounced, complained, gdpr_erased
         return self.filter(active=True)
 
-class Subscription(CreatedUpdatedMixin):
 
+class Subscription(CreatedUpdatedMixin):
     class LawfulBasis(models.TextChoices):
         CONSENT = "consent", "Consent"
         CONTRACT = "contract", "Contract"
         LEGITIMATE_INTEREST = "legit_interest", "Legitimate Interest"
-
-
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(db_column="name", max_length=200, blank=True, null=True, verbose_name=_("name"))
@@ -361,16 +370,15 @@ class Subscription(CreatedUpdatedMixin):
     complained_at = models.DateTimeField(null=True, blank=True)
     complaint_reason = models.TextField(blank=True)
 
-    #TODO: convert to UUID
+    # TODO: convert to UUID
     activation_code = models.CharField(max_length=40, default=generate_activation_code, unique=True)
-
 
     objects = SubscriptionQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("subscription")
         verbose_name_plural = _("subscriptions")
-        ordering = ["-created",]
+        ordering = ["-created", ]
         constraints = [
 
             # models.UniqueConstraint(
@@ -391,18 +399,16 @@ class Subscription(CreatedUpdatedMixin):
     def save(self, *args, **kwargs):
 
         if not self.email and self.user:
-           self.email = self.user.email.strip().lower()
+            self.email = self.user.email.strip().lower()
         elif self.email:
-              self.email = self.email.strip().lower()
+            self.email = self.email.strip().lower()
 
         self._recompute_active()
 
         super().save(*args, **kwargs)
 
-
     def _recompute_active(self) -> bool:
         """Compute deliverability according to your current rules."""
-
 
         self.active = bool(
             self.subscribed and
@@ -420,7 +426,6 @@ class Subscription(CreatedUpdatedMixin):
         qs = cls.objects.filter(newsletter=newsletter, email=email)
         sub = qs.first()
         if qs.count() > 1:
-
             logger.warning(
                 f"Multiple subscriptions found for {email} and newsletter {newsletter.pk} - using pk {sub.pk}")
         return sub
@@ -449,9 +454,9 @@ class Subscription(CreatedUpdatedMixin):
         sub = cls.get_subscription(newsletter=newsletter, email=me.email)
 
         if not sub:
-                    sub = cls(user=me, newsletter=newsletter)
-                    consent = cls.consent_from_request(request)
-                    sub.subscribe(consent, send_email=False)
+            sub = cls(user=me, newsletter=newsletter)
+            consent = cls.consent_from_request(request)
+            sub.subscribe(consent, send_email=False)
         else:
             if sub.active:
                 # already subscribed - nothing to do
@@ -491,8 +496,6 @@ class Subscription(CreatedUpdatedMixin):
         sub.unsubscribe(consent, me, send_email=False)
         return sub
 
-
-
     @classmethod
     def subscribe_from_request(cls, newsletter: "Newsletter", request) -> "Subscription":
         """
@@ -514,7 +517,7 @@ class Subscription(CreatedUpdatedMixin):
         email = (data.get("email") or "").strip().lower()
         name = (data.get("name") or "").strip()
         try:
-            user = User.objects.get(email=email)   # we are not currently checking for status of user - does it matter?
+            user = User.objects.get(email=email)  # we are not currently checking for status of user - does it matter?
         except User.DoesNotExist:
             user = None
         logged_in = request.user.is_authenticated
@@ -530,18 +533,18 @@ class Subscription(CreatedUpdatedMixin):
         sub = cls.get_subscription(newsletter=newsletter, email=email)
 
         if not sub:
-            if  not user:
+            if not user:
                 # create and require consent
                 sub = cls(email=email, name=name, newsletter=newsletter)
                 sub.subscribe()
-            elif  user and not logged_in:
+            elif user and not logged_in:
                 # create and require consent because user is not logged in
                 sub = cls(user=user, newsletter=newsletter)
                 sub.subscribe()
-            elif  user and logged_in:
-                    sub = cls(user=user, newsletter=newsletter)
-                    consent = cls.consent_from_request(request)
-                    sub.subscribe(consent)
+            elif user and logged_in:
+                sub = cls(user=user, newsletter=newsletter)
+                consent = cls.consent_from_request(request)
+                sub.subscribe(consent)
         else:
             if sub.active:
                 # already subscribed - nothing to do
@@ -557,7 +560,6 @@ class Subscription(CreatedUpdatedMixin):
                 sub.consent_user_agent = ""
                 sub.consent_text = ""
                 sub.save(user=request.user if logged_in else None)
-
 
                 if logged_in:
                     # Logged-in re-subscribe → record consent now (activate)
@@ -589,7 +591,7 @@ class Subscription(CreatedUpdatedMixin):
         sub = cls.get_subscription(newsletter=newsletter, email=email)
 
         if not sub:
-            if  not subscriber_user:
+            if not subscriber_user:
                 # create and require consent
                 sub = cls(email=email, name=name, newsletter=newsletter)
                 sub._subscribe()
@@ -598,20 +600,19 @@ class Subscription(CreatedUpdatedMixin):
                 sub = cls(user=subscriber_user, newsletter=newsletter)
                 sub._subscribe()
             elif subscriber_user and consent:
-                    sub = cls(user=subscriber_user, newsletter=newsletter)
-                    sub._subscribe()
-            sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False,  **consent)
+                sub = cls(user=subscriber_user, newsletter=newsletter)
+                sub._subscribe()
+            sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False, **consent)
         else:
             if sub.active and sub.subscribed:
                 # already subscribed - nothing to do
                 return sub
             else:
                 sub._subscribe()
-                sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False, **consent)
+                sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False, **consent)
         sub.save()
 
         return sub
-
 
     @classmethod
     def admin_unsubscribe(cls, newsletter, email, name, subscriber_user, consent=None, user=None):
@@ -621,10 +622,10 @@ class Subscription(CreatedUpdatedMixin):
         sub = cls.get_subscription(newsletter=newsletter, email=email)
 
         if not sub:
-            if  not subscriber_user:
+            if not subscriber_user:
                 # create and require consent
                 sub = cls(email=email, name=name, newsletter=newsletter)
-            elif subscriber_user :
+            elif subscriber_user:
                 # create and require consent because user is not logged in
                 sub = cls(user=subscriber_user, newsletter=newsletter)
 
@@ -638,7 +639,6 @@ class Subscription(CreatedUpdatedMixin):
             elif sub.subscribed:
 
                 sub._unsubscribe()
-
 
         sub.save()
 
@@ -658,7 +658,6 @@ class Subscription(CreatedUpdatedMixin):
             email = (data.get("email") or "").strip().lower()
             if not email:
                 raise ValidationError("Email is required.")
-
 
         sub = cls.get_subscription(email=email, newsletter=newsletter)
 
@@ -728,8 +727,6 @@ class Subscription(CreatedUpdatedMixin):
 
         return count
 
-
-
     # ---- state helpers ----
     def _subscribe(self):
         '''use for initial subscription or re-subscribe '''
@@ -753,14 +750,14 @@ class Subscription(CreatedUpdatedMixin):
         self.consent_user_agent = ""
         self.consent_text = ""
 
-
-    def subscribe(self, consent:dict={}, user=None, send_email=True):
+    def subscribe(self, consent: dict = {}, user=None, send_email=True):
 
         already_active = self.active
         sub_event = SubscriptionEvent.Event.SUBSCRIBE
         self._subscribe()
         if consent:
-            self.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False,  **consent) # will add to SubscriptionEvent in here
+            self.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False,
+                                **consent)  # will add to SubscriptionEvent in here
 
         self.save(user=user)
 
@@ -779,7 +776,7 @@ class Subscription(CreatedUpdatedMixin):
             self.user.unsubscribe_news = self.unsubscribe_date
             self.user.save()
 
-    def unsubscribe(self, consent:dict={}, user=None, send_email=True):
+    def unsubscribe(self, consent: dict = {}, user=None, send_email=True):
         '''not really consent as we do not require it for unsubscribe, but we can log some metadata'''
 
         was_unsubscribed = self.unsubscribed  # detect transition
@@ -805,12 +802,11 @@ class Subscription(CreatedUpdatedMixin):
         if not was_unsubscribed and self.unsubscribed and send_email:
             self._send_tx_email("unsubscribed")
 
-
     def record_consent(self, event=SubscriptionEvent.Event.CONSENT,
-                       source:str="",
-                       user_agent:str="",
-                       consent_text:str="",
-                       ip_address:str="",
+                       source: str = "",
+                       user_agent: str = "",
+                       consent_text: str = "",
+                       ip_address: str = "",
                        send_email=True):
 
         was_active = getattr(self, "active", False)  # capture pre-state
@@ -825,12 +821,11 @@ class Subscription(CreatedUpdatedMixin):
 
         SubscriptionEvent.log(self, event, meta={'source': source, 'ip': ip_address, 'user_agent': user_agent})
 
-
         # # If this consent made us become active now (fresh after any unsubscribe), send confirmation
         if send_email and not was_active and self.active:
             self._send_tx_email("subscribed")
 
-    def mark_bounce(self, reason:str=""):
+    def mark_bounce(self, reason: str = ""):
         self.bounced = True
         self.bounced_at = timezone.now()
         self.bounce_reason = reason
@@ -838,7 +833,7 @@ class Subscription(CreatedUpdatedMixin):
         self.save()
         SubscriptionEvent.log(self, SubscriptionEvent.Event.BOUNCE, meta={"reason": reason})
 
-    def mark_complaint(self, reason:str=""):
+    def mark_complaint(self, reason: str = ""):
         self.complained = True
         self.complained_at = timezone.now()
         self.complaint_reason = reason
@@ -884,7 +879,9 @@ class Subscription(CreatedUpdatedMixin):
 
         result = DirectEmail.send_simple_email(subject, text, user=self.user, to_email=self.email)
         result_pk = result.pk if result else None
-        SubscriptionEvent.log(self, SubscriptionEvent.Event.EMAIL_SENT, meta={'email_action': action, 'result': result_pk})
+        SubscriptionEvent.log(self, SubscriptionEvent.Event.EMAIL_SENT,
+                              meta={'email_action': action, 'result': result_pk})
+
 
 # ---------------------------------------------------------------------
 # Article (+ Attachment on Article)
@@ -902,8 +899,12 @@ class Article(CreatedUpdatedMixin):
         (TEMPLATE_TYPE_EMAIL, "Email"),
     )
 
-    ABOVE = "above"; BELOW = "below"; LEFT = "left"; RIGHT = "right"
-    IMAGE_POSITION_CHOICES = [(ABOVE,"Above text"),(BELOW,"Below text"),(LEFT,"Left of text"),(RIGHT,"Right of text")]
+    ABOVE = "above";
+    BELOW = "below";
+    LEFT = "left";
+    RIGHT = "right"
+    IMAGE_POSITION_CHOICES = [(ABOVE, "Above text"), (BELOW, "Below text"), (LEFT, "Left of text"),
+                              (RIGHT, "Right of text")]
 
     template_type = models.CharField(
         max_length=1, choices=TEMPLATE_TYPE_CHOICES, default=TEMPLATE_TYPE_NEWSLETTER
@@ -919,7 +920,6 @@ class Article(CreatedUpdatedMixin):
 
     is_template = models.BooleanField(default=False)
 
-
     class Meta:
         verbose_name = _("article")
         verbose_name_plural = _("articles")
@@ -928,13 +928,12 @@ class Article(CreatedUpdatedMixin):
     def __str__(self):
         return self.title
 
-
     def render_html(
-        self,
-        *,
-        base_url: str | None = None,
-        include_attachments: bool = True,
-        include_title: bool = True,
+            self,
+            *,
+            base_url: str | None = None,
+            include_attachments: bool = True,
+            include_title: bool = True,
     ) -> str:
         """
         Return an HTML string for this article (image positioned + body_html + attachments list).
@@ -980,7 +979,8 @@ class Article(CreatedUpdatedMixin):
         # Image after body for below
         if self.image and self.image_position == "below":
             img_url = _abs_url(getattr(self.image, "url", ""), base_url)
-            pieces.append(f'<p style="margin:12px 0 0 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>')
+            pieces.append(
+                f'<p style="margin:12px 0 0 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>')
 
         # Clear floats for left/right layouts
         if self.image_position in {"left", "right"}:
@@ -1005,11 +1005,11 @@ class Article(CreatedUpdatedMixin):
         return "".join(pieces)
 
     def render_text(
-        self,
-        *,
-        base_url: str | None = None,
-        include_attachments: bool = True,
-        include_title: bool = True,
+            self,
+            *,
+            base_url: str | None = None,
+            include_attachments: bool = True,
+            include_title: bool = True,
     ) -> str:
         """
         Return a plain-text version of this article (good for text part of emails).
@@ -1070,6 +1070,7 @@ class Attachment(CreatedUpdatedMixin):
     def file_name(self):
         return os.path.split(self.file.name)[1]
 
+
 # ---------------------------------------------------------------------
 # Message (Issue) + IssueArticle (ordering + appear_in_blog)
 # ---------------------------------------------------------------------
@@ -1128,7 +1129,6 @@ class Issue(CreatedUpdatedMixin):
             status__in=[Mailing.Status.QUEUED, Mailing.Status.SENDING]
         ).exists()
         return not active
-
 
     @classmethod
     def send_due(cls, max_per_run: int | None = None) -> int:
@@ -1209,124 +1209,93 @@ class Issue(CreatedUpdatedMixin):
         mailing.queue()  # uses Mailing.queue()
         return mailing
 
-
-    def send_via_anymail(self, batch_size: int = 800):
-        """
-        Send this mailing in batches via Anymail (Mailgun backend).
-
-        Step 1: use Issue.render_email() once to build subject/text/html/files.
-        Step 2: for each batch of recipients, send with merge_data so per-recipient
-                details (name, unsubscribe_url, etc.) are applied by Mailgun.
-        """
-
-        # 1) Resolve recipients
-        subs = list(self.subscriptions.active()) or list(self.newsletter.get_subscriptions())
-        recipients = [s for s in subs if s.email]
-        if not recipients:
-            self.status = self.Status.INACTIVE
-            self.save(update_fields=["status", "updated"])
-            return
-
-        # 2) Render the email ONCE from the Issue (articles + base context)
-        base_ctx = {
-            "mailing": self,                  # extra info if templates want it
-            "site": Site.objects.get_current()
-        }
-        email = self.issue.render_email(extra_context=base_ctx)
-        subject = email["subject"]
-        text = email["text"]
-        html = email["html"]
-        files = email["files"]   # list of ("attachment", (filename, fileobj))
-
-        # 3) Update status
-        self.status = self.Status.SENDING
-        self.save(update_fields=["status", "updated"])
-
-        all_deliveries = []
-
-        try:
-            # 4) Chunk recipients to respect Mailgun limits
-            for start in range(0, len(recipients), batch_size):
-                chunk = recipients[start:start + batch_size]
-
-                # Per-recipient merge data (step 2: apply user details)
-                to_list = [s.email for s in chunk]
-                merge_data = {
-                    s.email: {
-                        "name": s.name or "",
-                        "unsubscribe_url": s.unsubscribe_url,
-                        "subscription_id": s.pk,
-                    }
-                    for s in chunk
-                }
-
-                msg = AnymailMessage(
-                    subject=subject,
-                    body=text,
-                    from_email=self.newsletter.get_sender,
-                    to=to_list,
-                )
-                if html:
-                    msg.attach_alternative(html, "text/html")
-
-                # Attachments from Issue.render_email()
-                for _kind, (filename, fileobj) in files:
-                    try:
-                        fileobj.open("rb")
-                    except Exception:
-                        pass
-                    msg.attach(filename, fileobj.read())
-
-                # Provider-agnostic bits
-                msg.tags = [NEWSLETTER_BASENAME or "newsletter", self.newsletter.slug]
-                msg.metadata = {
-                    "mailing_id": str(self.pk),
-                    "newsletter_id": str(self.newsletter_id),
-                }
-                msg.merge_data = merge_data
-
-                # This header will be rendered by Mailgun using merge_data (unsubscribe_url)
-                msg.extra_headers = {"List-Unsubscribe": "<{{ unsubscribe_url }}>"}
-
-                # 5) Send this batch (one Mailgun API call)
-                msg.send()
-
-                anymail_status = msg.anymail_status
-                print(anymail_status)
-                # esp_name = anymail_status.esp_name
-                esp_name='mailgun'
-
-                # 6) Create Delivery rows for this batch
-                for email_addr, r in anymail_status.recipients.items():
-                    all_deliveries.append(Delivery(
-                        mailing=self,
-                        email=email_addr,
-                        esp_name=esp_name,
-                        message_id=r.get("message_id"),
-                        state=r.get("status", "sending"),
-                        sent_at=timezone.now(),
-                        metadata={"mailing_id": self.pk},
-                        tags=[self.newsletter.slug],
-                    ))
-
-            if all_deliveries:
-                Delivery.objects.bulk_create(all_deliveries)
-
-            # 7) Only mark SENT if all batches succeeded
-            self.status = self.Status.SENT
-            self.save(update_fields=["status", "updated"])
-
-        except Exception:
-            logger.exception(f"Mailing {self.pk} failed to send via Anymail/Mailgun")
-            self.status = self.Status.ERROR
-            self.save(update_fields=["status", "updated"])
-            raise
-
     def publish_to_blog(self):
         if not self.published_at:
             self.published_at = timezone.now()
             self.save(update_fields=["published_at"])
 
+    def send_one(self, email_addr):
+        '''this has a lot of duplicated code form Mailing.send_via_anymail - should dry'''
+
+        # Ordered list of issue articles for this issue
+        articles = (
+            self.issue_articles
+            .select_related("article")
+            .order_by("position")
+        )
+
+        ctx = {
+            "subscription": None,
+            "site": Site.objects.get_current(),
+            "mailing": None,
+            "date": timezone.now(),
+            "STATIC_URL": settings.STATIC_URL,
+            "MEDIA_URL": settings.MEDIA_URL,
+        }
+
+        email = self.render_email(extra_context=ctx)
+        '''email = {
+            "subject": subject,
+            "text": text,
+            "html": html,
+            "files": files,
+        }'''
+
+        merge_data = {email_addr: {
+            "name": "Test Name",
+            "unsubscribe_url": "",
+            "subscription_id": 0,
+        }
+        }
+        try:
+            msg = AnymailMessage(
+                subject=email['subject'],
+                body=email['text'],
+                from_email=self.newsletter.get_sender,
+                to=[email_addr, ],
+            )
+            if 'html' in email and email['html']:
+                msg.attach_alternative(email['html'], "text/html")
+
+            # Attachments on the Issue
+            for _kind, (filename, fileobj) in email['files']:
+                try:
+                    fileobj.open("rb")
+                except Exception:
+                    pass
+                msg.attach(filename, fileobj.read())
+
+            # Provider-agnostic knobs
+            msg.tags = [NEWSLETTER_BASENAME or "newsletter", self.newsletter.slug]
+            msg.metadata = {"mailing_id": str(self.pk), "newsletter_id": str(self.newsletter_id)}
+            msg.merge_data = merge_data
+            # If your ESP supports header merge vars (Mailgun does), this works there;
+            # across providers safest is also to include the link in body.
+            msg.extra_headers = {"List-Unsubscribe": "<{{ unsubscribe_url }}>"}
+
+            msg.send()  # uses Anymail backend
+
+            # Create Delivery rows
+            # anymail_status.recipients maps each email -> {'status': 'queued/sent', 'message_id': '...'}
+            anymail_status = msg.anymail_status
+            print(anymail_status)
+            # esp_name = anymail_status.esp_name
+            esp_name = 'mailgun'
+            Delivery.objects.create(
+                mailing=None,
+                email=email_addr,
+                esp_name=esp_name,  # normally 'mailgun'
+                message_id=r.message_id,  # provider id
+                state="sending",  # accepted by ESP
+                sent_at=timezone.now(),
+                tags=[self.newsletter.slug],
+            )
+
+        except Exception as e:
+            logger.exception(f"Test Email {self.pk} failed to send via Anymail/Mailgun error: {e}")
+
+            return False
+        return True
 
     # ---- Templates for send ----
     @cached_property
@@ -1345,6 +1314,20 @@ class Issue(CreatedUpdatedMixin):
     @property
     def html_template(self):
         return self._templates[2]
+
+    def render_html(self):
+        html = ""
+        for ia in self.issue_articles.select_related("article"):
+            if self.html_template:
+                html += ia.article.render_html(base_url=self.newsletter.base_url) + "<br><br>"
+        return html
+
+    def render_text(self):
+        text = ""
+        for ia in self.issue_articles.select_related("article"):
+            text += ia.article.render_text(base_url=self.newsletter.base_url) + "\n\n"
+
+        return text
 
     def render_email(self, extra_context=None):
         """
@@ -1365,12 +1348,10 @@ class Issue(CreatedUpdatedMixin):
         text = self.text_template.render(context).strip()
         html = self.html_template.render(context).strip()
 
-
         files = []
         for ia in self.issue_articles.select_related("article"):
             for attach in ia.article.attachments.all():
                 files.append(("attachment", (attach.file_name, attach.file.open("rb"))))
-
 
         return {
             "subject": subject,
@@ -1378,6 +1359,7 @@ class Issue(CreatedUpdatedMixin):
             "html": html,
             "files": files,
         }
+
 
 class IssueArticle(models.Model):
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="issue_articles")
@@ -1393,18 +1375,18 @@ class IssueArticle(models.Model):
         return f"{self.issue.title} → {self.article.title} (#{self.position})"
 
     def save(self, *args, **kwargs):
-
-        #automatically assign position to the end of the list if not provided.
+        # automatically assign position to the end of the list if not provided.
         if not self.position:
             # Find current max position for this issue
             max_pos = (
-                IssueArticle.objects.filter(issue=self.issue)
-                .aggregate(_max=Max("position"))
-                .get("_max") or 0
+                    IssueArticle.objects.filter(issue=self.issue)
+                    .aggregate(_max=Max("position"))
+                    .get("_max") or 0
             )
             self.position = max_pos + 1
 
         super().save(*args, **kwargs)
+
 
 # ---------------------------------------------------------------------
 # Mailing + Delivery
@@ -1414,12 +1396,13 @@ class Mailing(CreatedUpdatedMixin):
     """
     Represents sending a Issue to newsletter subscribers.
     """
+
     class Status(models.TextChoices):
         INACTIVE = "0", "Inactive"
-        QUEUED   = "1", "Queued"
-        SENDING  = "2", "Sending"
-        SENT     = "3", "Sent"
-        ERROR    = "9", "Error"
+        QUEUED = "1", "Queued"
+        SENDING = "2", "Sending"
+        SENT = "3", "Sent"
+        ERROR = "9", "Error"
 
     newsletter = models.ForeignKey(Newsletter, on_delete=models.CASCADE, related_name="mailings", editable=False)
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="mailings")
@@ -1462,15 +1445,24 @@ class Mailing(CreatedUpdatedMixin):
         return self.status == self.Status.SENT
 
     @property
-    def is_active(self):   return self.status in {self.Status.QUEUED, self.Status.SENDING}
+    def is_active(self):
+        return self.status in {self.Status.QUEUED, self.Status.SENDING}
+
     @property
-    def is_inactive(self): return self.status == self.Status.INACTIVE
+    def is_inactive(self):
+        return self.status == self.Status.INACTIVE
+
     @property
-    def is_queued(self):   return self.status == self.Status.QUEUED
+    def is_queued(self):
+        return self.status == self.Status.QUEUED
+
     @property
-    def is_sending(self):  return self.status == self.Status.SENDING
+    def is_sending(self):
+        return self.status == self.Status.SENDING
+
     @property
-    def is_sent(self):     return self.status == self.Status.SENT
+    def is_sent(self):
+        return self.status == self.Status.SENT
 
     # ----- Lifecycle -----
     @classmethod
@@ -1481,7 +1473,6 @@ class Mailing(CreatedUpdatedMixin):
         # default recipients = all active subscribers
         sub.subscriptions.set(issue.newsletter.get_subscriptions())
         return sub
-
 
     def queue(self):
         if self.is_sent:
@@ -1494,7 +1485,7 @@ class Mailing(CreatedUpdatedMixin):
         subs = self.subscriptions.active()
         if not subs.exists():
             subs = self.newsletter.get_subscriptions()
-        return [s.email for s in subs if s.email ]
+        return [s.email for s in subs if s.email]
 
     # @property
     # def extra_headers(self):
@@ -1584,7 +1575,7 @@ class Mailing(CreatedUpdatedMixin):
     #         self.save(update_fields=["status", "updated"])
     #         raise
 
-    def send_via_anymail(self):
+    def send_via_anymail(self, batch_size: int = 800):
         subs = list(self.subscriptions.active()) or list(self.newsletter.get_subscriptions())
         recipients = [s for s in subs if s.email]
         if not recipients:
@@ -1603,86 +1594,102 @@ class Mailing(CreatedUpdatedMixin):
             "subscription": None,
             "site": Site.objects.get_current(),
             "mailing": self,
-            "issue": self.issue,
-            "newsletter": self.newsletter,
             "date": self.publish_date,
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
-            "articles": articles,
         }
 
-        # Subject: either use template as before, or just issue.title
-        subject = self.issue.subject_template.render(ctx).strip() if self.issue.subject_template else self.issue.title
+        email = self.issue.render_email(extra_context=ctx)
+        '''email = {
+            "subject": subject,
+            "text": text,
+            "html": html,
+            "files": files,
+        }'''
 
-        # HTML body: use your preview template
-        html = render_to_string("skorie_news/admin/issues/issue_email.html", ctx)
+        # 3) Update status
+        #     self.issue.status = self.Status.SENDING
+        #     self.issue.save()
 
-        # Text body: strip HTML (good enough unless you want a separate text template)
-        text = strip_tags(html)
+        all_deliveries = []
 
-        # Build per-recipient merge_data (unsubscribe links etc.)
-        merge_data = {}
-        to_list = []
-        for s in recipients:
-            to_list.append(s.email)
-            merge_data[s.email] = {
-                "name": s.name or "",
-                "unsubscribe_url": s.unsubscribe_url,
-                "subscription_id": s.pk,
-            }
+        try:
+            # 4) Chunk recipients to respect Mailgun limits
+            for start in range(0, len(recipients), batch_size):
+                chunk = recipients[start:start + batch_size]
 
-        # Message
-        msg = AnymailMessage(
-            subject=subject,
-            body=text,
-            from_email=self.newsletter.get_sender,
-            to=to_list,  # batched send with merge_data
-        )
-        msg.attach_alternative(html, "text/html")
+                # Per-recipient merge data (step 2: apply user details)
+                to_list = [s.email for s in chunk]
+                merge_data = {
+                    s.email: {
+                        "name": s.name or "",
+                        "unsubscribe_url": s.unsubscribe_url,
+                        "subscription_id": s.pk,
+                    }
+                    for s in chunk
+                }
 
-        # Attachments on the Issue
-        for ia in self.issue.issue_articles.select_related("article"):
-            for att in ia.article.attachments.all():
-                # FileField gives file & name
-                msg.attach(att.file_name, att.file.read())
+                msg = AnymailMessage(
+                    subject=email['subject'],
+                    body=email['text'],
+                    from_email=self.newsletter.get_sender,
+                    to=to_list,
+                )
+                if 'html' in email and email['html']:
+                    msg.attach_alternative(email['html'], "text/html")
 
-        # Provider-agnostic knobs
-        msg.tags = [NEWSLETTER_BASENAME or "newsletter", self.newsletter.slug]
-        msg.metadata = {"mailing_id": str(self.pk), "newsletter_id": str(self.newsletter_id)}
-        msg.merge_data = merge_data
-        # If your ESP supports header merge vars (Mailgun does), this works there;
-        # across providers safest is also to include the link in body.
-        msg.extra_headers = {"List-Unsubscribe": "<{{ unsubscribe_url }}>"}
+                # Attachments on the Issue
+                for _kind, (filename, fileobj) in email['files']:
+                    try:
+                        fileobj.open("rb")
+                    except Exception:
+                        pass
+                    msg.attach(filename, fileobj.read())
 
-        self.status = self.Status.SENDING
-        self.save(update_fields=["status", "updated"])
+                # Provider-agnostic knobs
+                msg.tags = [NEWSLETTER_BASENAME or "newsletter", self.newsletter.slug]
+                msg.metadata = {"mailing_id": str(self.pk), "newsletter_id": str(self.newsletter_id)}
+                msg.merge_data = merge_data
+                # If your ESP supports header merge vars (Mailgun does), this works there;
+                # across providers safest is also to include the link in body.
+                msg.extra_headers = {"List-Unsubscribe": "<{{ unsubscribe_url }}>"}
 
-        msg.send()  # uses Anymail backend
+                self.status = self.Status.SENDING
+                self.save(update_fields=["status", "updated"])
 
-        # Create Delivery rows
-        # anymail_status.recipients maps each email -> {'status': 'queued/sent', 'message_id': '...'}
-        anymail_status = msg.anymail_status
-        print(anymail_status)
-        # esp_name = anymail_status.esp_name
-        esp_name = 'mailgun'
+                msg.send()  # uses Anymail backend
 
+                # Create Delivery rows
+                # anymail_status.recipients maps each email -> {'status': 'queued/sent', 'message_id': '...'}
+                anymail_status = msg.anymail_status
+                print(anymail_status)
+                # esp_name = anymail_status.esp_name
+                esp_name = 'mailgun'
 
-        deliveries = []
-        for email, r in anymail_status.recipients.items():
-            deliveries.append(Delivery(
-                mailing=self,
-                email=email,
-                esp_name=esp_name,         # normally 'mailgun'
-                message_id=r.get("message_id"),           # provider id
-                state="sending",                          # accepted by ESP
-                sent_at=timezone.now(),
-                metadata={"mailing_id": self.pk},
-                tags=[self.newsletter.slug],
-            ))
-        Delivery.objects.bulk_create(deliveries)
+                # 6) Create Delivery rows for this batch
+                for email_addr, r in anymail_status.recipients.items():
+                    all_deliveries.append(Delivery(
+                        mailing=self,
+                        email=email_addr,
+                        esp_name=esp_name,  # normally 'mailgun'
+                        message_id=r.message_id,  # provider id
+                        state="sending",  # accepted by ESP
+                        sent_at=timezone.now(),
+                        metadata={"mailing_id": self.pk},
+                        tags=[self.newsletter.slug],
+                    ))
+            if all_deliveries:
+                Delivery.objects.bulk_create(all_deliveries)
 
-        self.status = self.Status.SENT
-        self.save(update_fields=["status"])
+            self.status = self.Status.SENT
+            self.save(update_fields=["status", "updated"])
+
+        except Exception as e:
+            logger.exception(f"Mailing {self.pk} failed to send via Anymail/Mailgun error: {e}")
+            self.status = self.Status.ERROR
+            self.save(update_fields=["status", "updated"])
+            raise
+
 
 class DirectEmail(CreatedUpdatedMixin):
     # Template/article to render from (optional)
@@ -1701,17 +1708,16 @@ class DirectEmail(CreatedUpdatedMixin):
     )
     DIRECT_MAIL_DEFAULT = DIRECT_MAIL_DRAFT
 
-
     # Always store the raw target email
     to_email = models.EmailField(db_index=True)
 
     # SMTP from (do not conflate with sender FK)
     from_email = models.CharField(max_length=255, blank=True)
 
-
     # looksup
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.CASCADE)  # is this the sender or receive - have both already
-    event = models.ForeignKey('web.Event',  blank=True, null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                             on_delete=models.CASCADE)  # is this the sender or receive - have both already
+    event = models.ForeignKey('web.Event', blank=True, null=True, on_delete=models.CASCADE)
     event_ref = models.CharField(max_length=5, db_index=True, blank=True, null=True)
 
     eventrole = models.ForeignKey("web.EventRole", blank=True, null=True, on_delete=models.CASCADE)
@@ -1735,7 +1741,8 @@ class DirectEmail(CreatedUpdatedMixin):
         blank=True, null=True,
         related_name="direct_emails",
     )
-    template = models.CharField(max_length=50, blank=True, null=True, help_text="Optional template name that appears in templates/email directory to render from")
+    template = models.CharField(max_length=50, blank=True, null=True,
+                                help_text="Optional template name that appears in templates/email directory to render from")
     # sender = the staff/admin user who triggered the email
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1755,7 +1762,6 @@ class DirectEmail(CreatedUpdatedMixin):
         help_text="Recipient user, if linked to an account",
     )
 
-
     class Meta:
         ordering = ["-created"]
 
@@ -1770,7 +1776,6 @@ class DirectEmail(CreatedUpdatedMixin):
 
             if self.to_email:
                 self.to_email = self.to_email.strip().lower()
-
 
         super().save(*args, **kwargs)
 
@@ -1801,8 +1806,8 @@ class DirectEmail(CreatedUpdatedMixin):
         elif self.template:
             # template is the name in the template/email directory
             context = self.context_processor(context)
-            #TODO: remove context field - too big - don't know what's going to be in it - might be private.
-            #self.context = context -
+            # TODO: remove context field - too big - don't know what's going to be in it - might be private.
+            # self.context = context -
 
             if not self.subject:
                 try:
@@ -1827,7 +1832,6 @@ class DirectEmail(CreatedUpdatedMixin):
 
         if save:
             self.save()
-
 
     @classmethod
     def send_simple_email(cls, subject, message, html=None, user=None, to_email=None, from_email=None):
@@ -1857,78 +1861,76 @@ class DirectEmail(CreatedUpdatedMixin):
         else:
             return delivery
 
-
     def _build_message(self) -> AnymailMessage:
 
-            msg = AnymailMessage(
-                subject=self.subject or "",
-                body=self.body_text or "",
-                from_email=(self.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "")),
-                to=[self.to_email],
-            )
-            if self.body_html:
-                msg.attach_alternative(self.body_html, "text/html")
+        msg = AnymailMessage(
+            subject=self.subject or "",
+            body=self.body_text or "",
+            from_email=(self.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "")),
+            to=[self.to_email],
+        )
+        if self.body_html:
+            msg.attach_alternative(self.body_html, "text/html")
 
-            # Optional provider-agnostic knobs
-            msg.tags = ["direct-email"]
-            msg.metadata = {
-                "direct_email_id": str(self.pk),
-                "event_id": getattr(self.event, "id", None),
-                "receiver_id": getattr(self.receiver, "id", None),
-            }
+        # Optional provider-agnostic knobs
+        msg.tags = ["direct-email"]
+        msg.metadata = {
+            "direct_email_id": str(self.pk),
+            "event_id": getattr(self.event, "id", None),
+            "receiver_id": getattr(self.receiver, "id", None),
+        }
 
-            # You can also add reply-to, headers, attachments here based on `context`
-            # e.g. msg.reply_to = [ ... ]
-            return msg
+        # You can also add reply-to, headers, attachments here based on `context`
+        # e.g. msg.reply_to = [ ... ]
+        return msg
 
     def send(self):
-            """
-            Send via Anymail backend and create a Delivery row linked back to this message.
-            Returns the Delivery instance (or None in DEBUG short-circuit).
-            """
+        """
+        Send via Anymail backend and create a Delivery row linked back to this message.
+        Returns the Delivery instance (or None in DEBUG short-circuit).
+        """
 
+        if not self.to_email:
+            raise ValidationError("to_email is required")
 
-            if not self.to_email:
-                raise ValidationError("to_email is required")
-
-                if settings.DEBUG:
+            if settings.DEBUG:
                 # Dry-run: mark as sent without hitting an ESP
-                    self.status = "sent"
-                self.updated = timezone.now()
-                self.save(update_fields=["status", "updated"])
-                return None
+                self.status = "sent"
+            self.updated = timezone.now()
+            self.save(update_fields=["status", "updated"])
+            return None
 
-            msg = self._build_message()
+        msg = self._build_message()
 
-            # transition → sending
-            if self.status == self.DIRECT_MAIL_SENDING:
-                self.save(update_fields=["status", "updated"])
-
-            # send
-            msg.send()
-            st = getattr(msg, "anymail_status", None)
-
-            # recip is AnymailRecipientStatus, not a dict
-            recip = st.recipients.get(self.to_email) if hasattr(st, "recipients") else None
-            message_id = getattr(recip, "message_id", None) or getattr(st, "message_id", None)
-            esp_name = "mailgun"
-
-            # Record Delivery (provider-agnostic)
-            delivery = Delivery.objects.create(direct_mail=self,
-                                            email=self.to_email,
-                esp_name=esp_name,
-                message_id=message_id,
-                state="sending",                # accepted/queued by ESP; later webhooks will roll this up
-                sent_at=timezone.now(),
-                metadata={"direct_email_id": self.pk},
-                tags=["direct-email"],
-            )
-
-            # local status → sent (means "handed to ESP")
-            self.status = self.DIRECT_MAIL_SENT
+        # transition → sending
+        if self.status == self.DIRECT_MAIL_SENDING:
             self.save(update_fields=["status", "updated"])
 
-            return delivery
+        # send
+        msg.send()
+        st = getattr(msg, "anymail_status", None)
+
+        # recip is AnymailRecipientStatus, not a dict
+        recip = st.recipients.get(self.to_email) if hasattr(st, "recipients") else None
+        message_id = getattr(recip, "message_id", None) or getattr(st, "message_id", None)
+        esp_name = "mailgun"
+
+        # Record Delivery (provider-agnostic)
+        delivery = Delivery.objects.create(direct_mail=self,
+                                           email=self.to_email,
+                                           esp_name=esp_name,
+                                           message_id=message_id,
+                                           state="sending",  # accepted/queued by ESP; later webhooks will roll this up
+                                           sent_at=timezone.now(),
+                                           metadata={"direct_email_id": self.pk},
+                                           tags=["direct-email"],
+                                           )
+
+        # local status → sent (means "handed to ESP")
+        self.status = self.DIRECT_MAIL_SENT
+        self.save(update_fields=["status", "updated"])
+
+        return delivery
 
     @property
     def get_signature(self):
@@ -1936,14 +1938,17 @@ class DirectEmail(CreatedUpdatedMixin):
         if self.event:
             return "Event Team"
         else:
-            return getattr('settings','SIGNATURE','')
+            return getattr('settings', 'SIGNATURE', '')
+
 
 class Delivery(models.Model):
-    mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, related_name="deliveries", blank=True, null=True) # only for newsletters not emails
-    direct_mail = models.ForeignKey(DirectEmail, on_delete=models.CASCADE, related_name="direct_deliveries", blank=True, null=True) # only for direct emails not newsletters
+    mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, related_name="deliveries", blank=True,
+                                null=True)  # only for newsletters not emails
+    direct_mail = models.ForeignKey(DirectEmail, on_delete=models.CASCADE, related_name="direct_deliveries", blank=True,
+                                    null=True)  # only for direct emails not newsletters
     email = models.EmailField()
 
-        # ESP identity (Anymail-normalized)
+    # ESP identity (Anymail-normalized)
     esp_name = models.CharField(
         max_length=20, default="mailgun", db_index=True,
         help_text="Which ESP handled the send (e.g., 'mailgun')."
@@ -1968,8 +1973,8 @@ class Delivery(models.Model):
 
     # High-level state (rolled up from events)
     STATE_CHOICES = [
-        ("queued", "Queued"),       # created/queued locally
-        ("sending", "Sending"),     # accepted/queued by ESP
+        ("queued", "Queued"),  # created/queued locally
+        ("sending", "Sending"),  # accepted/queued by ESP
         ("delivered", "Delivered"),
         ("opened", "Opened"),
         ("clicked", "Clicked"),
@@ -2009,18 +2014,17 @@ class Delivery(models.Model):
     tags = ArrayField(models.CharField(max_length=64), default=list, blank=True)
     campaigns = ArrayField(models.CharField(max_length=64), default=list, blank=True)
     user_variables = models.JSONField(default=dict, blank=True)  # metadata/merge vars you sent
-    metadata = models.JSONField(default=dict, blank=True)        # extra internal metadata
+    metadata = models.JSONField(default=dict, blank=True)  # extra internal metadata
 
     # Failure details (snapshot of latest)
     failure_severity = models.CharField(max_length=20, blank=True)  # 'temporary' | 'permanent'
-    failure_reason = models.CharField(max_length=50, blank=True)    # e.g. 'bounce'
+    failure_reason = models.CharField(max_length=50, blank=True)  # e.g. 'bounce'
     smtp_code = models.IntegerField(blank=True, null=True)
     smtp_message = models.TextField(blank=True)
     raw_delivery_status = models.JSONField(default=dict, blank=True)
 
     # Lifecycle
     is_active = models.BooleanField(default=True)
-
 
     class Meta:
         ordering = ["-created"]
@@ -2106,7 +2110,6 @@ class Delivery(models.Model):
         ])
 
 
-
 class DeliveryEvent(CreatedUpdatedMixin):
     """
     Every webhook from Mailgun for a given message.
@@ -2132,7 +2135,6 @@ class DeliveryEvent(CreatedUpdatedMixin):
 
     # Mailgun event id (unique)
     provider_event_id = models.CharField(max_length=255, unique=True)
-
 
     event = models.CharField(max_length=20, choices=DELIVERY_EVENT_CHOICES)
     occurred_at = models.DateTimeField()  # from webhook timestamp
@@ -2169,9 +2171,9 @@ class DeliveryEvent(CreatedUpdatedMixin):
 
 class EventDispatch(EventMixin, CreatedUpdatedMixin):
     class Status(models.TextChoices):
-        DRAFT  = "draft",  "Draft"
+        DRAFT = "draft", "Draft"
         QUEUED = "queued", "Queued"
-        SENT   = "sent",   "Sent"
+        SENT = "sent", "Sent"
         FAILED = "failed", "Failed"
 
     article = models.ForeignKey(Article, on_delete=models.PROTECT, related_name="event_dispatches")
@@ -2279,7 +2281,7 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
         def _batch_send(addresses: list[str]):
             BATCH = 1000
             for i in range(0, len(addresses), BATCH):
-                chunk = addresses[i:i+BATCH]
+                chunk = addresses[i:i + BATCH]
                 recipient_vars = {addr: {"name": ""} for addr in chunk}
                 data = {
                     "from": from_addr,
