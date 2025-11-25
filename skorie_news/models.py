@@ -600,14 +600,14 @@ class Subscription(CreatedUpdatedMixin):
             elif subscriber_user and consent:
                     sub = cls(user=subscriber_user, newsletter=newsletter)
                     sub._subscribe()
-            sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False,  **consent)
+            sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False,  **consent)
         else:
             if sub.active and sub.subscribed:
                 # already subscribed - nothing to do
                 return sub
             else:
                 sub._subscribe()
-                sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False, **consent)
+                sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False, **consent)
         sub.save()
 
         return sub
@@ -760,7 +760,7 @@ class Subscription(CreatedUpdatedMixin):
         sub_event = SubscriptionEvent.Event.SUBSCRIBE
         self._subscribe()
         if consent:
-            self.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False,  **consent) # will add to SubscriptionEvent in here
+            self.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False,  **consent) # will add to SubscriptionEvent in here
 
         self.save(user=user)
 
