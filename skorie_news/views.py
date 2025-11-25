@@ -1110,6 +1110,7 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
     #         "submission": issue.active_mailing,
     #     })
 
+@method_decorator(never_cache, name='dispatch')
 class IssuePreviewView(DetailView):
     model = Issue
     template_name = "skorie_news/admin/issues/issue_preview.html"
@@ -1120,7 +1121,9 @@ class IssuePreviewView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['newsletter'] = self.object.newsletter
         context["articles"] = self.object.ordered_articles
+        context.update(self.object.render_email())
         return context
 
 class ClaimEmailManageLinkView(TemplateView):

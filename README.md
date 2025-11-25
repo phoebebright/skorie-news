@@ -41,6 +41,14 @@ And require:
     path('api/n1/', include(('skorie_news.urls_api', 'skorie_news'), namespace='newsapi')),
     path('news/', include('skorie_news.urls', namespace="news")),
 
+## Custom templates can be added
+
+     TEMPLATES[0]['DIRS'].insert(0, os.path.join(BASE_DIR, 'templates/_client', CLIENT))
+
+eg. for main body of email in html
+
+    /templates/_client/skorie_news/mailings/mailing.html
+
 ## Scenarios
 
 table shows differnt possible scenarios.  Not that iContact is the temporary flow for people clicking on a link in a iContact email and to say they want to continue receiving emails.  This will be removed when iContact is no longer used.

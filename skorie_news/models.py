@@ -1346,36 +1346,24 @@ class Issue(CreatedUpdatedMixin):
     def html_template(self):
         return self._templates[2]
 
-    def render_html(self):
-        html = ""
-        for ia in self.issue_articles.select_related("article"):
-            if self.html_template:
-                html += ia.article.render_html(base_url=self.newsletter.base_url) + "<br><br>"
-        return html
-
-    def render_text(self):
-        text = ""
-        for ia in self.issue_articles.select_related("article"):
-            text += ia.article.render_text(base_url=self.newsletter.base_url) + "\n\n"
-
-        return text
-
     def render_email(self, extra_context=None):
         """
         Prepare subject, text, html, and attachments for this message.
         Returns a dict suitable for Mailgun.
         """
-        ctx = {
+        context = {
             "issue": self,
             "newsletter": self.newsletter,
+            "issue": self,
+            "articles": self.ordered_articles,
         }
         if extra_context:
-            ctx.update(extra_context)
+            context.update(extra_context)
 
-        subject = self.subject_template.render(ctx).strip()
+        subject = self.subject_template.render(context).strip()
 
-        text = self.render_text()
-        html = self.render_html()
+        text = self.text_template.render(context).strip()
+        html = self.html_template.render(context).strip()
 
 
         files = []
