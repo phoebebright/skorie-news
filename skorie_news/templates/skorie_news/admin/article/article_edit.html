@@ -25,35 +25,12 @@
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-between">
             <a href="{% url 'news:article-list' %}" class="btn btn-secondary">Cancel</a>
-
-            <div class="d-flex gap-2 align-items-center">
-                {% if object %}
-                    <button type="button" class="btn btn-outline-info" id="btn-preview-html">Preview HTML</button>
-                    <button type="button" class="btn btn-outline-secondary" id="btn-preview-text">Preview Text</button>
-                {% else %}
-                    <button type="button" class="btn btn-outline-info" disabled>Preview HTML</button>
-                    <button type="button" class="btn btn-outline-secondary" disabled>Preview Text</button>
-                {% endif %}
             <button type="submit" class="btn btn-primary">Save</button>
         </div>
-        </div>
-    </form>
 
-    <!-- Preview Modal -->
-    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Article Preview</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <iframe id="preview-frame" src="about:blank" style="width:100%;height:70vh;border:0;"></iframe>
-                    <pre id="preview-text" class="p-3 d-none" style="white-space:pre-wrap"></pre>
-                </div>
-            </div>
-        </div>
-    </div>
+
+
+    </form>
 {% endblock %}
 
 
@@ -61,47 +38,52 @@
     <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
     <script>
         // Enhance any textarea with TinyMCE
-        $(function () {
-            if (typeof tinymce !== 'undefined') {
-                tinymce.init({
-                    selector: 'textarea, .js-wysiwyg',
-                    menubar: false,
-                    plugins: 'link lists preview code autoresize',
-                    toolbar: 'undo redo | styles | bold italic underline | bullist numlist | link | code | preview',
-                    height: 400,
-                    branding: false,
-                    convert_urls: false
-                });
-            }
+      tinymce.init({
+    selector: 'textarea, .js-wysiwyg',
+    menubar: false,
+    plugins: 'link lists table paste code preview',
+    toolbar: 'undo redo | bold italic underline | forecolor backcolor | bullist numlist | link table | removeformat | code | preview',
 
-            $('#btn-preview-html').on('click', function(e){
-                e.preventDefault();
-                if (!{{ object.id|default:"null" }}) {
-                    alert("Please save the article first.");
-                    return;
-                }
-                $('#preview-frame').removeClass('d-none')
-                    .attr('src', "{% url 'news:article-preview' object.pk %}");
-                $('#preview-text').addClass('d-none').text('');
-                $('#previewModal').modal('show');
-            });
+    // Layout
+    height: 400,
+    branding: false,
+    convert_urls: false,
+    resize: true, // or false if you don't want user-resize
 
-            $('#btn-preview-text').on('click', function(e){
-                e.preventDefault();
-                if (!{{ object.id|default:"null" }}) {
-                    alert("Please save the article first.");
-                    return;
-                }
-                $('#preview-frame').addClass('d-none').attr('src', 'about:blank');
-                $('#preview-text').removeClass('d-none').text('Loading…');
-                $.get("{% url 'news:article-preview-text' object.pk %}", function(data){
-                    $('#preview-text').text(data);
-                }).fail(function(){
-                    $('#preview-text').text("Error loading text preview.");
-                });
-                $('#previewModal').modal('show');
-            });
+    // Email-friendly content
+    forced_root_block: 'p',
+
+    // Paste handling (TinyMCE 6-safe)
+    paste_as_text: false,  // true if you want super-clean plain text pastes
+
+    valid_elements:
+        'a[href|target=_blank],' +
+        'strong/b,em/i,u,' +
+        'p,br,' +
+        'ul,ol,li,' +
+        'table,tbody,tr,td,th,' +
+        'h1,h2,h3,' +
+        'span[style]',
+
+    valid_styles: {
+        '*': 'color,background-color,font-weight,font-style,text-decoration,text-align'
+    },
+
+    cleanup: true,
+    verify_html: true,
+
 
         });
     </script>
 {% endblock %}
+
+    // // Make the editor content use Calibri
+    // content_style: `
+    //     body {
+    //         font-family: Calibri, Arial, sans-serif;
+    //         font-size: 14px;
+    //     }
+    //     table, td, th, p, li, span {
+    //         font-family: Calibri, Arial, sans-serif;
+    //     }
+    // `
