@@ -1232,6 +1232,7 @@ class Issue(CreatedUpdatedMixin):
             "date": timezone.now(),
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
+            'unsubscribe_url': self.newsletter.unsubscribe_url,
         }
 
         email = self.render_email(extra_context=ctx)
@@ -1599,6 +1600,7 @@ class Mailing(CreatedUpdatedMixin):
             "date": self.publish_date,
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
+            'unsubscribe_url': self.newsletter.unsubscribe_url,
         }
 
         email = self.issue.render_email(extra_context=ctx)
