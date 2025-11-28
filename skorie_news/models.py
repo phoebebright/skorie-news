@@ -143,7 +143,6 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     email = models.EmailField(verbose_name=_("e-mail"), help_text=_("Sender e-mail"))
     sender = models.CharField(max_length=200, verbose_name=_("sender"), help_text=_("Sender name"))
     reply_to = models.EmailField(blank=True, null=True, verbose_name=_("reply to e-mail"))
-    send_from = models.EmailField(blank=True, null=True, verbose_name=_("send from e-mail"))
 
     visible = models.BooleanField(default=True, db_index=True, help_text=_(
         "Should be named active.  Can be active and not public for team use only."))
@@ -1255,6 +1254,7 @@ class Issue(CreatedUpdatedMixin):
                 body=email['text'],
                 from_email=self.newsletter.get_sender,
                 to=[email_addr, ],
+                reply_to=[self.newsletter.reply_to,],
             )
             if 'html' in email and email['html']:
                 msg.attach_alternative(email['html'], "text/html")
