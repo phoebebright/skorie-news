@@ -1102,32 +1102,66 @@ def mailgun_webhook(request):
 #
 #     return JsonResponse({"message": f"Webhook received but message {message_id} not found"}, status=200)
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib import messages
+from django.conf import settings
+
+from .models import Newsletter
+
+
 class SubscribeMe(APIView):
 
-    def get(self, request):
-        '''get for general newsletter only - only works if email passed as query param'''
+    def _subscribe(self, request):
+        """
+        Shared logic for GET/POST.
+        For GET: email can come from query params.
+        For POST: email can come from form data or JSON.
+        newsletter.subscribe_me(request) should handle where it gets the email.
+        """
         newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
 
+        # Your existing method – presumably pulls email from request
         newsletter.subscribe_me(request)
 
-        # add to django messages framework
-        messages.success(request, f"Subscribed to {newsletter} successfully")
+        messages.success(request._request, f"Subscribed to {newsletter} successfully")
+        # note: in DRF, request is a wrapper; messages expects the underlying HttpRequest
 
         return Response(status=status.HTTP_200_OK)
 
+    def get(self, request, *args, **kwargs):
+        """GET for general newsletter – email typically passed as query param."""
+        return self._subscribe(request)
+
+    def post(self, request, *args, **kwargs):
+        """
+        POST for general newsletter – email can be in request.data (JSON or form),
+        or still as a query param if you want to support both.
+        """
+        return self._subscribe(request)
+
 class UnSubscribeMe(APIView):
 
-    def get(self, request):
-
+    def _unsubscribe(self, request):
+        """Shared logic for GET and POST."""
         newsletter = Newsletter.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
 
         newsletter.unsubscribe_me(request)
 
-        # add to django messages framework
-        messages.success(request, f"Unsubscribed from {newsletter} successfully")
+        # Messages framework (works if you’re redirecting or using DRF with session auth)
+        messages.success(request._request if hasattr(request, "_request") else request,
+                         f"Unsubscribed from {newsletter} successfully")
 
         return Response(status=status.HTTP_200_OK)
 
+    def get(self, request, *args, **kwargs):
+        """GET → email usually comes from query string."""
+        return self._unsubscribe(request)
+
+    def post(self, request, *args, **kwargs):
+        """POST → email can come from request.data or form POST."""
+        return self._unsubscribe(request)
 
 class SubscribeFromRequest(APIView):
 
