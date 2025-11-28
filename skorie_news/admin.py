@@ -105,43 +105,43 @@ class ArticleAdmin(admin.ModelAdmin):
     # If you use TinyMCE site-wide, you can also tweak formfield_overrides here.
 
 
-# # ---------- Newsletter ----------
-#
-# # @admin.register(Newsletter)
-# class NewsletterAdmin(admin.ModelAdmin):
-#     list_display = ("title", "slug", "visible", "default_from", "subscriber_count")
-#     list_filter = ("visible",)
-#     search_fields = ("title", "slug")
-#
-#     def get_queryset(self, request):
-#         qs = super().get_queryset(request)
-#         # If you have related Subscription model name different, adjust related_name
-#         sub_rel = "subscription"  # default guess; many setups use 'subscriptions'
-#         try:
-#             qs = qs.annotate(_subs=Count("subscriptions"))
-#         except Exception:
-#             try:
-#                 qs = qs.annotate(_subs=Count("subscription"))
-#             except Exception:
-#                 qs = qs
-#         return qs
-#
-#     def subscriber_count(self, obj):
-#         return getattr(obj, "_subs", obj.subscription_set.count() if hasattr(obj, "subscription_set") else "-")
-#     subscriber_count.short_description = "Subscribers"
-#
-#     def default_from(self, obj):
-#         # Adjust to match your fields: sender/email on Newsletter
-#         parts = []
-#         if hasattr(obj, "sender") and obj.sender:
-#             parts.append(obj.sender)
-#         if hasattr(obj, "email") and obj.email:
-#             parts.append(f"<{obj.email}>")
-#         return format_html(" ".join(parts)) if parts else "-"
-#     default_from.short_description = "From"
-#
-#
-#
+# ---------- Newsletter ----------
+
+@admin.register(Newsletter)
+class NewsletterAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "visible", "default_from", "subscriber_count")
+    list_filter = ("visible",)
+    search_fields = ("title", "slug")
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # If you have related Subscription model name different, adjust related_name
+        sub_rel = "subscription"  # default guess; many setups use 'subscriptions'
+        try:
+            qs = qs.annotate(_subs=Count("subscriptions"))
+        except Exception:
+            try:
+                qs = qs.annotate(_subs=Count("subscription"))
+            except Exception:
+                qs = qs
+        return qs
+
+    def subscriber_count(self, obj):
+        return getattr(obj, "_subs", obj.subscription_set.count() if hasattr(obj, "subscription_set") else "-")
+    subscriber_count.short_description = "Subscribers"
+
+    def default_from(self, obj):
+        # Adjust to match your fields: sender/email on Newsletter
+        parts = []
+        if hasattr(obj, "sender") and obj.sender:
+            parts.append(obj.sender)
+        if hasattr(obj, "email") and obj.email:
+            parts.append(f"<{obj.email}>")
+        return format_html(" ".join(parts)) if parts else "-"
+    default_from.short_description = "From"
+
+
+
 # # @admin.register(Message)
 # class MessageAdmin(admin.ModelAdmin):
 #     list_display = ("title", "skorie_news", "created", "modified", "preview_link", "queue_link")

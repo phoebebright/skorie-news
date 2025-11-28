@@ -154,7 +154,7 @@
 
         const issueId = {{ issue.id|default:"null" }};
 
-        $("#issue_form").on('change input', ':input', function() {
+    $("#id_title").on('change', ':input', function() {
    $("#issue_form").trigger('submit'); // or AJAX submit
 });
 
