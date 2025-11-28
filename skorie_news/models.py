@@ -142,6 +142,8 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     about = models.TextField(blank=True, null=True, help_text=_("Short description shown on subscribe page"))
     email = models.EmailField(verbose_name=_("e-mail"), help_text=_("Sender e-mail"))
     sender = models.CharField(max_length=200, verbose_name=_("sender"), help_text=_("Sender name"))
+    reply_to = models.EmailField(blank=True, null=True, verbose_name=_("reply to e-mail"))
+    send_from = models.EmailField(blank=True, null=True, verbose_name=_("send from e-mail"))
 
     visible = models.BooleanField(default=True, db_index=True, help_text=_(
         "Should be named active.  Can be active and not public for team use only."))
