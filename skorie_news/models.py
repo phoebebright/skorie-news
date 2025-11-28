@@ -1636,6 +1636,7 @@ class Mailing(CreatedUpdatedMixin):
                     body=email['text'],
                     from_email=self.newsletter.get_sender,
                     to=to_list,
+                reply_to=[self.newsletter.reply_to,],
                 )
                 if 'html' in email and email['html']:
                     msg.attach_alternative(email['html'], "text/html")
@@ -1870,6 +1871,7 @@ class DirectEmail(CreatedUpdatedMixin):
             body=self.body_text or "",
             from_email=(self.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "")),
             to=[self.to_email],
+            reply_to=[self.newsletter.reply_to, ],
         )
         if self.body_html:
             msg.attach_alternative(self.body_html, "text/html")
