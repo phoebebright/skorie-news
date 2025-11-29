@@ -1250,13 +1250,19 @@ class Issue(CreatedUpdatedMixin):
         }
         }
         try:
+            # get domain from reply to email
+            domain = self.newsletter.reply_to.split('@')[-1]
             msg = AnymailMessage(
                 subject=email['subject'],
                 body=email['text'],
                 from_email=self.newsletter.get_sender,
                 to=[email_addr, ],
                 reply_to=[self.newsletter.reply_to,],
-            )
+                tags=["newsletter", "general"],
+                headers={
+                    "X-List-ID": f"{domain}-{self.newsletter.slug}",
+                    "X-Feedback-ID": f"{domain}-{self.newsletter.slug}:issue-{self.pk}",
+                })
             if 'html' in email and email['html']:
                 msg.attach_alternative(email['html'], "text/html")
 
@@ -1580,6 +1586,8 @@ class Mailing(CreatedUpdatedMixin):
 
     def send_via_anymail(self, batch_size: int = 800):
         subs = list(self.subscriptions.active()) or list(self.newsletter.get_subscriptions())
+
+
         recipients = [s for s in subs if s.email]
         if not recipients:
             self.status = self.Status.INACTIVE
