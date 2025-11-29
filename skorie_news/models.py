@@ -1629,7 +1629,7 @@ class Mailing(CreatedUpdatedMixin):
             # 4) Chunk recipients to respect Mailgun limits
             #for start in range(0, len(recipients), batch_size):
             for start in range(21, 420, batch_size):
-                chunk = recipients[start:start + batch_size]
+                chunk = recipients[21:420]
                 if len(chunk) > 401:
                     raise ValueError("too many recipients in test mode")
 
