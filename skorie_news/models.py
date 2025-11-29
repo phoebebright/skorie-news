@@ -1627,7 +1627,8 @@ class Mailing(CreatedUpdatedMixin):
         batch_size = 20
         try:
             # 4) Chunk recipients to respect Mailgun limits
-            for start in range(0, len(recipients), batch_size):
+            #for start in range(0, len(recipients), batch_size):
+            for start in range(0, 20, batch_size):
                 chunk = recipients[start:start + batch_size]
 
                 # Per-recipient merge data (step 2: apply user details)
