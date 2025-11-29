@@ -1624,7 +1624,7 @@ class Mailing(CreatedUpdatedMixin):
         #     self.issue.save()
 
         all_deliveries = []
-
+        batch_size = 20
         try:
             # 4) Chunk recipients to respect Mailgun limits
             for start in range(0, len(recipients), batch_size):
@@ -1875,13 +1875,13 @@ class DirectEmail(CreatedUpdatedMixin):
             return delivery
 
     def _build_message(self) -> AnymailMessage:
-
+        default_from = getattr(settings, "DEFAULT_FROM_EMAIL", "")
         msg = AnymailMessage(
             subject=self.subject or "",
             body=self.body_text or "",
-            from_email=(self.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "")),
+            from_email=(self.from_email or default_from),
             to=[self.to_email],
-            reply_to=[self.newsletter.reply_to, ],
+            reply_to=[default_from, ],
         )
         if self.body_html:
             msg.attach_alternative(self.body_html, "text/html")
