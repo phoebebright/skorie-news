@@ -1629,9 +1629,8 @@ class Mailing(CreatedUpdatedMixin):
             # 4) Chunk recipients to respect Mailgun limits
             #for start in range(0, len(recipients), batch_size):
             for start in range(421, 820, batch_size):
-                chunk = recipients[421:820]
-                if len(chunk) > 401:
-                    raise ValueError("too many recipients in test mode")
+                chunk = recipients[821:]
+
 
                 # Per-recipient merge data (step 2: apply user details)
                 to_list = [s.email for s in chunk]
