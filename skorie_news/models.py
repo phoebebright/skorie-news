@@ -1630,6 +1630,8 @@ class Mailing(CreatedUpdatedMixin):
             #for start in range(0, len(recipients), batch_size):
             for start in range(0, 20, batch_size):
                 chunk = recipients[start:start + batch_size]
+                if len(chunk) > 30:
+                    raise ValueError("too many recipients in test mode")
 
                 # Per-recipient merge data (step 2: apply user details)
                 to_list = [s.email for s in chunk]
