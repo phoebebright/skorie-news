@@ -1629,7 +1629,7 @@ class Mailing(CreatedUpdatedMixin):
             # 4) Chunk recipients to respect Mailgun limits
             #for start in range(0, len(recipients), batch_size):
             for start in range(421, 820, batch_size):
-                chunk = recipients[821:1400]
+                chunk = recipients[1401:]
                 logger.info(f"Sending mailing to {len(chunk)} recipients")
 
                 # Per-recipient merge data (step 2: apply user details)
