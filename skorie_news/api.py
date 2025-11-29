@@ -900,37 +900,41 @@ def mailgun_webhook(request):
     if not _verify_mailgun_signature(signature):
         return HttpResponseForbidden("Invalid signature")
 
-    event = (ed.get("event") or "").lower()
-    occurred_at = _epoch_to_dt(ed.get("timestamp"))
-    provider_event_id = ed.get("id") or ""  # Mailgun's unique event id
-    recipient = ed.get("recipient") or ed.get("envelope", {}).get("targets") or ""
-    storage = ed.get("storage") or {}
-    message = ed.get("message") or {}
-    headers = message.get("headers") or {}
-    provider_message_id = headers.get("message-id") or ed.get("message", {}).get("headers", {}).get("message-id")
-    subject = headers.get("subject", "")
+    try:
+        event = (ed.get("event") or "").lower()
+        occurred_at = _epoch_to_dt(ed.get("timestamp"))
+        provider_event_id = ed.get("id") or ""  # Mailgun's unique event id
+        recipient = ed.get("recipient") or ed.get("envelope", {}).get("targets") or ""
+        storage = ed.get("storage") or {}
+        message = ed.get("message") or {}
+        headers = message.get("headers") or {}
+        provider_message_id = headers.get("message-id") or ed.get("message", {}).get("headers", {}).get("message-id")
+        subject = headers.get("subject", "")
 
-    # Delivery/Failure details
-    ds = ed.get("delivery-status") or {}
-    smtp_code = _safe_int(ds.get("code"))
-    smtp_message = ds.get("message") or ""
-    failure_severity = ds.get("severity") or ""
-    failure_reason = ds.get("reason") or ds.get("description") or ""
+        # Delivery/Failure details
+        ds = ed.get("delivery-status") or {}
+        smtp_code = _safe_int(ds.get("code"))
+        smtp_message = ds.get("message") or ""
+        failure_severity = ds.get("severity") or ""
+        failure_reason = ds.get("reason") or ds.get("description") or ""
 
-    # Engagement details
-    client_info = ed.get("client-info") or {}
-    ip = ed.get("ip")
-    user_agent = client_info.get("user-agent") or ed.get("user-agent")
-    url = ed.get("url") or ""
+        # Engagement details
+        client_info = ed.get("client-info") or {}
+        ip = ed.get("ip")
+        user_agent = client_info.get("user-agent") or ed.get("user-agent")
+        url = ed.get("url") or ""
 
-    tags = ed.get("tags") or []
-    campaigns = ed.get("campaigns") or []
-    user_vars = ed.get("user-variables") or {}
+        tags = ed.get("tags") or []
+        campaigns = ed.get("campaigns") or []
+        user_vars = ed.get("user-variables") or {}
+    except Exception as e:
+        logger.error(f"Error extracting Mailgun webhook fields: {e}")
 
     # Ensure we have a message id (primary key for tying events to Delivery)
     if not provider_message_id:
         # You can choose to 400 here; creating a placeholder is safer for ops.
         provider_message_id = f"unknown-{provider_event_id or timezone.now().timestamp()}"
+
 
     # Create delivery event + update rollups atomically
     try:
@@ -988,6 +992,7 @@ def mailgun_webhook(request):
                 )
             except IntegrityError:
                 # ultra-rare race: clear rollback and carry on
+                logger.error(f"IntegrityError creating DeliveryEvent for {provider_event_id} / {event}")
                 transaction.set_rollback(False)
 
             # Roll up state on Delivery
@@ -1046,7 +1051,11 @@ def mailgun_webhook(request):
             delivery.webhook_signature_token = signature.get("token") or ""
             delivery.webhook_signature_sig = signature.get("signature") or ""
 
-            delivery.save()
+            try:
+                delivery.save()
+            except Exception as e:
+                logger.error(f"Error saving Delivery {delivery.pk} on Mailgun webhook: {e}")
+                transaction.set_rollback(False)
 
     except Exception as e:
         # Log e if you use logging; return 200 so Mailgun doesn't keep retrying forever
