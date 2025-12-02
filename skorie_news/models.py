@@ -903,8 +903,9 @@ class Article(CreatedUpdatedMixin):
     BELOW = "below";
     LEFT = "left";
     RIGHT = "right"
+    ONLY = "only_image"
     IMAGE_POSITION_CHOICES = [(ABOVE, "Above text"), (BELOW, "Below text"), (LEFT, "Left of text"),
-                              (RIGHT, "Right of text")]
+                              (RIGHT, "Right of text"),(ONLY, "Only image")]
 
     template_type = models.CharField(
         max_length=1, choices=TEMPLATE_TYPE_CHOICES, default=TEMPLATE_TYPE_NEWSLETTER
@@ -943,14 +944,14 @@ class Article(CreatedUpdatedMixin):
         pieces: list[str] = []
 
         # Optional title
-        if include_title and self.title:
+        if include_title and self.title and not self.image_position == "image_only":
             pieces.append(f'<h2 style="margin:0 0 12px 0;font-family:inherit;">{self.title}</h2>')
 
         # Prepare image HTML (absolute URL + inline style)
         img_html = ""
         if self.image:
             img_url = _abs_url(getattr(self.image, "url", ""), base_url)
-            if self.image_position == "above":
+            if self.image_position == "above" or self.image_position == "image_only":
                 img_html = f'<p style="margin:0 0 12px 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>'
             elif self.image_position == "below":
                 # inject later, after body
@@ -968,23 +969,27 @@ class Article(CreatedUpdatedMixin):
                     f'margin:0 0 12px 12px;">'
                 )
 
-        # Image before body for above/left/right
-        if img_html and self.image_position in {"above", "left", "right"}:
+        # only image - ignore everything else
+        if self.image_position == "image_only":
             pieces.append(img_html)
+        else:
+            # Image before body for above/left/right
+            if img_html and self.image_position in {"above", "left", "right"}:
+                pieces.append(img_html)
 
-        # Body HTML (as-is; assume it’s clean)
-        if self.body_html:
-            pieces.append(f'<div style="font-family:inherit;line-height:1.5;">{self.body_html}</div>')
+            # Body HTML (as-is; assume it’s clean)
+            if self.body_html:
+                pieces.append(f'<div style="font-family:inherit;line-height:1.5;">{self.body_html}</div>')
 
-        # Image after body for below
-        if self.image and self.image_position == "below":
-            img_url = _abs_url(getattr(self.image, "url", ""), base_url)
-            pieces.append(
-                f'<p style="margin:12px 0 0 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>')
+            # Image after body for below
+            if self.image and self.image_position == "below":
+                img_url = _abs_url(getattr(self.image, "url", ""), base_url)
+                pieces.append(
+                    f'<p style="margin:12px 0 0 0;"><img src="{img_url}" alt="" style="max-width:100%;height:auto;border:0;"></p>')
 
-        # Clear floats for left/right layouts
-        if self.image_position in {"left", "right"}:
-            pieces.append('<div style="clear:both;"></div>')
+            # Clear floats for left/right layouts
+            if self.image_position in {"left", "right"}:
+                pieces.append('<div style="clear:both;"></div>')
 
         # Optional attachments
         if include_attachments:
