@@ -37,12 +37,13 @@
 {% block js %}
     <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
     <script>
-        // Enhance any textarea with TinyMCE
       tinymce.init({
     selector: 'textarea, .js-wysiwyg',
     menubar: false,
-    plugins: 'link lists table paste code preview',
-    toolbar: 'undo redo | bold italic underline | forecolor backcolor | bullist numlist | link table | removeformat | code | preview',
+    plugins: 'link lists table paste code preview hr',
+
+    // Add the hr button wherever you like
+    toolbar: 'undo redo | bold italic underline | forecolor backcolor | bullist numlist | link table | hr | removeformat | code | preview',
 
     // Layout
     height: 400,
@@ -59,7 +60,7 @@
     valid_elements:
         'a[href|target=_blank],' +
         'strong/b,em/i,u,' +
-        'p,br,' +
+        'p,br,hr,' +        // ← allow hr here
         'ul,ol,li,' +
         'table,tbody,tr,td,th,' +
         'h1,h2,h3,' +

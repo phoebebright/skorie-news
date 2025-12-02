@@ -142,6 +142,7 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     about = models.TextField(blank=True, null=True, help_text=_("Short description shown on subscribe page"))
     email = models.EmailField(verbose_name=_("e-mail"), help_text=_("Sender e-mail"))
     sender = models.CharField(max_length=200, verbose_name=_("sender"), help_text=_("Sender name"))
+    reply_to = models.EmailField(blank=True, null=True, verbose_name=_("reply to e-mail"))
 
     visible = models.BooleanField(default=True, db_index=True, help_text=_(
         "Should be named active.  Can be active and not public for team use only."))
@@ -602,14 +603,14 @@ class Subscription(CreatedUpdatedMixin):
             elif subscriber_user and consent:
                 sub = cls(user=subscriber_user, newsletter=newsletter)
                 sub._subscribe()
-            sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False, **consent)
+            sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False, **consent)
         else:
             if sub.active and sub.subscribed:
                 # already subscribed - nothing to do
                 return sub
             else:
                 sub._subscribe()
-                sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False, **consent)
+                sub.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False, **consent)
         sub.save()
 
         return sub
@@ -756,7 +757,7 @@ class Subscription(CreatedUpdatedMixin):
         sub_event = SubscriptionEvent.Event.SUBSCRIBE
         self._subscribe()
         if consent:
-            self.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, email=False,
+            self.record_consent(SubscriptionEvent.Event.SUB_AND_CONSENT, send_email=False,
                                 **consent)  # will add to SubscriptionEvent in here
 
         self.save(user=user)
@@ -1236,6 +1237,7 @@ class Issue(CreatedUpdatedMixin):
             "date": timezone.now(),
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
+            'unsubscribe_url': self.newsletter.unsubscribe_url,
         }
 
         email = self.render_email(extra_context=ctx)
@@ -1253,12 +1255,19 @@ class Issue(CreatedUpdatedMixin):
         }
         }
         try:
+            # get domain from reply to email
+            domain = self.newsletter.reply_to.split('@')[-1]
             msg = AnymailMessage(
                 subject=email['subject'],
                 body=email['text'],
                 from_email=self.newsletter.get_sender,
                 to=[email_addr, ],
-            )
+                reply_to=[self.newsletter.reply_to,],
+                tags=["newsletter", "general"],
+                headers={
+                    "X-List-ID": f"{domain}-{self.newsletter.slug}",
+                    "X-Feedback-ID": f"{domain}-{self.newsletter.slug}:issue-{self.pk}",
+                })
             if 'html' in email and email['html']:
                 msg.attach_alternative(email['html'], "text/html")
 
@@ -1582,6 +1591,8 @@ class Mailing(CreatedUpdatedMixin):
 
     def send_via_anymail(self, batch_size: int = 800):
         subs = list(self.subscriptions.active()) or list(self.newsletter.get_subscriptions())
+
+
         recipients = [s for s in subs if s.email]
         if not recipients:
             self.status = self.Status.INACTIVE
@@ -1602,6 +1613,7 @@ class Mailing(CreatedUpdatedMixin):
             "date": self.publish_date,
             "STATIC_URL": settings.STATIC_URL,
             "MEDIA_URL": settings.MEDIA_URL,
+            'unsubscribe_url': self.newsletter.unsubscribe_url,
         }
 
         email = self.issue.render_email(extra_context=ctx)
@@ -1617,11 +1629,13 @@ class Mailing(CreatedUpdatedMixin):
         #     self.issue.save()
 
         all_deliveries = []
-
+        batch_size = 800
         try:
             # 4) Chunk recipients to respect Mailgun limits
-            for start in range(0, len(recipients), batch_size):
-                chunk = recipients[start:start + batch_size]
+            #for start in range(0, len(recipients), batch_size):
+            for start in range(421, 820, batch_size):
+                chunk = recipients[1401:]
+                logger.info(f"Sending mailing to {len(chunk)} recipients")
 
                 # Per-recipient merge data (step 2: apply user details)
                 to_list = [s.email for s in chunk]
@@ -1639,6 +1653,7 @@ class Mailing(CreatedUpdatedMixin):
                     body=email['text'],
                     from_email=self.newsletter.get_sender,
                     to=to_list,
+                reply_to=[self.newsletter.reply_to,],
                 )
                 if 'html' in email and email['html']:
                     msg.attach_alternative(email['html'], "text/html")
@@ -1867,12 +1882,13 @@ class DirectEmail(CreatedUpdatedMixin):
             return delivery
 
     def _build_message(self) -> AnymailMessage:
-
+        default_from = getattr(settings, "DEFAULT_FROM_EMAIL", "")
         msg = AnymailMessage(
             subject=self.subject or "",
             body=self.body_text or "",
-            from_email=(self.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "")),
+            from_email=(self.from_email or default_from),
             to=[self.to_email],
+            reply_to=[default_from, ],
         )
         if self.body_html:
             msg.attach_alternative(self.body_html, "text/html")
