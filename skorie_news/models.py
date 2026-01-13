@@ -185,6 +185,8 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
     def is_subscribed_to_newsletter(cls, user, newsletter=None):
         '''check if a user is currently subscribed to a newsletter'''
         if not newsletter:
+            if not settings.NEWSLETTER_GENERAL_SLUG:
+                return False
             newsletter = cls.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
         # TODO: this should be a search on user not email - potential for confusion
         sub = Subscription.get_subscription(email=user.email, newsletter=newsletter)
@@ -1632,8 +1634,8 @@ class Mailing(CreatedUpdatedMixin):
         batch_size = 400
         try:
             # 4) Chunk recipients to respect Mailgun limits
-            #for start in range(0, len(recipients), batch_size):
-            for start in range(421, 820, batch_size):
+            for start in range(0, len(recipients), batch_size):
+
                 chunk = recipients[start:start + batch_size]
 
                 logger.info(f"Sending mailing to {len(chunk)} recipients")
