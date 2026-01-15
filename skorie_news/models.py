@@ -1978,7 +1978,7 @@ class Delivery(models.Model):
         help_text="Which ESP handled the send (e.g., 'mailgun')."
     )
     message_id = models.CharField(
-        max_length=255, blank=True, null=True, unique=True,
+        max_length=255, blank=True, null=True,
         help_text="Provider message id returned by Anymail."
     )
     mailgun_id = models.CharField(max_length=255, blank=True, null=True)
