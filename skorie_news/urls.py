@@ -1,5 +1,5 @@
 from django.urls import path, register_converter
-from skorie_news.tools.ref import EventRefConverter
+from .tools.ref import EventRefConverter
 
 try:
     register_converter(EventRefConverter, 'event_ref')
