@@ -1,10 +1,15 @@
 from django.urls import path, register_converter
-from .tools.ref import EventRefConverter
+
+
 
 try:
+    # only runs locally - is this ok?
+    from skorie_news.tools.ref import EventRefConverter
     register_converter(EventRefConverter, 'event_ref')
 except Exception:
     pass
+
+
 
 from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
     MailingListView, MailingSendNowView, \
