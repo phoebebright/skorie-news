@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('email', models.EmailField(max_length=254)),
                 ('esp_name', models.CharField(db_index=True, default='mailgun', help_text="Which ESP handled the send (e.g., 'mailgun').", max_length=20)),
-                ('message_id', models.CharField(blank=True, help_text='Provider message id returned by Anymail.', max_length=255, null=True, unique=True)),
+                ('message_id', models.CharField(blank=True, help_text='Provider message id returned by Anymail.', max_length=255, null=True)),
                 ('mailgun_id', models.CharField(blank=True, max_length=255, null=True)),
                 ('status', models.CharField(default='queued', max_length=50)),
                 ('created', models.DateTimeField(auto_now_add=True)),
@@ -368,8 +368,8 @@ class Migration(migrations.Migration):
          ),
         #django.db.utils.ProgrammingError: relation "uniq_newsletter_email" already exists
         # comment this out when running initial migration then put it back to stop system adding it to new migrations
-        migrations.AddConstraint(
-            model_name='subscription',
-            constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
-        ),
+        # migrations.AddConstraint(
+        #     model_name='subscription',
+        #     constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
+        # ),
     ]

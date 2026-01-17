@@ -10,12 +10,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # migrations.AddConstraint(
-        #     model_name='delivery',
-        #     constraint=models.UniqueConstraint(condition=models.Q(('message_id__isnull', False)), fields=('esp_name', 'message_id'), name='uniq_delivery_esp_message'),
-        # ),
-        # migrations.AddConstraint(
-        #     model_name='subscription',
-        #     constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
-        # ),
+        migrations.AddConstraint(
+            model_name='delivery',
+            constraint=models.UniqueConstraint(condition=models.Q(('message_id__isnull', False)), fields=('esp_name', 'message_id'), name='uniq_delivery_esp_message'),
+        ),
+        migrations.AddConstraint(
+            model_name='subscription',
+            constraint=models.UniqueConstraint(condition=models.Q(('email__isnull', False)), fields=('newsletter', 'email'), name='uniq_newsletter_email'),
+        ),
     ]

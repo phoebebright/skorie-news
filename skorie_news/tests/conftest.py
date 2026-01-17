@@ -1,8 +1,8 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")  # your module
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.test_settings")
 
 import django
-django.setup()
+# django.setup()  # pytest-django handles this
 
 import pytest
 from django.contrib.auth import get_user_model

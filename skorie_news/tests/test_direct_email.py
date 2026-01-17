@@ -125,16 +125,28 @@ class MailWrapperTests(TestCase):
         )
 
         delivery = deliveries[0]
-        self.assertEqual(delivery.direct_mail.context, ctx)
+        self.assertEqual(delivery.direct_mail.context.get("foo"), "bar")
 
     def test_using_template(self):
         ctx = {"foo": "bar"}
-        deliveries = self.mail.send(
-            recipients="eve@example.com",
-            template="test_email",
-            context=ctx,
-        )
+        # Ensure SITE_NAME is in settings for the context processor
+        with self.settings(SITE_NAME="Test Site"):
+            deliveries = self.mail.send(
+                recipients="eve@example.com",
+                template="test_email",
+                context=ctx,
+            )
 
         delivery = deliveries[0]
-        self.assertEqual(delivery.direct_mail.context, ctx)
+        # Update ctx with values added by context_processor
+        full_ctx = ctx.copy()
+        from django.conf import settings
+        full_ctx.update({
+            'SITE_URL': settings.SITE_URL,
+            'SITE_NAME': "Test Site",
+            'SIGNATURE': settings.SIGNATURE,
+            'SUPPORT_EMAIL': settings.SUPPORT_EMAIL,
+            'LOGIN_URL': settings.LOGIN_URL,
+        })
+        self.assertEqual(delivery.direct_mail.context, full_ctx)
         self.assertEqual(delivery.direct_mail.subject, "Test email from Test Site")

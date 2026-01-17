@@ -50,6 +50,9 @@ class mail:
 
 
         deliveries = []
+        if settings.DEBUG:
+            logger.info(f"DEBUG ON: Would send email to {recipients}: {subject}")
+
         for to_email in recipients:
             email = DirectEmail(
                 to_email=to_email,
@@ -66,12 +69,10 @@ class mail:
             else:
                 email.save()
 
-            if settings.DEBUG:
-                logger.info(f"DEBUG ON: Would send email {email} to {to_email}: {email.body_text}")
-                continue
-
             try:
-                deliveries.append(email.send())
+                delivery = email.send()
+                if delivery:
+                    deliveries.append(delivery)
             except Exception as e:
                 # don't fail on email send
                 logger.error(f"Error sending email {email} to {to_email}: {e}")

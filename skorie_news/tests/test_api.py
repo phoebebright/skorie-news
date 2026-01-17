@@ -1,6 +1,6 @@
 # skorie_news/tests/test_message_api.py
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from skorie_news.models import Mailing, Issue, Newsletter
@@ -19,7 +19,19 @@ class QueueSubmissionTests(TestCase):
         nl = Newsletter.objects.create(title="Test List", slug="test")
         msg = Issue.objects.create(title="Hello", newsletter=nl)
 
-        url = reverse("skorie_news-issue-api-queue", args=[msg.pk])
+        # Action name is create-mailing because @action(detail=True, methods=['post'])
+        # defaults to method name with underscores replaced by hyphens.
+        for name in ["news-issue-create-mailing", "skorie_news:news-issue-create-mailing",
+                    "issue-create-mailing", "skorie_news:issue-create-mailing"]:
+            try:
+                url = reverse(name, args=[msg.pk])
+                break
+            except NoReverseMatch:
+                continue
+        
+        if not url:
+            self.fail("Could not reverse 'skorie_news-issue-create-mailing'")
+             
         resp = self.client.post(url)
 
         self.assertEqual(resp.status_code, 201)
