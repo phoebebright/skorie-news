@@ -49,8 +49,8 @@ class Migration(migrations.Migration):
                 ('last_event_at', models.DateTimeField(blank=True, null=True)),
                 ('provider_storage_url', models.URLField(blank=True, null=True)),
                 ('provider_message_size', models.PositiveIntegerField(blank=True, default=0, help_text='Bytes', validators=[django.core.validators.MinValueValidator(0)])),
-                ('tags', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=64), blank=True, default=list, size=None)),
-                ('campaigns', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=64), blank=True, default=list, size=None)),
+                ('tags', models.JSONField(blank=True, default=list)),
+                ('campaigns', models.JSONField(blank=True, default=list)),
                 ('user_variables', models.JSONField(blank=True, default=dict)),
                 ('metadata', models.JSONField(blank=True, default=dict)),
                 ('failure_severity', models.CharField(blank=True, max_length=20)),
@@ -365,7 +365,7 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='issue',
             unique_together={('slug', 'newsletter')},
-         ),
+        ),
         #django.db.utils.ProgrammingError: relation "uniq_newsletter_email" already exists
         # comment this out when running initial migration then put it back to stop system adding it to new migrations
         # migrations.AddConstraint(

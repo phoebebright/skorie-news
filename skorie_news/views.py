@@ -32,7 +32,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, T
 
 from django.conf import settings
 from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \
-    DeliveryEvent
+    DeliveryEvent, NewsActivityLog
 
 from tools.permission_mixins import UserCanOrganiseEventMixin, UserCanAdministerMixin
 
@@ -983,21 +983,9 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
         )
 
 
-
-
-        # quick counts
-        counts = {
-            "all": Issue.objects.filter(newsletter=nl).count(),
-            "queued": Issue.objects.filter(newsletter=nl, mailings__status=Mailing.Status.QUEUED).distinct().count(),
-            "sending": Issue.objects.filter(newsletter=nl, mailings__status=Mailing.Status.SENDING).distinct().count(),
-            "sent": Issue.objects.filter(newsletter=nl, mailings__status=Mailing.Status.SENT).distinct().count(),
-            "draft": Issue.objects.filter(newsletter=nl).exclude(mailings__isnull=False).count(),
-        }
-
         context.update({
             "newsletter": nl,
             "issues": issues,
-            "counts": counts,
         })
         return context
 
@@ -1029,6 +1017,13 @@ class IssueCreateView(UserCanAdministerMixin, FormView):
 
     def form_valid(self, form):
         issue = form.save()
+
+        NewsActivityLog.log(
+            action="issue_created",
+            user=self.request.user,
+            target=issue,
+            description=f"Created issue: {issue.title} in Newsletter: {issue.newsletter.title}"
+        )
 
         messages.success(
             self.request,
@@ -1069,16 +1064,48 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
 
             context["newsletter"] = issue.newsletter
             context["mailing"] = issue.active_mailing if issue else None
+            context["can_delete"] = not issue.mailings.exists()
             return context
 
         def form_valid(self, form):
             self.object = form.save()
+
+            NewsActivityLog.log(
+                action="issue_updated",
+                user=self.request.user,
+                target=self.object,
+                description=f"Updated issue: {self.object.title}"
+            )
+
             messages.success(self.request, "Issue updated.")
             return super().form_valid(form)
 
         def get_success_url(self):
             # stay on the same page after save
             return reverse("news:issue-edit", args=[self.object.pk])
+
+
+class IssueDeleteView(UserCanAdministerMixin, DeleteView):
+    model = Issue
+
+    def form_valid(self, form):
+        issue = self.get_object()
+        newsletter_pk = issue.newsletter.pk
+        title = issue.title
+        issue_pk = issue.pk
+
+        response = super().form_valid(form)
+
+        NewsActivityLog.log(
+            action="issue_deleted",
+            user=self.request.user,
+            description=f"Deleted issue: {title} (PK: {issue_pk}) from Newsletter PK: {newsletter_pk}"
+        )
+        return response
+
+    def get_success_url(self):
+        messages.success(self.request, "Issue deleted.")
+        return reverse("news:issue-list", args=[self.object.newsletter.pk])
     #
     # def get(self, request, pk):
     #     issue = get_object_or_404(Issue, pk=pk)

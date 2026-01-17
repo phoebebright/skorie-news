@@ -33,7 +33,7 @@ from rest_framework.response import Response
 
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet, GenericViewSet
-from rest_framework_datatables.django_filters.backends import DatatablesFilterBackend
+from rest_framework_datatables.filters import DatatablesFilterBackend
 from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 from rest_framework_datatables.renderers import DatatablesRenderer
 
@@ -82,12 +82,12 @@ class AdminSubscriptionROViewSet(ReadOnlyModelViewSet):
     pagination_class = SubscriptionManagePagination
     filter_backends = [DatatablesFilterBackend,]
     renderer_classes = [DatatablesRenderer,]
-    search_fields = ["email", ]  # global search box
+    search_fields = ["email", "name"]  # global search box
     ordering_fields = ["email",  "subscribe_date", "unsubscribe_date", ]
     ordering = ["-subscribe_date"]
 
     def get_queryset(self):
-        qs = Subscription.objects.all()
+        qs = Subscription.objects.all().select_related("newsletter","user")
         newsletter_slug = self.request.query_params.get("newsletter")
         if newsletter_slug:
             qs = qs.filter(newsletter__slug=newsletter_slug)

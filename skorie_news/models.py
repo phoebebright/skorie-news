@@ -297,6 +297,38 @@ class SubscriptionEvent(models.Model):
         cls.objects.create(subscription=sub, event=event, **kwargs)
 
 
+class NewsActivityLog(CreatedUpdatedMixin):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    action = models.CharField(max_length=100)
+    target_id = models.PositiveIntegerField(null=True, blank=True)
+    target_type = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
+    meta = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.created}"
+
+    @classmethod
+    def log(cls, action, user=None, target=None, description="", meta=None):
+        target_id = None
+        target_type = ""
+        if target:
+            target_id = getattr(target, "pk", None)
+            target_type = target._meta.model_name
+
+        return cls.objects.create(
+            user=user,
+            action=action,
+            target_id=target_id,
+            target_type=target_type,
+            description=description,
+            meta=meta or {}
+        )
+
+
 def generate_activation_code():
     return secrets.token_urlsafe(24)[:40]  # 24 bytes → ~32 chars, slice to 40 max
 
@@ -871,7 +903,7 @@ class Subscription(CreatedUpdatedMixin):
 
         elif action == "subscribed":
             subject = f"You are now subscribed to {self.newsletter.title}"
-            text = f"You are now subscribed to {self.newsletter.title}.\n\nIf you did not request this, please ignore this email or click the link below to unsubscribe:\n\n{self.unsubscribe_url}\n"
+            text = f"You are now subscribed to {self.newsletter.title}.\n\nIf you did not request this, you can follow this link to unsubscribe:\n\n{self.unsubscribe_url}\n"
 
         elif action == "unsubscribed":
             subject = f"You are now unsubscribed from {self.newsletter.title}"

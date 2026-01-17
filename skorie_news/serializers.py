@@ -110,8 +110,8 @@ class SubscriptionManageDTSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ["id", "newsletter_id",
-            "email", "subscribe_date", "unsubscribe_date",
-            "consent_at", "status","user_link"
+            "email", "status", "subscribe_date", "unsubscribe_date",
+            "consent_at", "user_link"
         ]
 
     def get_status(self, obj):
@@ -121,7 +121,7 @@ class SubscriptionManageDTSerializer(serializers.ModelSerializer):
 
     def get_user_link(self, obj):
         if obj.user:
-            return f'/admin/auth/user/{obj.user.id}/change/'
+            return f'/users/admin_user/{obj.user.id}/'
         return None
 
 

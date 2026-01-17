@@ -134,10 +134,11 @@
     { data: "id", name: "id", visible: false, searchable: false, orderable: false }, // hidden
 
                         { data: 'email', name: 'email' },
-                        { data: 'status', name: 'status' },
+                        { data: 'status', name: 'status', searchable: false, orderable: false},
                         {
                             data: 'subscribe_date',
                             name: 'subscribe_date',
+                            searchable: false, orderable: false,
                             render: function(data, type, row){
                                 if (type === 'display') return formatDMY(data);
                                 return data || ''; // keep raw for sort/filter/type !== 'display'
@@ -146,6 +147,7 @@
                         {
                             data: 'unsubscribe_date',
                             name: 'unsubscribe_date',
+                            searchable: false, orderable: false,
                             render: function(data, type, row){
                                 if (type === 'display') return formatDMY(data);
                                 return data || ''; // keep raw for sort/filter/type !== 'display'

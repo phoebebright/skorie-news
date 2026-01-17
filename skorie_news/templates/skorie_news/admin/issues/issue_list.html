@@ -9,13 +9,13 @@
 <a href="{% url 'skorie_news:issue-add' newsletter.id %}" class="btn btn-primary float-end">Add Issue</a>
     </div>
     </div>
-<div class="card">
+<div class="card mt-1">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
           <th>Title</th>
-          <th>Created</th>
+          <th>Updated</th>
           <th>Published</th>
           <th>Mailing</th>
           <th class="text-end" style="width: 280px;">Actions</th>
@@ -28,7 +28,7 @@
             {{ item.title }}<br>
             <span class="small text-muted">{{ item.slug }}</span>
           </td>
-          <td class="small text-muted">{{ item.created|date:"Y-m-d H:i" }}</td>
+          <td class="small text-muted">{{ item.updated|date:"Y-m-d H:i" }}</td>
           <td class="small">{% if item.published_at %}{{ item.published_at|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
           <td>
             {% if item.latest_status == "1" %}

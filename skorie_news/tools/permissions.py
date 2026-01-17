@@ -37,7 +37,7 @@ def get_event(request, kwargs ):
     # has event been specified in the request
     if not event:
 
-        if 'event_ref' in getattr(request, 'query_params',[]):
+        if 'event_ref' in getattr(request, 'query_params', {}):
             event_ref = request.query_params.get('event_ref')
         elif 'event_ref' in kwargs:
             event_ref = kwargs['event_ref']

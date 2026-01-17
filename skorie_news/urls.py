@@ -1,11 +1,17 @@
 from django.urls import path, register_converter
+from skorie_news.tools.ref import EventRefConverter
+
+try:
+    register_converter(EventRefConverter, 'event_ref')
+except Exception:
+    pass
 
 from skorie_news.views import NewsletterCreateView, NewsletterUpdateView, NewsletterDeleteView, \
     MailingListView, MailingSendNowView, \
     NewsletterSubscriptionsView, UpdateMySubscription, \
     SubscribeWithEmail, EventSendView, \
     NewsletterDashboardView, SubscriptionThanks, SubscribeWithEmailRedirect, SubscribeWithEmailUnconfirmed, \
-    IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, ArticleListView, ArticleEditView, \
+    IssueEditView, IssueCreateView, IssuePreviewView, IssueListView, IssueDeleteView, ArticleListView, ArticleEditView, \
     ManageSubscriptionsView, UnsubscribeView, ConfirmSubscribeView, ClaimEmailManageLinkView,\
     SendFromArticleTemplateView, AdminNewsletterDownloadView, fix_subscribers, issue_queue_mailing, NewsListView, \
     NewsCreateView, NewsUpdateView, NewsDeleteView, DirectEmailDetailView, ArticlePreviewHTMLView, \
@@ -33,6 +39,7 @@ urlpatterns = [
     path("issue/add/", IssueCreateView.as_view(), name="issue-add"),
     path("issue/add/<int:newsletter_pk>/", IssueCreateView.as_view(), name="issue-add"),
     path("issue/<int:pk>/edit/", IssueEditView.as_view(), name="issue-edit"),
+    path("issue/<int:pk>/delete/", IssueDeleteView.as_view(), name="issue-delete"),
     path("issue/<int:pk>/preview/", IssuePreviewView.as_view(), name="issue-preview"),
     path("issues/<int:pk>/queue/", issue_queue_mailing, name="issue-queue" ),
     path("issue/<int:pk>/mailings/", IssueMailingsView.as_view(), name="issue-mailings"),

@@ -4,3 +4,6 @@ recursive-include skorie_news/migrations *
 recursive-include skorie_news/mangement *
 recursive-include skorie_news/templatetags *
 recursive-include skorie_news/skorie_storage *
+
+prune web
+prune users
