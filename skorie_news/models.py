@@ -1833,6 +1833,10 @@ class DirectEmail(CreatedUpdatedMixin):
             if self.to_email:
                 self.to_email = self.to_email.strip().lower()
 
+        # check we don't have user in context - remove if we do
+        if self.context and "user" in self.context:
+            del self.context["user"]
+
         super().save(*args, **kwargs)
 
     def context_processor(self, context={}):
