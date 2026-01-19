@@ -32,7 +32,7 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 # can't import from skorie.common as get circular import
 from .model_mixins import EventMixin, CreatedUpdatedMixin
 from .skorie_storage.storage_backends import HetznerPublicStorage
-from .tools.utils import clean_for_json
+
 
 public_storage = HetznerPublicStorage()
 
@@ -45,6 +45,41 @@ logger = logging.getLogger("django")
 # ---------------------------------------------------------------------
 
 NEWSLETTER_BASENAME = getattr(settings, "NEWSLETTER_BASENAME", "")
+
+
+def clean_for_json(data):
+    """
+    Recursively remove any keys from a dictionary (or elements from a list)
+    that are not JSON serializable.
+    """
+    if isinstance(data, dict):
+        cleaned_dict = {}
+        for k, v in data.items():
+            try:
+                # Test if this specific value is serializable
+                json.dumps(v)
+                # If it's a dict or list, we still need to recurse to clean nested items
+                if isinstance(v, (dict, list)):
+                    cleaned_dict[k] = clean_for_json(v)
+                else:
+                    cleaned_dict[k] = v
+            except (TypeError, OverflowError):
+                # Not serializable (e.g., a User object, a datetime object, etc.)
+                continue
+        return cleaned_dict
+    elif isinstance(data, list):
+        cleaned_list = []
+        for item in data:
+            try:
+                json.dumps(item)
+                if isinstance(item, (dict, list)):
+                    cleaned_list.append(clean_for_json(item))
+                else:
+                    cleaned_list.append(item)
+            except (TypeError, OverflowError):
+                continue
+        return cleaned_list
+    return data
 
 
 def _abs_url(url: str, base_url: str) -> str:
