@@ -32,6 +32,7 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 # can't import from skorie.common as get circular import
 from .model_mixins import EventMixin, CreatedUpdatedMixin
 from .skorie_storage.storage_backends import HetznerPublicStorage
+from .tools.utils import clean_for_json
 
 public_storage = HetznerPublicStorage()
 
@@ -1833,9 +1834,9 @@ class DirectEmail(CreatedUpdatedMixin):
             if self.to_email:
                 self.to_email = self.to_email.strip().lower()
 
-        # check we don't have user in context - remove if we do
-        if self.context and "user" in self.context:
-            del self.context["user"]
+        # check we don't have model instances etc. in context - remove if we do
+        if self.context:
+            self.context = clean_for_json(self.context)
 
         super().save(*args, **kwargs)
 
