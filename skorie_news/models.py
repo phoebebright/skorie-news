@@ -1418,7 +1418,7 @@ class Issue(CreatedUpdatedMixin):
         Prepare subject, text, html, and attachments for this message.
         Returns a dict suitable for Mailgun.
         """
-        from django.template import Context
+
         context_data = {
             "issue": self,
             "newsletter": self.newsletter,
@@ -1426,12 +1426,11 @@ class Issue(CreatedUpdatedMixin):
         }
         if extra_context:
             context_data.update(extra_context)
-        context = Context(context_data)
 
-        subject = self.subject_template.render(context).strip()
+        subject = self.subject_template.render(context_data).strip()
 
-        text = self.text_template.render(context).strip()
-        html = self.html_template.render(context).strip()
+        text = self.text_template.render(context_data).strip()
+        html = self.html_template.render(context_data).strip()
 
         files = []
         for ia in self.issue_articles.select_related("article"):
