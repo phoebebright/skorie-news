@@ -1153,7 +1153,7 @@ class IssuePreviewView(DetailView):
         context = super().get_context_data(**kwargs)
         context['newsletter'] = self.object.newsletter
         context["articles"] = self.object.ordered_articles
-        # context.update(self.object.render_email())
+        context.update(self.object.render_email())
         return context
 
 class ClaimEmailManageLinkView(TemplateView):
