@@ -1088,6 +1088,9 @@ class IssueEditView(UserCanAdministerMixin, UpdateView):
 class IssueDeleteView(UserCanAdministerMixin, DeleteView):
     model = Issue
 
+    def get_template_names(self):
+        return ["skorie_news/admin/issues/issue_confirm_delete.html"]
+
     def form_valid(self, form):
         issue = self.get_object()
         newsletter_pk = issue.newsletter.pk
@@ -1150,7 +1153,7 @@ class IssuePreviewView(DetailView):
         context = super().get_context_data(**kwargs)
         context['newsletter'] = self.object.newsletter
         context["articles"] = self.object.ordered_articles
-        context.update(self.object.render_email())
+        # context.update(self.object.render_email())
         return context
 
 class ClaimEmailManageLinkView(TemplateView):
