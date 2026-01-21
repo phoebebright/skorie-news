@@ -190,6 +190,10 @@ class CreatedUpdatedMixin(models.Model):
     def touched(self):
         return self.updated if self.updated else self.created
 
+    def touch(self, user):
+        self.updator = user
+        self.updated = timezone.now()
+        self.__class__.objects.filter(pk=self.pk).update(updator=self.updator, updated=self.updated)
 
 class CreatedMixin(models.Model):
 

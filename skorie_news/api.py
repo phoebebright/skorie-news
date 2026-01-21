@@ -595,6 +595,8 @@ class IssueViewSet(ModelViewSet):
                     )
                     pos += 1
 
+                issue.touch()
+
         return Response({"ok": True}, status=status.HTTP_200_OK)
 
     # ----- attach or remove a single article from an issue -----
@@ -606,12 +608,18 @@ class IssueViewSet(ModelViewSet):
             return Response({"detail": "Missing 'article'."}, status=400)
         last_pos = issue.issue_articles.order_by("-position").values_list("position", flat=True).first() or 0
         IssueArticle.objects.create(issue=issue, article_id=int(article_id), position=last_pos + 1)
+
+        issue.touch()
+
         return Response({"ok": True}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["delete"], url_path=r"articles/(?P<article_id>\d+)")
     def article_remove(self, request, pk=None, article_id=None):
         issue = self.get_object()
         IssueArticle.objects.filter(issue=issue, article_id=article_id).delete()
+
+        issue.touch()
+
         return Response(status=204)
 
 
@@ -640,6 +648,9 @@ class IssueViewSet(ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         mailing = serializer.save()
+
+        issue.touch()
+
         return Response(MailingSerializer(mailing).data, status=status.HTTP_201_CREATED)
 
 
@@ -647,6 +658,9 @@ class IssueViewSet(ModelViewSet):
     def publish(self, request, pk=None):
         issue = self.get_object()
         issue.publish_to_blog()
+
+        issue.touch()
+
         return Response({"ok": True, "published_at": issue.published_at})
 
 
