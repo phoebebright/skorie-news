@@ -575,7 +575,8 @@ class IssueViewSet(ModelViewSet):
             data = IssueArticleSerializer(links, many=True).data
             return Response(data)
 
-            # PUT → save ordering/flags
+        elif request.method == "PUT":
+            #  save ordering/flags
             ser = IssueArticlesUpdateSerializer(data=request.data)
             ser.is_valid(raise_exception=True)
             items = ser.validated_data["articles"]

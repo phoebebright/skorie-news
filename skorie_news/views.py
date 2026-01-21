@@ -979,7 +979,7 @@ class IssueListView(UserCanAdministerMixin, TemplateView):
             .filter(newsletter=nl)
             .annotate(latest_status=Coalesce(latest_status, Value("", output_field=CharField())))
             .select_related("newsletter")
-            .order_by("-created")
+            .order_by("-updated","-created")
         )
 
 
