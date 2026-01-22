@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skorie-news"
-version = "1.0.11"
+version = "1.0.12"
 description = "A reusable Django app for newsletters and direct emails."
 readme = "README.md"
 license = {text = "MIT License"}

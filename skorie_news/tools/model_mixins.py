@@ -368,7 +368,7 @@ class CreatedUpdatedMixin(models.Model):
         return self.updated if self.updated else self.created
 
     def touch(self, user):
-        self.__class__.objects.filter(pk=self.pk).update(updator=self.updator, updated=self.updated)
+        self.__class__.objects.filter(pk=self.pk).update(updator=user, updated=timezone.now())
 
 class CreatedMixin(models.Model):
 
