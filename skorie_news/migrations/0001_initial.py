@@ -4,6 +4,8 @@ import django.contrib.postgres.fields
 import django.core.validators
 import django.db.models.deletion
 import django.utils.timezone
+from django.contrib.postgres.fields import ArrayField
+
 import skorie_news.models
 from django.conf import settings
 from django.db import migrations, models
@@ -49,8 +51,16 @@ class Migration(migrations.Migration):
                 ('last_event_at', models.DateTimeField(blank=True, null=True)),
                 ('provider_storage_url', models.URLField(blank=True, null=True)),
                 ('provider_message_size', models.PositiveIntegerField(blank=True, default=0, help_text='Bytes', validators=[django.core.validators.MinValueValidator(0)])),
-                ('tags', models.JSONField(blank=True, default=list)),
-                ('campaigns', models.JSONField(blank=True, default=list)),
+                ('tags', ArrayField(
+                    base_field=models.CharField(max_length=64),
+                    default=list,
+                    blank=True,
+                )),
+                ('campaigns', ArrayField(
+                    base_field=models.CharField(max_length=64),
+                    default=list,
+                    blank=True,
+                )),
                 ('user_variables', models.JSONField(blank=True, default=dict)),
                 ('metadata', models.JSONField(blank=True, default=dict)),
                 ('failure_severity', models.CharField(blank=True, max_length=20)),

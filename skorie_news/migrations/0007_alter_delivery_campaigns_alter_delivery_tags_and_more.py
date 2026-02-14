@@ -14,16 +14,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='delivery',
-            name='campaigns',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=64), blank=True, default=list, size=None),
-        ),
-        migrations.AlterField(
-            model_name='delivery',
-            name='tags',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=64), blank=True, default=list, size=None),
-        ),
+        # fixed initial to create as array fields
+        # migrations.AlterField(
+        #     model_name='delivery',
+        #     name='campaigns',
+        #     field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=64), blank=True, default=list, size=None),
+        # ),
+        # migrations.AlterField(
+        #     model_name='delivery',
+        #     name='tags',
+        #     field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=64), blank=True, default=list, size=None),
+        # ),
         migrations.CreateModel(
             name='NewsActivityLog',
             fields=[

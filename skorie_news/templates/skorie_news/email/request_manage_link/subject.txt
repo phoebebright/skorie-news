@@ -1,0 +1,1 @@
+Link to manage your subscriptions at {{ SITE_NAME }}

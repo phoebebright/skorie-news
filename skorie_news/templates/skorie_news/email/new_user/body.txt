@@ -1,0 +1,15 @@
+Hello {{user.friendly_name}},
+/n/n
+Your account has been created. You can now sign in using the details below:
+/n/n
+Email: {{user_email}}
+/n
+One-Time Password (OTP): {{otp_code}}
+/n/n
+Sign in here: {{LOGIN_URL}}
+/n/n
+
+If you need help, reply to this email or contact us at {{SUPPORT_EMAIL}}.
+/n/n
+Welcome aboard,/n
+{{SIGNATURE}}/n

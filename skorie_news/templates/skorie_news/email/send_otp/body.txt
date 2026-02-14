@@ -1,0 +1,3 @@
+Here is your One Time Password: {{verification_code}} to login to {{SITE_NAME}}.  You will be asked to enter a new password when you log in.  Login link {{login_url}}
+\n\n
+{{SIGNATURE}}

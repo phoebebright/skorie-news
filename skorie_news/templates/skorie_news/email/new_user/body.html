@@ -1,0 +1,18 @@
+ <p class="row">Hello {{user.friendly_name}},</p>
+        <p class="row">Your account has been created. You can now sign in using the details below:</p>
+
+        <p class="row"><strong>Email:</strong> {{user.email}}<br>
+        <strong>One-Time Password (OTP):</strong> <code>{{otp_code}}</code></p>
+
+        <p class="row">
+          <a class="btn" href="{{LOGIN}}" target="_blank" rel="noopener">Sign in</a>
+        </p>
+
+
+
+        <p class="row">If you need help, reply to this email or contact us at <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a>.</p>
+
+        <p class="row">Welcome aboard,<br>{{SIGNATURE}}</p>
+      </div>
+
+      <p class="muted" style="margin-top:12px;">If you didn’t expect this email, you can ignore it.</p>

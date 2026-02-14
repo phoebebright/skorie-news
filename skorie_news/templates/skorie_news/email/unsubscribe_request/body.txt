@@ -1,0 +1,7 @@
+You requested to manage your subscription to "{{ newsletter.title }}".
+{% if confirm_url %}
+To confirm unsubscribe, click:
+{{ confirm_url }}
+{% else %}
+If you created an account on our site, please log in to manage your subscriptions without the need to confirm via email.
+{% endif %}

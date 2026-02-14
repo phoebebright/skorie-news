@@ -351,18 +351,12 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
         token = signer.sign(email)
         manage_claim_url = f"{settings.SITE_URL}/skorie_news/manage/claim/{token}/"
 
-        ctx = {"manage_url": manage_claim_url}
-        subject = "Manage your subscriptions"
-        text = render_to_string("skorie_news/email/manage_link.txt", ctx)
-        html = render_to_string("skorie_news/email/manage_link.html", ctx)
-
-        msg = EmailMultiAlternatives(
-            subject, text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
+        mail.send(
+            email,
+            sender=request.user,
+            template="request_manage_link",
+            context={"manage_url": manage_claim_url},
         )
-        msg.attach_alternative(html, "text/html")
-        msg.send()
 
         return Response({"ok": True})
 

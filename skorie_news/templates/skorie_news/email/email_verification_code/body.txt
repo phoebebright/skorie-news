@@ -1,0 +1,4 @@
+Your verification code is valid for 10 minutes from when this email was sent.  Please enter this code in the verification form to complete your registration.\n\n
+{{ code }}
+\n\n
+If you did not request this email, please ignore it.

@@ -1,10 +1,6 @@
 # Implementing
 
 
-Trying to get an web/users application running so I can do changes here.  Currently making changes in skorie2 then copying changes back here.
-
-Also trying to get tests running...
-
 
 ## settings
 

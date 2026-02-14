@@ -1,0 +1,1 @@
+Confirm your unsubscribe request to {{ newsletter.title }}
