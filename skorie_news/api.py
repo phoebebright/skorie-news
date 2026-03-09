@@ -349,7 +349,7 @@ class SubscriptionPublicViewSet(UserOrManagedMixin, GenericViewSet):
 
         signer = signing.TimestampSigner(salt=MANAGE_EMAIL_SALT)
         token = signer.sign(email)
-        manage_claim_url = f"{settings.SITE_URL}/skorie_news/manage/claim/{token}/"
+        manage_claim_url = request.build_absolute_uri(reverse("news:manage-claim", kwargs={"token": token}))
 
         mail.send(
             email,
