@@ -235,11 +235,11 @@ class UserCanOrganiseEventMixin(CheckEventPermissionsMixin):
 
 class UserCanJudgeEventMixin(CheckEventPermissionsMixin):
 
-    role_required = [ModelRoles.ROLE_JUDGE, ModelRoles.ROLE_AUXJUDGE]
+    role_required = [ModelRoles.ROLE_MENTOR, ModelRoles.ROLE_AUXJUDGE]
 
 class UserCanOrganiseOrJudgeEventMixin(CheckEventPermissionsMixin):
 
-    role_required = [ModelRoles.ROLE_ORGANISER,ModelRoles.ROLE_JUDGE, ModelRoles.ROLE_AUXJUDGE]
+    role_required = [ModelRoles.ROLE_ORGANISER,ModelRoles.ROLE_MENTOR, ModelRoles.ROLE_AUXJUDGE]
 
 class UserCanOrganiseOrCompetitorEventMixin(CheckEventPermissionsMixin):
 
@@ -357,9 +357,9 @@ class UserCanAdministerOrganise(HasRoleMixin):
 
 class UserCanJudgeMixin(HasRoleMixin):
 
-    role_required = ModelRoles.JUDGE_ROLES
+    role_required = ModelRoles.MENTOR_ROLES
     also_allow = [ModelRoles.ROLE_MANAGER, ModelRoles.ROLE_ADMINISTRATOR]
-    mode_role = ModelRoles.ROLE_JUDGE
+    mode_role = ModelRoles.ROLE_MENTOR
 
 class UserCanCompeteMixin(HasRoleMixin):
 

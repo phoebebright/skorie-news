@@ -222,7 +222,7 @@ class IsOrganiser4EventPermission(CheckEventPermissions):
 # add to api permission classes
 class IsJudge4EventPermission(CheckEventPermissions):
 
-    role_required = [ModelRoles.ROLE_JUDGE,]
+    role_required = [ModelRoles.ROLE_MENTOR,]
 
 # add to api permission classes
 class IsReader4EventPermission(CheckEventPermissions):
@@ -232,7 +232,7 @@ class IsReader4EventPermission(CheckEventPermissions):
 # add to api permission classes
 class IsJudgeOrReader4EventPermission(CheckEventPermissions):
 
-    role_required = [ModelRoles.ROLE_JUDGE, ModelRoles.ROLE_AUXJUDGE]
+    role_required = [ModelRoles.ROLE_MENTOR, ModelRoles.ROLE_AUXJUDGE]
 
 class IsCompetitor4EventPermission(CheckEventPermissions):
     # we are not saving the Competitor role in EventRole anymore - so we need to check for Competitor in Competitor
@@ -270,7 +270,7 @@ class CanEnterEventPermission(CheckEventPermissions):
 # add to api permission classes
 class IsJudgeOrAux4EventPermission(CheckEventPermissions):
 
-    role_required = [ModelRoles.ROLE_JUDGE, ModelRoles.ROLE_AUXJUDGE]
+    role_required = [ModelRoles.ROLE_MENTOR, ModelRoles.ROLE_AUXJUDGE]
 
 
 # add to api permission classes
@@ -292,7 +292,7 @@ class IsAdministratorPermission(CheckRolePermissions):
 
 class IsJudgePermission(CheckRolePermissions):
 
-    role_required = ModelRoles.ROLE_JUDGE
+    role_required = ModelRoles.ROLE_MENTOR
 
 
 class IsRiderPermission(CheckRolePermissions):
