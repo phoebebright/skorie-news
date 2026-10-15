@@ -22,7 +22,7 @@ def get_event(request, kwargs ):
     ScoreSheet = apps.get_model('web', 'ScoreSheet')
     Event = apps.get_model('web', 'Course')
     MyEvent = apps.get_model('web', 'MyCourse')
-    Competitor = apps.get_model('web', 'Competitor')
+    Competitor = apps.get_model('web', 'Student')
 
     event_ref = None
     event = None

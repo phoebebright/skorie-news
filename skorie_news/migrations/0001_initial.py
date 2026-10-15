@@ -154,7 +154,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('draft', 'Draft'), ('queued', 'Queued'), ('sending', 'Sending'), ('sent', 'Sent'), ('error', 'Error')], default='draft', max_length=7)),
                 ('template', models.CharField(blank=True, help_text='Optional template name that appears in templates/email directory to render from', max_length=50, null=True)),
                 ('article', models.ForeignKey(blank=True, limit_choices_to={'template_type': 'E'}, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='direct_emails', to='skorie_news.article')),
-                ('competitor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='web.competitor')),
+                ('competitor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='web.student')),
                 ('creator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_creator', to=settings.AUTH_USER_MODEL)),
                 ('entries', models.ManyToManyField(to='web.entry')),
                 ('event', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='web.course')),

@@ -120,7 +120,7 @@ class UserIsCompetitorEventMixin(UserPassesTestMixin):
 
             self.me = self.request.user
 
-            Competitor = apps.get_model('web', 'Competitor')
+            Competitor = apps.get_model('web', 'Student')
             try:
                 competitor = Competitor.objects.get(event=parent, user=self.me)
             except Competitor.DoesNotExist:
