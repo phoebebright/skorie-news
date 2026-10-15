@@ -1813,7 +1813,7 @@ class DirectEmail(CreatedUpdatedMixin):
 
     eventrole = models.ForeignKey("web.CourseRole", blank=True, null=True, on_delete=models.CASCADE)
     competitor = models.ForeignKey("web.Student", blank=True, null=True, on_delete=models.CASCADE)
-    entries = models.ManyToManyField("web.Entry")
+    entries = models.ManyToManyField("web.Assignment")
 
     # context for rendering (optional, extend later if you want variables)
     context = models.JSONField(default=dict, blank=True)

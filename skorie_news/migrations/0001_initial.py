@@ -156,7 +156,7 @@ class Migration(migrations.Migration):
                 ('article', models.ForeignKey(blank=True, limit_choices_to={'template_type': 'E'}, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='direct_emails', to='skorie_news.article')),
                 ('competitor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='web.student')),
                 ('creator', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='%(app_label)s_%(class)s_creator', to=settings.AUTH_USER_MODEL)),
-                ('entries', models.ManyToManyField(to='web.entry')),
+                ('entries', models.ManyToManyField(to='web.assignment')),
                 ('event', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='web.course')),
                 ('eventrole', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='web.courserole')),
                 ('receiver', models.ForeignKey(blank=True, help_text='Recipient user, if linked to an account', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='emails_received', to=settings.AUTH_USER_MODEL)),
