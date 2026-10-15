@@ -266,12 +266,12 @@ class EventMixin(models.Model):
     @property
     def Event(self):
         if not self._Event:
-            self._Event = apps.get_model('web', 'Event')
+            self._Event = apps.get_model('web', 'Course')
         return self._Event
 
     # event fk used for internal queries for an event
     #TODO: try making event required
-    event = models.ForeignKey('web.Event',  blank=True, null=True, on_delete=models.CASCADE)
+    event = models.ForeignKey('web.Course',  blank=True, null=True, on_delete=models.CASCADE)
     # event_ref is used for external queries for an event
     event_ref = models.CharField(max_length=5, db_index=True, blank=True, null=True)  # this should be a required field also
 
@@ -288,7 +288,7 @@ class EventMixin(models.Model):
             self.event_ref = self.event.ref
 
         if self.event_ref and not self.event:
-            cls = apps.get_model(app_label='web', model_name='Event')
+            cls = apps.get_model(app_label='web', model_name='Course')
 
             self.event = cls.objects.get(ref=self.event_ref)
 

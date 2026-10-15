@@ -1808,7 +1808,7 @@ class DirectEmail(CreatedUpdatedMixin):
     # looksup
     user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
                              on_delete=models.CASCADE)  # is this the sender or receive - have both already
-    event = models.ForeignKey('web.Event', blank=True, null=True, on_delete=models.CASCADE)
+    event = models.ForeignKey('web.Course', blank=True, null=True, on_delete=models.CASCADE)
     event_ref = models.CharField(max_length=5, db_index=True, blank=True, null=True)
 
     eventrole = models.ForeignKey("web.EventRole", blank=True, null=True, on_delete=models.CASCADE)

@@ -34,7 +34,7 @@ from django.conf import settings
 from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \
     DeliveryEvent, NewsActivityLog
 
-from tools.permission_mixins import UserCanOrganiseEventMixin, UserCanAdministerMixin
+from tools.permission_mixins import UserCanOrganiseCourseMixin, UserCanAdministerMixin
 
 
 from .forms import NewsletterForm, CSVImportForm, SubscriptionForm, \
@@ -870,7 +870,7 @@ class ArticleEditView(GoNextMixin, UpdateView):
         return self.render_to_response(self.get_context_data(form=form, formset=formset))
 
 
-class EventSendView(UserCanOrganiseEventMixin, View):
+class EventSendView(UserCanOrganiseCourseMixin, View):
     template_name = "skorie_news/message/event_send.html"
 
     def get(self, request, event_ref):
@@ -1430,7 +1430,7 @@ def fix_subscribers(request):
 # === NEWS LIST VIEW ===
 
 @method_decorator(never_cache, name="dispatch")
-class NewsListView(UserCanOrganiseEventMixin, ListView):
+class NewsListView(UserCanOrganiseCourseMixin, ListView):
     model = None
     template_name = "organiser/news/news_list.html"
     context_object_name = "news_list"
@@ -1448,7 +1448,7 @@ class NewsListView(UserCanOrganiseEventMixin, ListView):
 
 
 # === NEWS CREATE VIEW ===
-class NewsCreateView(UserCanOrganiseEventMixin, GoNextTemplateMixin, CreateView):
+class NewsCreateView(UserCanOrganiseCourseMixin, GoNextTemplateMixin, CreateView):
     model = None
     fields = "__all__"
     template_name = "organiser/news/news_form.html"
@@ -1458,7 +1458,7 @@ class NewsCreateView(UserCanOrganiseEventMixin, GoNextTemplateMixin, CreateView)
 
 
 # === NEWS UPDATE VIEW ===
-class NewsUpdateView(UserCanOrganiseEventMixin, GoNextTemplateMixin, UpdateView):
+class NewsUpdateView(UserCanOrganiseCourseMixin, GoNextTemplateMixin, UpdateView):
     model = None
     fields = "__all__"
     template_name = "organiser/news/news_form.html"
@@ -1474,7 +1474,7 @@ class NewsUpdateView(UserCanOrganiseEventMixin, GoNextTemplateMixin, UpdateView)
 
 
 # === NEWS DELETE VIEW ===
-class NewsDeleteView(UserCanOrganiseEventMixin, GoNextTemplateMixin, DeleteView):
+class NewsDeleteView(UserCanOrganiseCourseMixin, GoNextTemplateMixin, DeleteView):
     model = None
     success_url = reverse_lazy("news_list")
     template_name = "organiser/news/news_confirm_delete.html"
@@ -1484,7 +1484,7 @@ class NewsDeleteView(UserCanOrganiseEventMixin, GoNextTemplateMixin, DeleteView)
 
 
 # === NEWS DETAIL VIEW ===
-class NewsDetailView(UserCanOrganiseEventMixin, DetailView):
+class NewsDetailView(UserCanOrganiseCourseMixin, DetailView):
     model = None
     template_name = "organiser/news/news_detail.html"
     context_object_name = "news"

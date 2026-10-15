@@ -20,7 +20,7 @@ def get_event(request, kwargs ):
     Entry = apps.get_model('web', 'Entry')
     Competition = apps.get_model('web', 'Competition')
     ScoreSheet = apps.get_model('web', 'ScoreSheet')
-    Event = apps.get_model('web', 'Event')
+    Event = apps.get_model('web', 'Course')
     MyEvent = apps.get_model('web', 'MyEvent')
     Competitor = apps.get_model('web', 'Competitor')
 
