@@ -18,7 +18,7 @@ ModelRoles = import_string(settings.MODEL_ROLES_PATH)
 def get_event(request, kwargs ):
     '''work out event from request and kwargs'''
     Entry = apps.get_model('web', 'Entry')
-    Competition = apps.get_model('web', 'Competition')
+    Competition = apps.get_model('web', 'Module')
     ScoreSheet = apps.get_model('web', 'ScoreSheet')
     Event = apps.get_model('web', 'Course')
     MyEvent = apps.get_model('web', 'MyCourse')
