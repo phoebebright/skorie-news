@@ -223,7 +223,10 @@ class Newsletter(EventMixin, CreatedUpdatedMixin, models.Model):
         if not newsletter:
             if not settings.NEWSLETTER_GENERAL_SLUG:
                 return False
-            newsletter = cls.objects.get(slug=settings.NEWSLETTER_GENERAL_SLUG)
+            newsletter = cls.objects.filter(slug=settings.NEWSLETTER_GENERAL_SLUG).first()
+            if not newsletter:
+                # no general newsletter configured/created yet - can't be subscribed
+                return False
         # TODO: this should be a search on user not email - potential for confusion
         sub = Subscription.get_subscription(email=user.email, newsletter=newsletter)
         return sub.subscribed if sub else False
