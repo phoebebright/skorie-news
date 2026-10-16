@@ -86,8 +86,8 @@ class GoNextMixin():
 
     def get_success_url(self):
         '''some forms put a url name in 'go_next' - respect this, otherwise go to event home'''
-        if hasattr(self, 'event'):
-            event = self.event
+        if hasattr(self, 'course'):
+            event = self.course
             if type(event) != type("duck"):
                 event = event.ref
         else:
@@ -106,11 +106,11 @@ class GoNextMixin():
             event_ref = kwargs['event_ref']
         elif 'event_ref' in self.kwargs:
             event_ref = self.kwargs['event_ref']
-        elif hasattr(self, 'event') and self.event:
-            event_ref = self.event.ref
-        elif hasattr(self.request, 'event') :
+        elif hasattr(self, 'course') and self.course:
+            event_ref = self.course.ref
+        elif hasattr(self.request, 'course') :
             try:
-                event_ref = self.request.event.ref
+                event_ref = self.request.course.ref
             except:
                 event_ref = None
 
@@ -136,8 +136,8 @@ class GoNextTemplateMixin(TemplateView):
             event_ref = kwargs['event_ref']
         elif 'event_ref' in self.kwargs:
             event_ref = self.kwargs['event_ref']
-        elif hasattr(self, 'event') and self.event:
-            event_ref = self.event.ref
+        elif hasattr(self, 'course') and self.course:
+            event_ref = self.course.ref
 
         context['next'] = get_next(self.request, event_ref )
         return context
@@ -874,14 +874,14 @@ class EventSendView(UserCanOrganiseCourseMixin, View):
     template_name = "skorie_news/message/event_send.html"
 
     def get(self, request, event_ref):
-        dispatch = EventDispatch(event=self.event, creator=request.user)
+        dispatch = EventDispatch(event=self.course, creator=request.user)
         # forms
         article_form = ArticleQuickForm()
         dispatch_form = DispatchForm(instance=dispatch)
         # library: templates first, then recent
         library = Article.objects.all().order_by("-is_template", "-updated")
         return render(request, self.template_name, {
-            "event": self.event,
+            "event": self.course,
             "article_form": article_form,
             "dispatch_form": dispatch_form,
             "library": library,
@@ -904,18 +904,18 @@ class EventSendView(UserCanOrganiseCourseMixin, View):
                 dispatch_form = DispatchForm()
                 library = Article.objects.all().order_by("-is_template", "-updated")
                 return render(request, self.template_name, {
-                    "event": self.event,
+                    "event": self.course,
                     "article_form": article_form,
                     "dispatch_form": dispatch_form,
                     "library": library,
                 })
 
-        dispatch = EventDispatch(event=self.event, article=article, creator=request.user)
+        dispatch = EventDispatch(event=self.course, article=article, creator=request.user)
         dispatch_form = DispatchForm(request.POST, instance=dispatch)
         if not dispatch_form.is_valid():
             library = Article.objects.all().order_by("-is_template", "-updated")
             return render(request, self.template_name, {
-                "event": self.event,
+                "event": self.course,
                 "article_form": article_form,
                 "dispatch_form": dispatch_form,
                 "library": library,
@@ -957,7 +957,7 @@ class EventSendView(UserCanOrganiseCourseMixin, View):
         except Exception as e:
             messages.error(request, str(e))
 
-        return redirect(reverse("news:event-send", args=[self.event.ref]))
+        return redirect(reverse("news:event-send", args=[self.course.ref]))
 
 
 
@@ -1436,7 +1436,7 @@ class NewsListView(UserCanOrganiseCourseMixin, ListView):
     context_object_name = "news_list"
 
     def get_queryset(self):
-        queryset = self.model.objects.filter(event=self.event).order_by("-publish_start")
+        queryset = self.model.objects.filter(event=self.course).order_by("-publish_start")
 
         return queryset
 

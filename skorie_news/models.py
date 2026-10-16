@@ -2352,7 +2352,7 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
         """
         News = apps.get_model("web", "News")  # adjust app/model name as needed
         News.objects.create(
-            event=self.event,
+            course=self.event,
             summary=self.article.title[:200],
             body=self.article.body_html,
             public=True,
