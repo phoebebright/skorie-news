@@ -2358,7 +2358,7 @@ class EventDispatch(EventMixin, CreatedUpdatedMixin):
             public=True,
             for_organisers=False,
             for_staff=False,
-            for_competitors=False,
+            for_students=False,
             url=None,
             publish_start=timezone.now(),
             publish_end=None,
