@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skorie-news"
-version = "1.0.21+learnsprite"
+version = "1.0.22+learnsprite"
 description = "A reusable Django app for newsletters and direct emails."
 readme = "README.md"
 license = {text = "MIT License"}
@@ -32,9 +32,9 @@ include-package-data = true
 # these setuptools required to get templates dir to be included
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["skorie_news"]
-exclude = ["web", "users"]
+include = ["skorie_news", "skorie_news.*"]
+exclude = ["web", "users", "skorie_news.tests*"]
 
 [tool.setuptools.package-data]
 # key is the import path of your app
-"skorie_news" = ["templates/**/*", "static/**/*", "management/**/*", "docs/**/*", "migrations/**/*" ]
+"skorie_news" = ["templates/**/*", "static/**/*", "management/**/*", "docs/**/*", "migrations/**/*", "tools/*.csv" ]
