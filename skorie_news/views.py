@@ -34,7 +34,7 @@ from django.conf import settings
 from skorie_news.models import Newsletter, Issue, Mailing, Subscription, Article, EventDispatch, DirectEmail, Delivery, \
     DeliveryEvent, NewsActivityLog
 
-from tools.permission_mixins import UserCanOrganiseEventMixin, UserCanAdministerMixin
+from .tools.permission_mixins import UserCanOrganiseEventMixin, UserCanAdministerMixin
 
 
 from .forms import NewsletterForm, CSVImportForm, SubscriptionForm, \
