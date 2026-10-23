@@ -32,7 +32,7 @@ from django_users.helpdesk import CreateTicketView, TicketDetailView
 from skorie_news.tools.permission_mixins import RequiresEventMixin
 from users.forms import  SubscribeForm
 from users.models import  Role, UserContact
-from web.models import Competitor, Entry
+
 
 
 logger = logging.getLogger('django')
