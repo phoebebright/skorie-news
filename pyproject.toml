@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skorie-news"
-version = "1.0.22+learnsprite"
+version = "1.0.23+learnsprite"
 description = "A reusable Django app for newsletters and direct emails."
 readme = "README.md"
 license = {text = "MIT License"}
@@ -19,6 +19,8 @@ classifiers = [
 ]
 dependencies = [
     "Django>=4.2,<7.0",
+    "djangorestframework",
+    "nanoid",
     "setuptools>=65.5.1",
 ]
 
